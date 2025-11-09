@@ -1,5 +1,5 @@
 @import "tailwindcss";
-* {
-  margin: 0;
-  padding: 0;
+
+:root {
+  --color-bg-primary: #0f172a;
 }

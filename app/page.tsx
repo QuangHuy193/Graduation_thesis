@@ -1,7 +1,12 @@
+import Header from "@/components/Header";
+
 export default function Home() {
   return (
-    <div className="flex justify-center text-2xl h-screen items-center text-red-500">
-      Hello World
+    <div>
+      <div>
+        <Header />
+      </div>
+      <div className="pl-32 pr-32">content</div>
     </div>
   );
 }
