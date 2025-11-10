@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import Button from "../Button";
 import Link from "next/link";
@@ -10,11 +11,23 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import styles from "./Header.module.scss";
+import Tippy from "@tippyjs/react";
 
+const fakeData = [
+  { id: 1, name: "CineGo Vincom" },
+  { id: 2, name: "CineGo Landmark 81" },
+  { id: 3, name: "CineGo Nguyễn Du" },
+  { id: 3, name: "CineGo Hà Thanh" },
+  { id: 3, name: "CineGo Đà Lạt" },
+  { id: 3, name: "CineGo Bình Dương" },
+];
 function Header() {
   return (
     <header className="bg-(--color-blue-black) text-white pl-32 pr-32 fixed w-full">
-      <div className="max-w-7xl mx-auto flex items-center justify-between border-b border-b-gray-500 ">
+      <div
+        className="max-w-7xl mx-auto flex items-center justify-between border-b
+       border-b-gray-500 "
+      >
         <div className=" flex gap-5">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center ">
@@ -61,7 +74,34 @@ function Header() {
             <div>
               <FontAwesomeIcon icon={faLocationDot} />
             </div>
-            <div>Chọn rạp</div>
+            <Tippy
+              className="bg-(--color-blue-black) min-w-[800px]"
+              placement="bottom-start"
+              arrow={false}
+              interactive={true}
+              delay={[150, 0]}
+              duration={[300, 0]}
+              offset={[0, 3]}
+              theme="cinego"
+              content={
+                <div
+                  className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
+                  p-2 rounded-md shadow-lg "
+                >
+                  {fakeData.map((cinema) => (
+                    <div
+                      key={cinema.id}
+                      className="hover:text-(--color-yellow) cursor-pointer 
+                        py-1 px-2 rounded transition-colors duration-200"
+                    >
+                      {cinema.name}
+                    </div>
+                  ))}
+                </div>
+              }
+            >
+              <div>Chọn rạp</div>
+            </Tippy>
           </div>
           <div className={`${styles.hd_bottom_left_item}`}>
             <div>

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tippy.js/dist/tippy.css";
 
 :root {
   --color-blue-black: #0f172a;
@@ -9,4 +10,38 @@
 
 body {
   color: var(--color-white);
+}
+
+/* theme nếu muốn đặt name 'cinego' */
+.tippy-box[data-theme~="cinego"] {
+  background-color: var(--color-blue-black);
+  border: #6b7280 1px solid;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: center top;
+}
+
+/* Khi đặt dưới (placement bắt đầu bằng 'bottom') - ẩn ở trạng thái hidden (translateY xuống 6-10px) */
+.tippy-box[data-placement^="bottom"][data-state="hidden"] {
+  opacity: 0;
+  transform: translateY(8px) scale(0.985);
+}
+
+/* Khi visible - trượt lên vị trí final */
+.tippy-box[data-placement^="bottom"][data-state="visible"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Tương tự nếu muốn cho placement top (xuống từ trên) */
+.tippy-box[data-placement^="top"][data-state="hidden"] {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.985);
+}
+.tippy-box[data-placement^="top"][data-state="visible"] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
