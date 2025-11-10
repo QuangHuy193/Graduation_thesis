@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import Button from "../Button";
+import Button from "../Button/Button";
 import Link from "next/link";
 import {
   faLocationDot,
@@ -12,18 +12,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
+import { fakeCinemaData } from "@/lib/constant";
 
-const fakeData = [
-  { id: 1, name: "CineGo Vincom" },
-  { id: 2, name: "CineGo Landmark 81" },
-  { id: 3, name: "CineGo Nguyễn Du" },
-  { id: 3, name: "CineGo Hà Thanh" },
-  { id: 3, name: "CineGo Đà Lạt" },
-  { id: 3, name: "CineGo Bình Dương" },
-];
 function Header() {
   return (
-    <header className="bg-(--color-blue-black) text-white pl-32 pr-32 fixed w-full">
+    <header className="bg-(--color-blue-black) text-white px-32 w-full h-[95px] fixed">
       <div
         className="max-w-7xl mx-auto flex items-center justify-between border-b
        border-b-gray-500 "
@@ -42,7 +35,7 @@ function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button text="ĐẶT NGAY" icon={faTicket} p_l_r="12px" />
+            <Button text="ĐẶT VÉ NGAY" icon={faTicket} p_l_r="12px" />
           </div>
         </div>
 
@@ -62,9 +55,12 @@ function Header() {
             <div>
               <FontAwesomeIcon icon={faUser} />
             </div>
-            <div className="cursor-pointer hover:text-(--color-yellow)">
+            <Link
+              href={"/login"}
+              className="cursor-pointer hover:text-(--color-yellow)"
+            >
               Đăng nhập
-            </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -88,14 +84,15 @@ function Header() {
                   className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
                 >
-                  {fakeData.map((cinema) => (
-                    <div
+                  {fakeCinemaData.map((cinema) => (
+                    <Link
+                      href={`/cinema/${cinema.id}`}
                       key={cinema.id}
                       className="hover:text-(--color-yellow) cursor-pointer 
                         py-1 px-2 rounded transition-colors duration-200"
                     >
                       {cinema.name}
-                    </div>
+                    </Link>
                   ))}
                 </div>
               }
@@ -107,12 +104,19 @@ function Header() {
             <div>
               <FontAwesomeIcon icon={faLocationDot} />
             </div>
-            <div>Lịch chiếu</div>
+            <Link href={"/showtimes"}>Lịch chiếu</Link>
           </div>
         </div>
         <div className="flex gap-3">
-          <div className={`${styles.hd_bottom_right_item}`}>Khuyến mãi</div>
-          <div className={`${styles.hd_bottom_right_item}`}>Giới thiệu</div>
+          <Link
+            href={"/promotions"}
+            className={`${styles.hd_bottom_right_item}`}
+          >
+            Khuyến mãi
+          </Link>
+          <Link href={"/about"} className={`${styles.hd_bottom_right_item}`}>
+            Giới thiệu
+          </Link>
         </div>
       </div>
     </header>

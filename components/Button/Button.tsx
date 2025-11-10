@@ -35,15 +35,14 @@ function Button({
     <button
       className="
         relative overflow-hidden
-        font-bold rounded-sm py-2 text-xs cursor-pointer
-        transition-[background-position] duration-500 ease-in-out
-      "
+        font-bold rounded-sm py-2 text-xs cursor-pointer"
       style={
         {
           "--bg": bgColor,
           "--bg-hover": hoverBgColor,
           color: textColor,
-          backgroundImage: "linear-gradient(90deg, var(--bg), var(--bg-hover))",
+          backgroundColor: "var(--bg)",
+          backgroundImage: "none",
           backgroundSize: "200% 100%",
           backgroundPosition: "0% 0%",
           paddingLeft: p_l_r,
@@ -53,11 +52,15 @@ function Button({
       onMouseEnter={(e) => {
         const el = e.currentTarget;
         el.style.color = hoverTextColor;
+        el.style.backgroundImage = `linear-gradient(90deg, var(--bg), var(--bg-hover))`;
         el.style.backgroundPosition = "100% 0%";
+        el.style.transition = "background 0.6s ease-in-out, color 0.3s ease";
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget;
         el.style.color = textColor;
+        el.style.backgroundImage = `none`;
+        el.style.backgroundColor = "var(--bg)";
         el.style.backgroundPosition = "0% 0%";
       }}
     >

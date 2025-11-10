@@ -1,0 +1,14 @@
+.ft_title {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.ft_item {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  margin: 5px 0;
+  &:hover {
+    color: var(--color-yellow);
+  }
+}
