@@ -6,12 +6,15 @@
   --color-yellow: #eed218;
   --color-purple: #955ecb;
   --color-white: #ffffffed;
+
+  --width-header: 99px;
 }
 
 body {
   color: var(--color-white);
 }
 
+/* start tippy */
 /* theme nếu muốn đặt name 'cinego' */
 .tippy-box[data-theme~="cinego"] {
   background-color: var(--color-blue-black);
@@ -45,3 +48,17 @@ body {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
+/* end tippy */
+
+/* start login, register page */
+.form_input {
+  background-color: #ffffff;
+  width: 100%;
+  padding: 5px 10px;
+  border: #bdbec1 1px solid;
+}
+
+.form_input:hover {
+  border-color: black;
+}
+/* end login, register page */

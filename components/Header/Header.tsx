@@ -16,7 +16,7 @@ import { fakeCinemaData } from "@/lib/constant";
 
 function Header() {
   return (
-    <header className="bg-(--color-blue-black) text-white px-32 w-full h-[95px] fixed">
+    <header className="bg-(--color-blue-black) text-white px-32 w-full h-(--width-header) fixed z-11">
       <div
         className="max-w-7xl mx-auto flex items-center justify-between border-b
        border-b-gray-500 "
@@ -64,7 +64,7 @@ function Header() {
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-between py-1">
+      <div className="flex items-center justify-between py-1.5">
         <div className="flex gap-3">
           <div className={`${styles.hd_bottom_left_item}`}>
             <div>

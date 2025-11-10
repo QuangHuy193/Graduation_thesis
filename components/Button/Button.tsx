@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 type ButtonProps = {
   text: string;
   icon?: IconDefinition;
+  wfull?: boolean;
   text_color?: string;
   bg_color?: string; // hex hoặc var(--color-name)
   hover_text_color?: string;
@@ -15,6 +16,7 @@ type ButtonProps = {
 function Button({
   text,
   icon,
+  wfull = false,
   text_color = "var(--color-blue-black)",
   bg_color = "var(--color-yellow)",
   hover_text_color = "var(--color-white)",
@@ -33,9 +35,9 @@ function Button({
 
   return (
     <button
-      className="
+      className={`${wfull && "w-full"}
         relative overflow-hidden
-        font-bold rounded-sm py-2 text-xs cursor-pointer"
+        font-bold rounded-sm py-2 text-xs cursor-pointer`}
       style={
         {
           "--bg": bgColor,
