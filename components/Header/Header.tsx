@@ -12,14 +12,29 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
-import { fakeCinemaData } from "@/lib/constant";
+import { useEffect, useState } from "react";
 
 function Header() {
+  const [cinemas, setCinemas] = useState([]);
+
+  useEffect(() => {
+    const getCinemas = async () => {
+      try {
+        const res = await fetch("/api/cinemas");
+        const data = await res.json();
+        setCinemas(data);
+      } catch (error) {
+        console.error("Error fetching cinemas:", error);
+      }
+    };
+
+    getCinemas();
+  }, []);
   return (
-    <header className="bg-(--color-blue-black) text-white px-32 w-full h-(--width-header) fixed z-11">
+    <header className="bg-(--color-blue-black) text-white px-10 w-full h-(--width-header) fixed z-11">
       <div
         className="max-w-7xl mx-auto flex items-center justify-between border-b
-       border-b-gray-500 "
+       border-b-gray-500 py-1"
       >
         <div className=" flex gap-5">
           <div className="flex items-center gap-3">
@@ -64,14 +79,14 @@ function Header() {
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-between py-1.5">
+      <div className="flex items-center justify-between py-2">
         <div className="flex gap-3">
           <div className={`${styles.hd_bottom_left_item}`}>
             <div>
               <FontAwesomeIcon icon={faLocationDot} />
             </div>
             <Tippy
-              className="bg-(--color-blue-black) min-w-[800px]"
+              className="bg-(--color-blue-black) min-w-[900px]"
               placement="bottom-start"
               arrow={false}
               interactive={true}
@@ -84,14 +99,14 @@ function Header() {
                   className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
                 >
-                  {fakeCinemaData.map((cinema) => (
+                  {cinemas?.map((cinema) => (
                     <Link
                       href={`/cinema/${cinema.id}`}
                       key={cinema.id}
                       className="hover:text-(--color-yellow) cursor-pointer 
                         py-1 px-2 rounded transition-colors duration-200"
                     >
-                      {cinema.name}
+                      {cinema.name} ({cinema.province})
                     </Link>
                   ))}
                 </div>
