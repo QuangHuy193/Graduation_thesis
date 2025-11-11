@@ -1,6 +1,7 @@
 "use client";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Link from "next/link";
 
 type ButtonProps = {
   text: string;
@@ -11,6 +12,7 @@ type ButtonProps = {
   hover_text_color?: string;
   hover_bg_color?: string;
   p_l_r?: string;
+  link?: string;
 };
 
 function Button({
@@ -22,6 +24,7 @@ function Button({
   hover_text_color = "var(--color-white)",
   hover_bg_color = "var(--color-purple)",
   p_l_r = "20px",
+  link = "",
 }: ButtonProps) {
   // Helper để nhận dạng xem giá trị là biến CSS hay mã màu hex
   const normalizeColor = (color: string) =>
@@ -67,7 +70,9 @@ function Button({
       }}
     >
       {icon && <FontAwesomeIcon icon={icon} className="mr-2 relative z-10" />}
-      <span className="relative z-10">{text}</span>
+      <span className="relative z-10">
+        <Link href={link}>{text}</Link>
+      </span>
     </button>
   );
 }

@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
+import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 
 function Header() {
   const [cinemas, setCinemas] = useState([]);
@@ -99,10 +100,10 @@ function Header() {
                   className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
                 >
-                  {cinemas?.map((cinema) => (
+                  {cinemas?.map((cinema: CinemaOnlyCity) => (
                     <Link
-                      href={`/cinema/${cinema.id}`}
-                      key={cinema.id}
+                      href={`/cinema/${cinema.cinema_id}`}
+                      key={cinema.cinema_id}
                       className="hover:text-(--color-yellow) cursor-pointer 
                         py-1 px-2 rounded transition-colors duration-200"
                     >

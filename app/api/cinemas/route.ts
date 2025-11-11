@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const [rows] = await db.query("SELECT name, province FROM cinemas");
+    const [rows] = await db.query(
+      "SELECT cinema_id, name, province FROM cinemas"
+    );
     return NextResponse.json(rows);
   } catch (error) {
     console.error(error);
