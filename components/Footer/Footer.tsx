@@ -1,31 +1,13 @@
-"use client";
 import Link from "next/link";
 import styles from "./Footer.module.scss";
 import Image from "next/image";
 import Button from "../Button/Button";
-import { useEffect, useState } from "react";
-import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
+import { fakeCinemaData } from "@/lib/constant";
 
 function Footer() {
-  const [cinemas, setCinemas] = useState([]);
-
-  useEffect(() => {
-    const getCinemas = async () => {
-      try {
-        const res = await fetch("/api/cinemas");
-        const data = await res.json();
-        setCinemas(data);
-      } catch (error) {
-        console.error("Error fetching cinemas:", error);
-      }
-    };
-
-    getCinemas();
-  }, []);
-
   return (
     <footer
-      className="text-white px-10 w-full pt-[70px] pb-5
+      className="text-white px-32 w-full pt-[70px] pb-5
     bg-[linear-gradient(90deg,#62368e_0%,#5395e1_100%)]"
     >
       <div className="grid grid-cols-4 gap-2">
@@ -76,14 +58,14 @@ function Footer() {
         <div>
           <div className={`${styles.ft_title}`}>HỆ THỐNG RẠP</div>
           <div className="flex flex-col">
-            {cinemas.map((cinema: CinemaOnlyCity) => (
+            {fakeCinemaData.map((cinema) => (
               <Link
-                href={`/cinema/${cinema.cinema_id}`}
-                key={cinema.cinema_id}
+                href={`/cinema/${cinema.id}`}
+                key={cinema.id}
                 className="hover:text-(--color-yellow) cursor-pointer 
-                py-1 rounded transition-colors duration-200"
+                py-1 px-2 rounded transition-colors duration-200"
               >
-                {cinema.name} ({cinema.province})
+                {cinema.name}
               </Link>
             ))}
           </div>

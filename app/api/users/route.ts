@@ -1,12 +1,13 @@
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { successResponse, errorResponse } from "@/lib/response";
 
+//Lấy danh sách user
 export async function GET() {
     try {
         const [rows] = await db.query("SELECT * FROM users LIMIT 10");
-        return NextResponse.json(rows);
+        return successResponse(rows, "success", 201)
     } catch (error) {
         console.error(error);
-        return NextResponse.json({ message: "Error fetching users" }, { status: 500 });
+        return errorResponse("Lấy danh sách thất bại", 500);
     }
 }

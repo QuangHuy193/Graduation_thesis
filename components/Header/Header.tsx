@@ -16,8 +16,10 @@ import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 
 function Header() {
-  const [cinemas, setCinemas] = useState([]);
+  const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
+  const [user, setUser] = useState<{ name?: string } | null>(null);
 
+  // ✅ Lấy danh sách rạp
   useEffect(() => {
     const getCinemas = async () => {
       try {
@@ -28,16 +30,38 @@ function Header() {
         console.error("Error fetching cinemas:", error);
       }
     };
-
     getCinemas();
   }, []);
+
+  // ✅ Kiểm tra user login (token + user info)
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      const userData = localStorage.getItem("user");
+      if (token && userData) {
+        const parsed = JSON.parse(userData);
+        setUser(parsed);
+      } else {
+        setUser(null);
+      }
+    } catch (err) {
+      console.error("Error reading user from localStorage:", err);
+    }
+  }, []);
+
+  // ✅ Logout handler (xóa token)
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
+
   return (
     <header className="bg-(--color-blue-black) text-white px-10 w-full h-(--width-header) fixed z-11">
       <div
         className="max-w-7xl mx-auto flex items-center justify-between border-b
        border-b-gray-500 py-1"
       >
-        <div className=" flex gap-5">
+        <div className="flex gap-5">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center ">
               <Image
@@ -56,6 +80,7 @@ function Header() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Ô tìm kiếm */}
           <div className="hidden sm:block relative ">
             <input
               className="bg-(--color-white) rounded-2xl outline-none py-1 pl-3 w-[250px]
@@ -67,19 +92,24 @@ function Header() {
               icon={faMagnifyingGlass}
             />
           </div>
-          <div className="flex gap-1.5">
-            <div>
-              <FontAwesomeIcon icon={faUser} />
-            </div>
+
+          {/* ✅ User section */}
+          <div className="flex gap-1.5 items-center">
+            <FontAwesomeIcon icon={faUser} />
+
+
             <Link
               href={"/login"}
               className="cursor-pointer hover:text-(--color-yellow)"
             >
               Đăng nhập
             </Link>
+
           </div>
         </div>
       </div>
+
+      {/* Dòng dưới của header */}
       <div className="flex items-center justify-between py-2">
         <div className="flex gap-3">
           <div className={`${styles.hd_bottom_left_item}`}>
@@ -123,6 +153,7 @@ function Header() {
             <Link href={"/showtimes"}>Lịch chiếu</Link>
           </div>
         </div>
+
         <div className="flex gap-3">
           <Link
             href={"/promotions"}
