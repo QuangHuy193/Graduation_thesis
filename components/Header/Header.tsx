@@ -9,7 +9,7 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
+import { jwtDecode } from "jwt-decode";
 import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
@@ -18,7 +18,14 @@ import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
   const [user, setUser] = useState<{ name?: string } | null>(null);
-
+  interface JwtPayload {
+    user_id: string;
+    name: string;
+    email: string;
+    role: string;
+    iat?: number;
+    exp?: number;
+  }
   // ✅ Lấy danh sách rạp
   useEffect(() => {
     const getCinemas = async () => {
@@ -37,15 +44,19 @@ function Header() {
   useEffect(() => {
     try {
       const token = localStorage.getItem("token");
-      const userData = localStorage.getItem("user");
-      if (token && userData) {
-        const parsed = JSON.parse(userData);
-        setUser(parsed);
+      if (token) {
+        const decoded = jwtDecode<JwtPayload>(token);
+        if (decoded && decoded.name) {
+          setUser({ name: decoded.name });
+        } else {
+          setUser(null);
+        }
       } else {
         setUser(null);
       }
     } catch (err) {
-      console.error("Error reading user from localStorage:", err);
+      console.error("Error decoding JWT:", err);
+      setUser(null);
     }
   }, []);
 
@@ -96,16 +107,31 @@ function Header() {
           {/* ✅ User section */}
           <div className="flex gap-1.5 items-center">
             <FontAwesomeIcon icon={faUser} />
-
-
-            <Link
-              href={"/login"}
-              className="cursor-pointer hover:text-(--color-yellow)"
-            >
-              Đăng nhập
-            </Link>
-
+            {user ? (
+              <div className="relative group flex items-center gap-2">
+                <span className="font-medium text-(--color-yellow) cursor-pointer select-none">
+                  {user.name}
+                </span>
+                <div
+                  className="absolute left-0 top-full mt-1 bg-gray-800 rounded shadow-md 
+                   opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 
+                   transition-all duration-300 min-w-[100px] z-50"
+                >
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-[13px] text-white hover:bg-red-500 rounded border-2 border-amber-800"
+                  >
+                    Đăng xuất
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link href={"/login"} className="cursor-pointer hover:text-(--color-yellow)">
+                Đăng nhập
+              </Link>
+            )}
           </div>
+
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import { faCheck, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FormAuthProps } from "@/lib/interface/formAuthStateInterface";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
 import { useRouter } from "next/navigation";
+import axios, { AxiosError } from "axios";
 
 export default function FormLogin({
   state,
@@ -45,46 +46,42 @@ export default function FormLogin({
         password,
       };
 
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
+      const res = await axios.post<ApiResponse<any>>("/api/auth/login", payload, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        // withCredentials: true, // bật nếu server set cookie và bạn dùng cookie-based auth
       });
 
-      let data: ApiResponse<any> | null = null;
-      try {
-        data = await res.json();
-      } catch {
-        setMsg({ type: "error", text: "Server trả về JSON không hợp lệ." });
-        setLoading(false);
-        return;
-      }
+      const data = res.data;
 
-      if (!res.ok || data?.success === false) {
-        const message = data?.message ?? data?.error ?? `Lỗi (${res.status})`;
+      if (!data || data.success === false) {
+        const message = data?.message ?? data?.error ?? "Đăng nhập thất bại";
         setMsg({ type: "error", text: message });
       } else {
-        setMsg({
-          type: "success",
-          text: data?.message ?? "Đăng nhập thành công",
-        });
+        setMsg({ type: "success", text: data?.message ?? "Đăng nhập thành công" });
 
-        // Save token (client-side). For production prefer HttpOnly cookie.
-        if (data?.token) {
+        if (data.token) {
           try {
             localStorage.setItem("token", data.token);
-          } catch {
-            /* ignore storage errors */
-          }
+          } catch { }
         }
 
+
+
         setTimeout(() => {
+          // dùng reload để các component đọc token từ storage cập nhật
           window.location.href = "/";
         }, 700);
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setMsg({ type: "error", text: "Lỗi mạng hoặc server." });
+      if (axios.isAxiosError(err)) {
+        const aErr = err as AxiosError;
+        const serverData = aErr.response?.data as ApiResponse<any> | undefined;
+        const message = serverData?.message ?? serverData?.error ?? aErr.message ?? "Lỗi server";
+        setMsg({ type: "error", text: message });
+      } else {
+        console.error("Login error (non-axios):", err);
+        setMsg({ type: "error", text: "Lỗi mạng hoặc server." });
+      }
     } finally {
       setLoading(false);
     }
@@ -96,11 +93,10 @@ export default function FormLogin({
         {msg && (
           <div
             role="alert"
-            className={`mb-4 px-3 py-2 rounded text-sm ${
-              msg.type === "error"
-                ? "bg-red-100 text-red-800"
-                : "bg-green-100 text-green-800"
-            }`}
+            className={`mb-4 px-3 py-2 rounded text-sm ${msg.type === "error"
+              ? "bg-red-100 text-red-800"
+              : "bg-green-100 text-green-800"
+              }`}
           >
             {msg.text}
           </div>
@@ -142,9 +138,8 @@ export default function FormLogin({
             onClick={() => handleToggleVisibility("saveLogin")}
           >
             <div
-              className={`w-3.5 h-3.5  rounded-xs border border-black relative ${
-                state.saveLogin === true ? "bg-orange-300" : ""
-              }`}
+              className={`w-3.5 h-3.5  rounded-xs border border-black relative ${state.saveLogin === true ? "bg-orange-300" : ""
+                }`}
             >
               {state.saveLogin && (
                 <FontAwesomeIcon
