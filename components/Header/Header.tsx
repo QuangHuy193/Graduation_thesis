@@ -83,7 +83,7 @@ function Header() {
           {/* Ô tìm kiếm */}
           <div className="hidden sm:block relative ">
             <input
-              className="bg-(--color-white) rounded-2xl outline-none py-1 pl-3 w-[250px]
+              className="bg-white rounded-2xl outline-none py-1 pl-3 w-[250px]
                text-gray-500 placeholder-gray-400 placeholder:text-[12px]"
               placeholder="Tìm phim..."
             />
