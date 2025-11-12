@@ -14,6 +14,10 @@ body {
   color: var(--color-white);
 }
 
+.bg {
+  background: linear-gradient(180deg, var(--color-blue-black) 0%, #2b3b5e 100%);
+}
+
 /* start tippy */
 /* theme nếu muốn đặt name 'cinego' */
 .tippy-box[data-theme~="cinego"] {

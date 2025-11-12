@@ -1,12 +1,3 @@
-export const fakeCinemaData = [
-  { id: 1, name: "CineGo Vincom" },
-  { id: 2, name: "CineGo Landmark 81" },
-  { id: 3, name: "CineGo Nguyễn Du" },
-  { id: 4, name: "CineGo Hà Thanh" },
-  { id: 5, name: "CineGo Đà Lạt" },
-  { id: 6, name: "CineGo Bình Dương" },
-];
-
 export const POLICY = `TỔNG QUAN
 CineGo hiểu rằng khách hàng quan tâm đến việc thông tin cá nhân của mình được thu thập, sử dụng và bảo vệ như thế nào. Chúng tôi trân trọng sự tin tưởng đó và cam kết quản lý, lưu trữ và xử lý thông tin một cách minh bạch, an toàn và tuân thủ pháp luật.
 Website: https://cinego.vn

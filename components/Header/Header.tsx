@@ -14,6 +14,7 @@ import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
+import { getCinemasWithCity } from "@/lib/axios/cinemasAPI";
 
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
@@ -29,13 +30,8 @@ function Header() {
   // ✅ Lấy danh sách rạp
   useEffect(() => {
     const getCinemas = async () => {
-      try {
-        const res = await fetch("/api/cinemas");
-        const data = await res.json();
-        setCinemas(data);
-      } catch (error) {
-        console.error("Error fetching cinemas:", error);
-      }
+      const res = await getCinemasWithCity();
+      setCinemas(res.data);
     };
     getCinemas();
   }, []);
@@ -126,12 +122,14 @@ function Header() {
                 </div>
               </div>
             ) : (
-              <Link href={"/login"} className="cursor-pointer hover:text-(--color-yellow)">
+              <Link
+                href={"/login"}
+                className="cursor-pointer hover:text-(--color-yellow)"
+              >
                 Đăng nhập
               </Link>
             )}
           </div>
-
         </div>
       </div>
 
@@ -156,16 +154,17 @@ function Header() {
                   className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
                 >
-                  {cinemas?.map((cinema: CinemaOnlyCity) => (
-                    <Link
-                      href={`/cinema/${cinema.cinema_id}`}
-                      key={cinema.cinema_id}
-                      className="hover:text-(--color-yellow) cursor-pointer 
+                  {cinemas.length > 0 &&
+                    cinemas?.map((cinema: CinemaOnlyCity) => (
+                      <Link
+                        href={`/cinema/${cinema.cinema_id}`}
+                        key={cinema.cinema_id}
+                        className="hover:text-(--color-yellow) cursor-pointer 
                         py-1 px-2 rounded transition-colors duration-200"
-                    >
-                      {cinema.name} ({cinema.province})
-                    </Link>
-                  ))}
+                      >
+                        {cinema.name} ({cinema.province})
+                      </Link>
+                    ))}
                 </div>
               }
             >
