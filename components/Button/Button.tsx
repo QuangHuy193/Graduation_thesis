@@ -7,6 +7,7 @@ import cn from "clsx";
 
 type ButtonProps = {
   text?: React.ReactNode;
+  text_size?: string;
   children?: React.ReactNode;
   icon?: IconDefinition;
   wfull?: boolean;
@@ -16,6 +17,7 @@ type ButtonProps = {
   hover_bg_color?: string;
   p_l_r?: string;
   link?: string;
+  border?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 function normalizeColor(input: string) {
@@ -33,6 +35,7 @@ function normalizeColor(input: string) {
 
 export default function Button({
   text,
+  text_size = "13px",
   children,
   icon,
   wfull = false,
@@ -42,6 +45,7 @@ export default function Button({
   hover_bg_color = "var(--color-purple)",
   p_l_r = "20px",
   link = "",
+  border = "",
   type = "button",
   disabled = false,
   className,
@@ -66,13 +70,17 @@ export default function Button({
     backgroundPosition: "0% 0%",
     paddingLeft: p_l_r,
     paddingRight: p_l_r,
+    border: border,
+    fontSize: text_size,
   } as React.CSSProperties;
 
   const baseClass =
     "relative overflow-hidden font-bold rounded-sm py-2 text-xs cursor-pointer inline-flex items-center justify-center";
 
   const fullClass = wfull ? "w-full" : "";
-  const disabledClass = disabled ? "opacity-60 cursor-not-allowed" : "hover:shadow-md";
+  const disabledClass = disabled
+    ? "opacity-60 cursor-not-allowed"
+    : "hover:shadow-md";
 
   // handlers để vẫn cho phép caller override onMouseEnter/onMouseLeave
   const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {
@@ -110,7 +118,9 @@ export default function Button({
           }}
           {...(rest as any)}
         >
-          {icon && <FontAwesomeIcon icon={icon} className="mr-2 relative z-10" />}
+          {icon && (
+            <FontAwesomeIcon icon={icon} className="mr-2 relative z-10" />
+          )}
           <span className="relative z-10">{text ?? children}</span>
         </a>
       </Link>

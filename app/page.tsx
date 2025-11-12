@@ -41,6 +41,16 @@ const dataF = [
     duration: 120,
     genre: ["Hồi hộp", "Tâm lý"],
   },
+  {
+    id: 5,
+    image: "/trai-tim-que-quat-poster.webp",
+    name: "Trái tim què quặt",
+    age: 16,
+    contruy: "Việt Nam",
+    subtitle: "Tiếng Việt",
+    duration: 120,
+    genre: ["Hồi hộp", "Tâm lý"],
+  },
 ];
 export default function Home() {
   return (
