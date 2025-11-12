@@ -154,16 +154,17 @@ function Header() {
                   className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
                 >
-                  {cinemas?.map((cinema: CinemaOnlyCity) => (
-                    <Link
-                      href={`/cinema/${cinema.cinema_id}`}
-                      key={cinema.cinema_id}
-                      className="hover:text-(--color-yellow) cursor-pointer 
+                  {cinemas.length > 0 &&
+                    cinemas?.map((cinema: CinemaOnlyCity) => (
+                      <Link
+                        href={`/cinema/${cinema.cinema_id}`}
+                        key={cinema.cinema_id}
+                        className="hover:text-(--color-yellow) cursor-pointer 
                         py-1 px-2 rounded transition-colors duration-200"
-                    >
-                      {cinema.name} ({cinema.province})
-                    </Link>
-                  ))}
+                      >
+                        {cinema.name} ({cinema.province})
+                      </Link>
+                    ))}
                 </div>
               }
             >

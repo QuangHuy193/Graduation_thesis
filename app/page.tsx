@@ -55,11 +55,12 @@ const dataF = [
 export default function Home() {
   return (
     <div>
-      <div className="px-10 bg-[linear-gradient(180deg,var(--color-blue-black)_0%,#2b3b5e_100%)] ">
+      <div className="px-10 bg ">
         <div className="h-(--width-header)"></div>
         <div>
           <MovieList data={dataF} title="PHIM ĐANG CHIẾU" />
         </div>
+        <div></div>
       </div>
     </div>
   );

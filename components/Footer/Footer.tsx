@@ -69,16 +69,17 @@ function Footer() {
         <div>
           <div className={`${styles.ft_title}`}>HỆ THỐNG RẠP</div>
           <div className="flex flex-col">
-            {cinemas.map((cinema) => (
-              <Link
-                href={`/cinema/${cinema.cinema_id}`}
-                key={cinema.cinema_id}
-                className="hover:text-(--color-yellow) cursor-pointer 
+            {cinemas.length > 0 &&
+              cinemas.map((cinema) => (
+                <Link
+                  href={`/cinema/${cinema.cinema_id}`}
+                  key={cinema.cinema_id}
+                  className="hover:text-(--color-yellow) cursor-pointer 
                 py-1 px-2 rounded transition-colors duration-200"
-              >
-                {cinema.name}
-              </Link>
-            ))}
+                >
+                  {cinema.name}
+                </Link>
+              ))}
           </div>
         </div>
       </div>
