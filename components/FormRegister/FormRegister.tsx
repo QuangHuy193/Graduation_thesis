@@ -29,7 +29,10 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
   const [confirm, setConfirm] = useState("");
 
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [msg, setMsg] = useState<{
+    type: "error" | "success";
+    text: string;
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,14 +75,20 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
     }
 
     if (phone.trim() && !validatePhoneBasic(phone.trim())) {
-      setMsg({ type: "error", text: "Số điện thoại không hợp lệ (10 chữ số)." });
+      setMsg({
+        type: "error",
+        text: "Số điện thoại không hợp lệ (10 chữ số).",
+      });
       scrollToPosition();
       return;
     }
 
     // check user agreed terms (assuming state.agreeClause is provided from parent)
     if (!state.agreeClause) {
-      setMsg({ type: "error", text: "Bạn cần đồng ý điều khoản trước khi đăng ký." });
+      setMsg({
+        type: "error",
+        text: "Bạn cần đồng ý điều khoản trước khi đăng ký.",
+      });
       scrollToPosition();
       return;
     }
@@ -112,13 +121,20 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
       }
 
       if (!res.ok) {
-        const message = data?.message ?? data?.error ?? `Lỗi server (${res.status})`;
+        const message =
+          data?.message ?? data?.error ?? `Lỗi server (${res.status})`;
         setMsg({ type: "error", text: message });
       } else {
         if (data?.success === false) {
-          setMsg({ type: "error", text: data?.message ?? data?.error ?? "Đăng ký thất bại" });
+          setMsg({
+            type: "error",
+            text: data?.message ?? data?.error ?? "Đăng ký thất bại",
+          });
         } else {
-          setMsg({ type: "success", text: data?.message ?? "Đăng ký thành công" });
+          setMsg({
+            type: "success",
+            text: data?.message ?? "Đăng ký thành công",
+          });
           // reset form
           setName("");
           setBirthday("");
@@ -196,7 +212,6 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             aria-label="Số điện thoại"
-            placeholder="0987654321"
           />
         </div>
 
@@ -248,7 +263,10 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
             className="pb-1 text-[13px] hover:text-blue-500 w-fit cursor-pointer"
             onClick={() => handleToggleVisibility("policy")}
           >
-            <FontAwesomeIcon icon={state.showPolicy ? faCaretDown : faCaretRight} /> Chính sách bảo mật
+            <FontAwesomeIcon
+              icon={state.showPolicy ? faCaretDown : faCaretRight}
+            />{" "}
+            Chính sách bảo mật
           </div>
           {state.showPolicy && (
             <textarea
@@ -265,15 +283,20 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
             onClick={() => handleToggleVisibility("agree")}
           >
             <div
-              className={`w-3.5 h-3.5 rounded-xs border border-black relative ${state.agreeClause === true ? "bg-blue-300" : ""}`}
+              className={`w-3.5 h-3.5 rounded-xs border border-black relative ${state.agreeClause === true ? "bg-blue-300" : ""
+                }`}
               aria-hidden
             >
               {state.agreeClause && (
-                <FontAwesomeIcon icon={faCheck} className="text-[11px] absolute" />
+                <FontAwesomeIcon
+                  icon={faCheck}
+                  className="text-[11px] absolute"
+                />
               )}
             </div>
             <div className="text-[13px]">
-              Khách hàng đã đồng ý các điều khoản, điều kiện của thành viên CineGo
+              Khách hàng đã đồng ý các điều khoản, điều kiện của thành viên
+              CineGo
             </div>
           </div>
         </div>

@@ -24,6 +24,13 @@ function MovieItem({ data }: { data: MovieItemITF }) {
           className="w-full cursor-pointer"
         />
 
+        <div
+          className="absolute top-0 left-0 text-xl font-bold px-2 py-1 bg-red-500
+        group-hover:opacity-0 transition-opacity duration-300 ease-in-out"
+        >
+          T{data.age}
+        </div>
+
         <Link href={`/movie/${data.id}`}>
           <div
             className="cursor-pointer absolute top-0 left-0 right-0 bottom-0 flex 
