@@ -6,6 +6,12 @@ import Button from "../Button/Button";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 import { getCinemasWithCity } from "@/lib/axios/cinemasAPI";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFacebook,
+  faTiktok,
+  faYoutube,
+} from "@fortawesome/free-brands-svg-icons";
 
 function Footer() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
@@ -35,14 +41,31 @@ function Footer() {
             </Link>
           </div>
           <div>YOUR STORY, YOUR SCREEN</div>
+
+          <div className="flex gap-2 py-2">
+            <div>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                className="text-xl"
+              >
+                <FontAwesomeIcon icon={faFacebook} />
+              </a>
+            </div>
+            <div>
+              <a href="https://tiktok.com" target="_blank" className="text-xl">
+                <FontAwesomeIcon icon={faTiktok} />
+              </a>
+            </div>
+            <div>
+              <a href="https://youtube.com" target="_blank" className="text-xl">
+                <FontAwesomeIcon icon={faYoutube} />
+              </a>
+            </div>
+          </div>
+
           <div className="mt-2.5">
             <Button text="ĐẶT VÉ" p_l_r="50px" hover_bg_color="#5F4CA2" />
-          </div>
-          <div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
           </div>
         </div>
         <div>
