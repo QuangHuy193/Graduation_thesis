@@ -14,6 +14,7 @@ import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
+import { getCinemasWithCity } from "@/lib/axios/cinemasAPI";
 
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
@@ -29,13 +30,8 @@ function Header() {
   // ✅ Lấy danh sách rạp
   useEffect(() => {
     const getCinemas = async () => {
-      try {
-        const res = await fetch("/api/cinemas");
-        const data = await res.json();
-        setCinemas(data);
-      } catch (error) {
-        console.error("Error fetching cinemas:", error);
-      }
+      const res = await getCinemasWithCity();
+      setCinemas(res.data);
     };
     getCinemas();
   }, []);
@@ -126,12 +122,14 @@ function Header() {
                 </div>
               </div>
             ) : (
-              <Link href={"/login"} className="cursor-pointer hover:text-(--color-yellow)">
+              <Link
+                href={"/login"}
+                className="cursor-pointer hover:text-(--color-yellow)"
+              >
                 Đăng nhập
               </Link>
             )}
           </div>
-
         </div>
       </div>
 
