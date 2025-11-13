@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import "antd/dist/reset.css";
 import "./fontawesome.ts";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
