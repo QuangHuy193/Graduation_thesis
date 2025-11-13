@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Button from "../Button/Button";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FormAuthProps } from "@/lib/interface/formAuthStateInterface";
@@ -13,6 +14,8 @@ import { sendOtp } from "@/lib/axios/sendotpAPI";
 import { getEmailByPhone, GetEmailByPhoneResponse } from "@/lib/axios/getEmailByPhone";
 import { checkUserStatus } from "@/lib/axios/checkUserStatusAPI";
 import { useRouter } from "next/navigation";
+import styles from "./FormLogin.module.scss";
+
 export default function FormLogin({
   state,
   handleToggleVisibility,
@@ -30,20 +33,17 @@ export default function FormLogin({
 
   async function handleActivateNow() {
     setMsg(null);
-    // đơn giản validate email
     let email = identifier.trim();
 
-    // Nếu không phải email hợp lệ thì thử tìm theo số điện thoại
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       try {
-        const res = await getEmailByPhone(identifier) as GetEmailByPhoneResponse;
+        const res = (await getEmailByPhone(identifier)) as GetEmailByPhoneResponse;
         console.log("getEmailByPhone response:", res);
         if (!res.success || !res.data?.email) {
           setMsg({ type: "error", text: "Không tìm thấy email cho số điện thoại này." });
           return;
         }
-
-        email = res.data.email; // <-- gán đúng
+        email = res.data.email;
       } catch (err) {
         console.error(err);
         setMsg({ type: "error", text: "Lỗi khi tìm email theo số điện thoại." });
@@ -51,12 +51,10 @@ export default function FormLogin({
       }
     }
 
-
     setLoading(true);
     try {
-      const res = await sendOtp({ email }); // sendOtp bạn đã có (axios wrapper)
+      const res = await sendOtp({ email });
       if (res && res.success) {
-        // điều hướng sang trang xác thực OTP, kèm email làm query param
         router.push(`/verifyotp?email=${encodeURIComponent(email)}`);
         return;
       } else {
@@ -68,6 +66,7 @@ export default function FormLogin({
       setLoading(false);
     }
   }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(null);
@@ -85,7 +84,6 @@ export default function FormLogin({
     try {
       const payload = { identifier: idTrim, password };
 
-      // 1) Gọi login
       const loginResp = await axios.post<ApiResponse<any>>(
         "/api/auth/login",
         payload,
@@ -94,7 +92,6 @@ export default function FormLogin({
 
       const loginData = loginResp.data;
 
-      // 2) Kiểm tra login success trước khi làm việc khác
       if (!loginData || loginData.success === false) {
         const message = loginData?.message ?? loginData?.error ?? "Đăng nhập thất bại";
         setMsg({ type: "error", text: message });
@@ -102,7 +99,6 @@ export default function FormLogin({
         return;
       }
 
-      // 3) Lấy userId an toàn
       const userIdRaw = loginData?.data?.user?.user_id ?? null;
       const userId = userIdRaw !== null ? Number(userIdRaw) : NaN;
       if (!userId || Number.isNaN(userId)) {
@@ -111,8 +107,6 @@ export default function FormLogin({
         return;
       }
 
-      // 4) Nếu checkUserStatus cần token, truyền token từ loginData.token
-      //    (checkUserStatus nên hỗ trợ optional token param)
       const token = loginData.token ?? null;
       const statusRes = await checkUserStatus(userId);
 
@@ -132,7 +126,6 @@ export default function FormLogin({
         return;
       }
 
-      // 5) Lưu token (sessionStorage hoặc localStorage)
       if (loginData.token) {
         try {
           if (state.saveLogin) {
@@ -165,7 +158,6 @@ export default function FormLogin({
     }
   };
 
-
   return (
     <div>
       <form className="px-6 py-7" onSubmit={handleSubmit}>
@@ -194,23 +186,6 @@ export default function FormLogin({
           )}
         </div>
 
-        {/* {msg && (
-          <AlertMessage
-            type={msg.type}
-            text={msg.text}
-            dismissible
-            onClose={() => setMsg(null)}
-          />
-        )}
-        {needActivation && (
-          <Button
-            type="button"
-            className="text-sm text-blue-600 mb-3"
-            onClick={handleActivateNow}
-          >
-            Kích hoạt ngay
-          </Button>
-        )} */}
         <div className="my-2.5">
           <div className="pb-1">
             Email hoặc số điện thoại <span className="text-red-500">*</span>
@@ -218,7 +193,7 @@ export default function FormLogin({
           <input
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            className="form_input"
+            className={styles.form_input}
           />
         </div>
 
@@ -230,14 +205,19 @@ export default function FormLogin({
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="form_input"
+              className={`${styles.form_input} ${styles.prIcon}`}
               type={state.showPass === true ? "text" : "password"}
             />
-            <FontAwesomeIcon
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 cursor-pointer"
-              icon={state.showPass === true ? faEye : faEyeSlash}
+            <button
+              type="button"
+              className={styles.icon_button}
               onClick={() => handleToggleVisibility("password")}
-            />
+              aria-label="toggle password visibility"
+            >
+              <FontAwesomeIcon
+                icon={state.showPass === true ? faEye : faEyeSlash}
+              />
+            </button>
           </div>
         </div>
 

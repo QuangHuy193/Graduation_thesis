@@ -117,10 +117,11 @@ function Header() {
                 >
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-[13px] text-white hover:bg-red-500 rounded border-2 border-amber-800"
+                    className={styles.logoutBtn}
                   >
                     Đăng xuất
                   </button>
+
                 </div>
               </div>
             ) : (

@@ -1,0 +1,45 @@
+/* FormLogin.module.scss */
+
+.form_input {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    /* px-3 py-2 */
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    box-sizing: border-box;
+    outline: none;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    color: #0f172a;
+}
+
+/* padding-right reserve for icon inside relative parent */
+.prIcon {
+    padding-right: 2.5rem;
+}
+
+.form_input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+}
+
+.form_input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* icon button inside relative parent */
+.icon_button {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+    color: inherit;
+}

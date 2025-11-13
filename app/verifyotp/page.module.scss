@@ -1,0 +1,106 @@
+/* VerifyOtp.module.scss */
+
+.container {
+    padding-left: 8rem;
+    /* pl-32 */
+    padding-right: 8rem;
+    /* pr-32 */
+    padding-bottom: 5rem;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(180deg, var(--color-blue-black) 0%, #2b3b5e 100%);
+    color: #000;
+}
+
+.innerSpacer {
+    height: var(--width-header);
+}
+
+.card {
+    width: 100%;
+    max-width: 28rem;
+    /* max-w-md */
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(2, 6, 23, 0.12);
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #0f172a;
+}
+
+.subtitle {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+/* message styles */
+.msgError {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: #dc2626;
+}
+
+.msgSuccess {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    color: #047857;
+}
+
+/* buttons row */
+.rowBtns {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 0.75rem;
+}
+
+/* hint text */
+.hint {
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+/* Nút gửi lại OTP */
+.resendBtn {
+    font-size: 0.875rem;
+    /* text-sm */
+    color: #0284c7;
+    /* sky-600 */
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.resendBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Nút quay lại đăng ký */
+.backBtn {
+    margin-left: auto;
+    font-size: 0.875rem;
+    /* text-sm */
+    color: #475569;
+    /* slate-600 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.backBtn:hover {
+    color: #1e293b;
+    /* slate-800 */
+}

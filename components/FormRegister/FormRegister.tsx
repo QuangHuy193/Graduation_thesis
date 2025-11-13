@@ -12,6 +12,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Button from "../Button/Button";
 import { scrollToPosition } from "@/lib/function";
 import { sendOtp } from "@/lib/axios/sendotpAPI";
+import styles from "./FormRegister.module.scss";
+
 function validateEmailBasic(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -33,13 +35,10 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
   const [msg, setMsg] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const router = useRouter();
 
-  // Khi user nhấn "Xác nhận" — chỉ gửi user_data để server lưu tạm và gửi OTP,
-  // rồi điều hướng sang trang xác thực OTP.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(null);
 
-    // validate đơn giản
     if (!name.trim()) { setMsg({ type: "error", text: "Họ và tên là bắt buộc." }); scrollToPosition(); return; }
     if (!birthday) { setMsg({ type: "error", text: "Ngày sinh là bắt buộc." }); scrollToPosition(); return; }
     if (!email.trim() || !validateEmailBasic(email.trim().toLowerCase())) { setMsg({ type: "error", text: "Email không hợp lệ." }); scrollToPosition(); return; }
@@ -58,15 +57,9 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
         password
       };
 
-      // const res = await fetch("/api/auth/send-otp", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(payload),
-      // });
       const data = await sendOtp(payload);
 
       if (data.success) {
-        // điều hướng sang trang verify OTP, chỉ đưa email để hiển thị
         router.push(`/verifyotp?email=${encodeURIComponent(payload.email)}`);
         return;
       } else {
@@ -88,7 +81,7 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
         <div className="my-2.5">
           <div className="pb-1">Họ và tên <span className="text-red-500">*</span></div>
           <input
-            className="form_input"
+            className={`${styles.form_input} w-full`}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Họ và tên"
@@ -101,11 +94,10 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
           <div className="pb-1">Ngày sinh <span className="text-red-500">*</span></div>
           <input
             type="date"
-            className="form_input"
+            className={`${styles.form_input}`}
             value={birthday}
             onChange={(e) => setBirthday(e.target.value)}
             tabIndex={2}
-
           />
         </div>
 
@@ -114,7 +106,7 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
           <div className="pb-1">Email <span className="text-red-500">*</span></div>
           <input
             type="email"
-            className="form_input"
+            className={`${styles.form_input}`}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             aria-label="Email"
@@ -127,7 +119,7 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
         <div className="my-2.5">
           <div className="pb-1">Số điện thoại <span className="text-red-500">*</span></div>
           <input
-            className="form_input"
+            className={`${styles.form_input}`}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             tabIndex={4}
@@ -141,7 +133,7 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
           <div className="relative">
             <input
               type={state.showPass ? "text" : "password"}
-              className="form_input"
+              className={`${styles.form_input} pr-10`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               tabIndex={5}
@@ -149,8 +141,9 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
             />
             <button
               type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2"
+              className={styles.icon_button}
               onClick={() => handleToggleVisibility("password")}
+              aria-label="toggle password visibility"
             >
               <FontAwesomeIcon icon={state.showPass ? faEyeSlash : faEye} />
             </button>
@@ -163,7 +156,7 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
           <div className="relative">
             <input
               type={state.showConfirmPass ? "text" : "password"}
-              className="form_input"
+              className={`${styles.form_input} pr-10`}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               tabIndex={6}
@@ -171,17 +164,16 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
             />
             <button
               type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2"
+              className={styles.icon_button}
               onClick={() => handleToggleVisibility("comfirmPassword")}
+              aria-label="toggle confirm password visibility"
             >
               <FontAwesomeIcon icon={state.showConfirmPass ? faEyeSlash : faEye} />
             </button>
           </div>
         </div>
 
-
         {/* Policy */}
-        {/* Policy / checkbox (hiển thị theo state.agreeClause bên parent) */}
         <div className="my-2.5">
           <label className="flex items-start gap-2">
             <input
@@ -189,6 +181,7 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
               checked={state.agreeClause}
               onChange={() => handleToggleVisibility("agree")}
               disabled={stage === "done"}
+              className={styles.checkbox}
             />
             <div className="text-sm">
               Tôi đã đọc và đồng ý với{" "}
@@ -200,20 +193,17 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
               >
                 điều khoản
               </button>
-              { /* ngắn gọn mô tả bên cạnh link (tuỳ) */}
               <div className="text-xs text-gray-500 mt-1">Bạn cần đồng ý để có thể hoàn tất đăng ký.</div>
             </div>
           </label>
 
           {showPolicy && (
             <div
-              className="mt-3 p-3 bg-gray-50 rounded text-sm text-gray-800 max-h-48 overflow-auto border"
-              // nếu POLICY chứa HTML, dùng dangerouslySetInnerHTML; nếu là plain text, dùng {POLICY}
+              className={styles.policyBox}
               dangerouslySetInnerHTML={{ __html: POLICY }}
             />
           )}
         </div>
-
 
         {msg && (
           <AlertMessage

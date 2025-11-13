@@ -1,0 +1,83 @@
+/* FormRegister.module.scss */
+
+/* cơ bản cho input/button control */
+.form_input {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    /* tương đương px-3 py-2 */
+    border: 1px solid #d1d5db;
+    /* gray-300 */
+    border-radius: 0.5rem;
+    /* rounded */
+    background-color: #ffffff;
+    font-size: 0.875rem;
+    /* text-sm */
+    line-height: 1.25;
+    color: #0f172a;
+    /* slate-900 */
+    box-sizing: border-box;
+    outline: none;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+/* padding-right lớn cho chừa chỗ icon toggle */
+.form_input.pr-10 {
+    padding-right: 2.5rem;
+}
+
+/* focus */
+.form_input:focus {
+    border-color: #6366f1;
+    /* indigo-500 */
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
+}
+
+/* disabled */
+.form_input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* icon button ở trong relative parent */
+.icon_button {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+    color: inherit;
+}
+
+/* nhỏ gọn checkbox nếu muốn style */
+.checkbox {
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.25rem;
+    accent-color: #f97316;
+    /* orange-400 nếu browser hỗ trợ */
+}
+
+/* policy box (scrollable) */
+.policyBox {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    /* gray-50 */
+    border-radius: 0.5rem;
+    color: #0f172a;
+    max-height: 12rem;
+    /* 48 */
+    overflow: auto;
+    border: 1px solid #e6e9ef;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* nếu cần style cụ thể cho alert, bạn có thể thêm class ở đây */
+/* ex:
+.alert_custom { margin-top: 0.75rem; }
+*/
