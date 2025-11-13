@@ -9,6 +9,7 @@ export const db = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    timezone: 'Z',
     ssl: {
         // Chấp nhận self-signed (DEV only)
         rejectUnauthorized: false

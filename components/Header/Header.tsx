@@ -14,7 +14,7 @@ import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
-import { getCinemasWithCity } from "@/lib/axios/cinemasAPI";
+
 
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
@@ -27,14 +27,6 @@ function Header() {
     iat?: number;
     exp?: number;
   }
-  // ✅ Lấy danh sách rạp
-  useEffect(() => {
-    const getCinemas = async () => {
-      const res = await getCinemasWithCity();
-      setCinemas(res.data);
-    };
-    getCinemas();
-  }, []);
 
   // ✅ Kiểm tra user login (token + user info)
   useEffect(() => {
@@ -154,17 +146,18 @@ function Header() {
                   className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
                 >
-                  {cinemas.length > 0 &&
-                    cinemas?.map((cinema: CinemaOnlyCity) => (
+                  {Array.isArray(cinemas) && cinemas.length > 0 &&
+                    cinemas.map((cinema: CinemaOnlyCity) => (
                       <Link
                         href={`/cinema/${cinema.cinema_id}`}
                         key={cinema.cinema_id}
-                        className="hover:text-(--color-yellow) cursor-pointer 
-                        py-1 px-2 rounded transition-colors duration-200"
+                        className="hover:text-(--color-yellow) cursor-pointer py-1 px-2 rounded transition-colors duration-200"
                       >
                         {cinema.name} ({cinema.province})
                       </Link>
-                    ))}
+                    ))
+                  }
+
                 </div>
               }
             >

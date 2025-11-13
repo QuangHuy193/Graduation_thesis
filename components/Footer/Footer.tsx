@@ -18,7 +18,7 @@ function Footer() {
   useEffect(() => {
     const getCinemas = async () => {
       const res = await getCinemasWithCity();
-      setCinemas(res.data);
+      setCinemas(res);
     };
     getCinemas();
   }, []);

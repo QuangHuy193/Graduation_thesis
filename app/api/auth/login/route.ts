@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt, { Secret } from "jsonwebtoken";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
-import { successResponse, errorResponse } from "@/lib/response";
+import { successResponse, errorResponse } from "@/lib/function";
 const JWT_EXPIRES_IN = "7d"; // hoặc "1h" tuỳ nhu cầu
 
 type LoginReq = {

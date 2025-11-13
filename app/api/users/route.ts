@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { successResponse, errorResponse } from "@/lib/response";
+import { successResponse, errorResponse } from "@/lib/function";
 
 //Lấy danh sách user
 export async function GET() {

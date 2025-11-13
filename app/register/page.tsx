@@ -57,9 +57,8 @@ export default function Register() {
       <div className="w-[500px]">
         <div className="flex w-full ">
           <div
-            className={`flex-1 p-1.5 ${
-              state.chosseForm === "login" ? "rounded-tr-sm" : "text-white"
-            }`}
+            className={`flex-1 p-1.5 ${state.chosseForm === "login" ? "rounded-tr-sm" : "text-white"
+              }`}
             style={{
               backgroundColor:
                 state.chosseForm === "login" ? "#f5f5f5" : "inherit",
@@ -67,9 +66,8 @@ export default function Register() {
           >
             <div
               className={`py-1 font-bold cursor-pointer flex justify-center rounded-sm 
-                    w-full ${
-                      state.chosseForm !== "login" && "hover:bg-gray-800"
-                    }`}
+                    w-full ${state.chosseForm !== "login" && "hover:bg-gray-800"
+                }`}
               onClick={() => {
                 handleToggleVisibility("form");
               }}
@@ -78,9 +76,8 @@ export default function Register() {
             </div>
           </div>
           <div
-            className={`flex-1 p-1.5 ${
-              state.chosseForm === "register" ? "rounded-tl-sm" : "text-white"
-            }`}
+            className={`flex-1 p-1.5 ${state.chosseForm === "register" ? "rounded-tl-sm" : "text-white"
+              }`}
             style={{
               backgroundColor:
                 state.chosseForm === "register" ? "#f5f5f5" : "inherit",
@@ -88,9 +85,8 @@ export default function Register() {
           >
             <div
               className={`py-1 font-bold cursor-pointer flex justify-center rounded-sm 
-                    w-full ${
-                      state.chosseForm !== "register" && "hover:bg-gray-800"
-                    }`}
+                    w-full ${state.chosseForm !== "register" && "hover:bg-gray-800"
+                }`}
               onClick={() => {
                 handleToggleVisibility("form");
               }}
