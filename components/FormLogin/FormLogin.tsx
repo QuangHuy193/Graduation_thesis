@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FormAuthProps } from "@/lib/interface/formAuthStateInterface";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
+import AlertMessage from "../MessageBox/MessageBox";
 import { useRouter } from "next/navigation";
 import axios, { AxiosError } from "axios";
 
@@ -61,8 +62,15 @@ export default function FormLogin({
 
         if (data.token) {
           try {
-            localStorage.setItem("token", data.token);
-          } catch { }
+            if (state.saveLogin) {
+              localStorage.setItem("token", data.token); // giữ lâu dài
+            } else {
+              sessionStorage.setItem("token", data.token); // chỉ trong session/tab
+            }
+          } catch (err) {
+            // optional: log lỗi storage (VD: private mode)
+            console.warn("Storage error:", err);
+          }
         }
 
 
@@ -91,15 +99,12 @@ export default function FormLogin({
     <div>
       <form className="px-6 py-7" onSubmit={handleSubmit}>
         {msg && (
-          <div
-            role="alert"
-            className={`mb-4 px-3 py-2 rounded text-sm ${msg.type === "error"
-              ? "bg-red-100 text-red-800"
-              : "bg-green-100 text-green-800"
-              }`}
-          >
-            {msg.text}
-          </div>
+          <AlertMessage
+            type={msg.type}
+            text={msg.text}
+            dismissible
+            onClose={() => setMsg(null)}
+          />
         )}
 
         <div className="my-2.5">
