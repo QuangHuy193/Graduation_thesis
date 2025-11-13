@@ -1,5 +1,6 @@
 "use client";
 import MovieList from "@/components/MovieList/MovieList";
+import PromotionList from "@/components/PromotionList/PromotionList";
 const dataF = [
   {
     id: 1,
@@ -52,17 +53,24 @@ const dataF = [
     genre: ["Hồi hộp", "Tâm lý"],
   },
 ];
+
+const dataF2 = ["/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp"];
 export default function Home() {
   return (
     <div>
       <div className="px-10 bg ">
         <div className="h-(--width-header)"></div>
         <div>
-          <MovieList
-            data={dataF}
-            title="PHIM ĐANG CHIẾU"
-            link="/movie/showing"
-          />
+          <div>
+            <MovieList
+              data={dataF}
+              title="PHIM ĐANG CHIẾU"
+              link="/movie/showing"
+            />
+          </div>
+          <div>
+            <PromotionList data={dataF2} title="KHUYẾN MÃI" />
+          </div>
         </div>
         <div></div>
       </div>

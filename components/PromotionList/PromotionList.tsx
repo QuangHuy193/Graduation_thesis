@@ -1,25 +1,23 @@
-import { MovieItemITF } from "@/lib/interface/movieInterface";
-import MovieItem from "../MovieItem/MovieItem";
 import { useState } from "react";
+import PromotionItem from "../PromotionItem/PromotionItem";
+import Button from "../Button/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
-import styles from "./MovieList.module.scss";
-import Button from "../Button/Button";
 
-function MovieList({
+function PromotionList({
   data,
   title,
   link,
 }: {
-  data: MovieItemITF[];
+  data: string[];
   title: string;
   link: string;
 }) {
   const [page, setPage] = useState(0);
-  const pageSize = 4;
+  const pageSize = 3;
 
   // Số trang tối đa
   const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
@@ -31,10 +29,9 @@ function MovieList({
   const prevPage = () => {
     if (page > 0) setPage((p) => p - 1);
   };
-
   return (
     <div>
-      <div className="w-full flex justify-center py-7 text-4xl font-bold">
+      <div className="w-full flex justify-start py-7 text-4xl font-bold">
         {title}
       </div>
 
@@ -54,7 +51,7 @@ function MovieList({
             className={`sliderTrack`}
             style={{ transform: `translateX(-${page * 100}%)` }}
           >
-            {/* Mỗi slide chứa 4 item (grid) */}
+            {/* Mỗi slide chứa 3 item (grid) */}
             {Array.from({ length: totalPages }).map((_, p) => {
               const start = p * pageSize;
               const slice = data.slice(start, start + pageSize);
@@ -62,10 +59,10 @@ function MovieList({
                 <div className={`slide`} key={p}>
                   {/* slideInner giữ padding/gutter - không làm slide vượt 100% */}
                   <div className={`slideInner`}>
-                    <div className="grid grid-cols-4 gap-6">
-                      {slice.map((movie) => (
-                        <div key={movie.id}>
-                          <MovieItem data={movie} />
+                    <div className="grid grid-cols-3 gap-6">
+                      {slice.map((img, index) => (
+                        <div key={index}>
+                          <PromotionItem image={img} />
                         </div>
                       ))}
                     </div>
@@ -103,20 +100,10 @@ function MovieList({
       </div>
 
       <div className="w-full flex justify-center pt-3 pb-5">
-        <Button
-          text="XEM THÊM"
-          bg_color="transparent"
-          text_color="--color-yellow"
-          border="var(--color-yellow) 1px solid"
-          p_l_r="80px"
-          text_size="15px"
-          hover_text_color="--color-white"
-          hover_bg_color="#FF9933"
-          link={link}
-        />
+        <Button text="XEM THÊM" p_l_r="80px" link={link} />
       </div>
     </div>
   );
 }
 
-export default MovieList;
+export default PromotionList;
