@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { verifyOtp } from "@/lib/axios/verifyOtpAPI";
 import { sendOtp } from "@/lib/axios/sendotpAPI";
-import { signupFromOtp } from "@/lib/axios/signupfromotpAPI";
+
 import { useSearchParams, useRouter } from "next/navigation";
 import Button from "@/components/Button/Button";
 export default function VerifyOtp() {
@@ -87,38 +87,13 @@ export default function VerifyOtp() {
                     return;
                 }
 
-                try {
-                    // Gọi API đăng ký user từ user_data trong bảng otps
-                    const signupRes = await signupFromOtp({ otpId });
-
-                    if (signupRes.success) {
-                        setMsg({
-                            type: "success",
-                            text: signupRes.message || "Tạo tài khoản thành công!",
-                        });
-
-                        // Sau khi đăng ký thành công, chuyển về trang login
-                        setTimeout(() => router.push("/login"), 1000);
-                    } else {
-                        setMsg({
-                            type: "error",
-                            text: signupRes.message || "Không thể tạo tài khoản từ OTP.",
-                        });
-                    }
-                } catch (err: any) {
-                    console.error("signupFromOtp error:", err);
-                    setMsg({
-                        type: "error",
-                        text: err?.message || "Lỗi khi tạo tài khoản. Vui lòng thử lại.",
-                    });
-                }
-
+                router.push("/login"); // hoặc router.push("/login") tuỳ flow
                 return;
+            } else {
+                const attemptsMsg = (data as any).attempts ? ` Số lần thử: ${(data as any).attempts}.` : "";
+                setMsg({ type: "error", text: data.message || ("OTP không hợp lệ." + attemptsMsg) });
             }
 
-            // Nếu success === false (VerifyOtpFail)
-            const attemptsMsg = (data as any).attempts ? ` Số lần thử: ${(data as any).attempts}.` : "";
-            setMsg({ type: "error", text: data.message || ("OTP không hợp lệ." + attemptsMsg) });
         } catch (err: any) {
             // verifyOtp wrapper đã xử lý axios errors nhưng phòng thêm
             console.error("verifyOtp error:", err);

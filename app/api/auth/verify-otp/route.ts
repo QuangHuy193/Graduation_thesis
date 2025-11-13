@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
         // LẤY OTP CHƯA CONSUMED VÀ CHƯA HẾT HẠN (SO SÁNH Ở DB) VÀ KHÓA HÀNG
         const [rows] = await conn.execute(
-            `SELECT id, otp, attempts, expires_at, consumed, consumed_at, created_at, user_data, UTC_TIMESTAMP() as mysql_now
+            `SELECT id, user_id, otp, attempts, expires_at, consumed, consumed_at, created_at, user_data, UTC_TIMESTAMP() as mysql_now
        FROM otps
        WHERE email = ? AND consumed = 0 AND expires_at > UTC_TIMESTAMP()
        ORDER BY created_at DESC
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
         // debug
         console.log("[verify-otp] record:", {
             id: record.id,
+            user_id: record.user_id,
             created_at: record.created_at,
             expires_at: record.expires_at,
             mysql_now: record.mysql_now,
@@ -50,16 +51,9 @@ export async function POST(req: Request) {
 
         if (!match) {
             // Sai OTP: tăng attempts
-            const [incRes] = await conn.execute(
-                `UPDATE otps SET attempts = attempts + 1 WHERE id = ?`,
-                [record.id]
-            ) as any;
+            await conn.execute(`UPDATE otps SET attempts = attempts + 1 WHERE id = ?`, [record.id]);
 
-            const [updatedRows] = await conn.execute(
-                `SELECT attempts FROM otps WHERE id = ? FOR UPDATE`,
-                [record.id]
-            ) as any;
-
+            const [updatedRows] = await conn.execute(`SELECT attempts FROM otps WHERE id = ? FOR UPDATE`, [record.id]) as any;
             const attemptsAfter = updatedRows[0]?.attempts ?? (record.attempts + 1);
 
             if (attemptsAfter >= MAX_ATTEMPTS) {
@@ -87,12 +81,28 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, message: "OTP đã bị sử dụng/tiêu thụ bởi yêu cầu khác" }, { status: 409 });
         }
 
-        // commit rồi trả về otp id để client hoặc endpoint signup dùng
+        // Nếu có user_id liên kết → cập nhật users.status = 1
+        let activatedUserId: number | null = null;
+        if (record.user_id) {
+            const userId = Number(record.user_id);
+            if (!Number.isNaN(userId)) {
+                const [updateUserRes] = await conn.execute(
+                    `UPDATE users SET status = 1 WHERE user_id = ?`,
+                    [userId]
+                ) as any;
+                console.log("[verify-otp] user-activate affectedRows:", updateUserRes.affectedRows);
+                // Nếu muốn chỉ update khi status khác 1, có thể thêm WHERE user_id = ? AND status <> 1
+                activatedUserId = userId;
+            }
+        }
+
+        // commit rồi trả về otp id và user_id nếu có
         await conn.commit();
         return NextResponse.json({
             success: true,
             message: "Xác thực OTP thành công.",
-            otpId: record.id
+            otpId: record.id,
+            user_id: activatedUserId,
         });
     } catch (err) {
         console.error("Verify OTP error:", err);
@@ -101,6 +111,8 @@ export async function POST(req: Request) {
         }
         return NextResponse.json({ success: false, message: "Không thể xác thực OTP. Vui lòng thử lại." }, { status: 500 });
     } finally {
-        if (conn) conn?.release?.();
+        if (conn) {
+            try { conn.release(); } catch (e) { /* ignore */ }
+        }
     }
 }
