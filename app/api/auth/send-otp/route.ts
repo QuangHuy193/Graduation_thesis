@@ -50,7 +50,6 @@ export async function POST(req: Request) {
                 const existingUser = existing[0];
                 const existingUserId = existingUser.user_id;
                 const existingStatus = Number(existingUser.status);
-
                 if (existingStatus === 0) {
                     // 🟡 User tồn tại nhưng CHƯA kích hoạt → resend OTP
                     const otpPlain = Math.floor(100000 + Math.random() * 900000).toString();
@@ -189,6 +188,19 @@ export async function POST(req: Request) {
             // Lưu ý: vẫn chuyển các OTP trước đó thành consumed để tránh duplicate conflicts
             const otpPlain = Math.floor(100000 + Math.random() * 900000).toString();
             const otpHash = await bcrypt.hash(otpPlain, 10);
+            const [foundUsers] = await conn.execute(
+                `SELECT user_id FROM users WHERE email = ? LIMIT 1`,
+                [email]
+            ) as any;
+
+            let linkedUserId: number | null = null;
+            if (Array.isArray(foundUsers) && foundUsers.length > 0) {
+                // Nếu project của bạn dùng user_id là PK thì dùng trực tiếp
+                linkedUserId = foundUsers[0]?.user_id ?? null;
+                console.log("[send-otp] found existing user for email:", { email, linkedUserId });
+            } else {
+                console.log("[send-otp] no existing user found for email:", email);
+            }
 
             await conn.execute(
                 `UPDATE otps SET consumed = 1, consumed_at = NOW() WHERE email = ? AND consumed = 0`,
@@ -197,8 +209,8 @@ export async function POST(req: Request) {
 
             await conn.execute(
                 `INSERT INTO otps (user_id, email, otp, created_at, expires_at, consumed, attempts)
-         VALUES (NULL, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 5 MINUTE), 0, 0)`,
-                [email, otpHash]
+         VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 5 MINUTE), 0, 0)`,
+                [linkedUserId, email, otpHash]
             );
 
             await conn.commit();

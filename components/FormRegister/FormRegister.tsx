@@ -160,15 +160,25 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
         {/* Confirm password */}
         <div className="my-2.5">
           <div className="pb-1">Xác nhận mật khẩu <span className="text-red-500">*</span></div>
-          <input
-            type={state.showConfirmPass ? "text" : "password"}
-            className="form_input"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            tabIndex={6}
-            placeholder="Nhập lại mật khẩu"
-          />
+          <div className="relative">
+            <input
+              type={state.showConfirmPass ? "text" : "password"}
+              className="form_input"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              tabIndex={6}
+              placeholder="Xác nhận mật khẩu"
+            />
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+              onClick={() => handleToggleVisibility("comfirmPassword")}
+            >
+              <FontAwesomeIcon icon={state.showConfirmPass ? faEyeSlash : faEye} />
+            </button>
+          </div>
         </div>
+
 
         {/* Policy */}
         {/* Policy / checkbox (hiển thị theo state.agreeClause bên parent) */}

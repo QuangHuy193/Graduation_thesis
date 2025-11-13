@@ -28,7 +28,7 @@ function BarTicket() {
   }, []);
   return (
     <div
-      className="w-full bg-(--color-white) rounded-sm flex 
+      className="w-full bg-white rounded-sm flex 
     items-center justify-between px-5 py-4"
     >
       <div>
@@ -50,9 +50,9 @@ function BarTicket() {
           options={
             cinemas?.length > 0
               ? cinemas.map((c: CinemaOnlyCity) => ({
-                  label: c.name,
-                  value: String(c.cinema_id),
-                }))
+                label: c.name,
+                value: String(c.cinema_id),
+              }))
               : []
           }
         />
@@ -72,9 +72,9 @@ function BarTicket() {
             options={
               cinemas?.length > 0
                 ? cinemas.map((c: CinemaOnlyCity) => ({
-                    label: c.name,
-                    value: String(c.cinema_id),
-                  }))
+                  label: c.name,
+                  value: String(c.cinema_id),
+                }))
                 : []
             }
           />
@@ -95,9 +95,9 @@ function BarTicket() {
             options={
               cinemas?.length > 0
                 ? cinemas.map((c: CinemaOnlyCity) => ({
-                    label: c.name,
-                    value: String(c.cinema_id),
-                  }))
+                  label: c.name,
+                  value: String(c.cinema_id),
+                }))
                 : []
             }
           />
@@ -118,9 +118,9 @@ function BarTicket() {
             options={
               cinemas?.length > 0
                 ? cinemas.map((c: CinemaOnlyCity) => ({
-                    label: c.name,
-                    value: String(c.cinema_id),
-                  }))
+                  label: c.name,
+                  value: String(c.cinema_id),
+                }))
                 : []
             }
           />

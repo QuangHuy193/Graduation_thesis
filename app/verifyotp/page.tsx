@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { verifyOtp } from "@/lib/axios/verifyOtpAPI";
 import { sendOtp } from "@/lib/axios/sendotpAPI";
-
 import { useSearchParams, useRouter } from "next/navigation";
 import Button from "@/components/Button/Button";
 export default function VerifyOtp() {
@@ -87,13 +86,18 @@ export default function VerifyOtp() {
                     return;
                 }
 
-                router.push("/login"); // hoặc router.push("/login") tuỳ flow
+                // chuyển về login sau khi hiện message thành công (600ms)
+                setTimeout(() => {
+                    // replace để không cho user back về trang OTP
+                    router.replace("/login");
+                }, 600);
+
                 return;
-            } else {
-                const attemptsMsg = (data as any).attempts ? ` Số lần thử: ${(data as any).attempts}.` : "";
-                setMsg({ type: "error", text: data.message || ("OTP không hợp lệ." + attemptsMsg) });
             }
 
+            // Nếu success === false (VerifyOtpFail)
+            const attemptsMsg = (data as any).attempts ? ` Số lần thử: ${(data as any).attempts}.` : "";
+            setMsg({ type: "error", text: data.message || ("OTP không hợp lệ." + attemptsMsg) });
         } catch (err: any) {
             // verifyOtp wrapper đã xử lý axios errors nhưng phòng thêm
             console.error("verifyOtp error:", err);

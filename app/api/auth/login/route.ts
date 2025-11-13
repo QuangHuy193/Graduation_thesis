@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt, { Secret } from "jsonwebtoken";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
 import { successResponse, errorResponse } from "@/lib/function";
-import { checkUserStatus } from "@/lib/axios/checkUserStatusAPI";
+
 const JWT_EXPIRES_IN = "7d"; // hoặc "1h" tuỳ nhu cầu
 
 type LoginReq = {

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
         // LẤY OTP CHƯA CONSUMED VÀ CHƯA HẾT HẠN (SO SÁNH Ở DB) VÀ KHÓA HÀNG
         const [rows] = await conn.execute(
-            `SELECT id, user_id, otp, attempts, expires_at, consumed, consumed_at, created_at, user_data, UTC_TIMESTAMP() as mysql_now
+            `SELECT id, user_id, otp, attempts, expires_at, consumed, consumed_at, created_at, UTC_TIMESTAMP() as mysql_now
        FROM otps
        WHERE email = ? AND consumed = 0 AND expires_at > UTC_TIMESTAMP()
        ORDER BY created_at DESC
