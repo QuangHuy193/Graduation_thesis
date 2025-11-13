@@ -14,7 +14,7 @@ import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
-import { getCinemasWithCity } from "@/lib/axios/cinemasAPI";
+import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
 
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
@@ -30,7 +30,7 @@ function Header() {
   // ✅ Lấy danh sách rạp
   useEffect(() => {
     const getCinemas = async () => {
-      const res = await getCinemasWithCity();
+      const res = await getCinemasWithCityAPI();
       setCinemas(res.data);
     };
     getCinemas();

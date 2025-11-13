@@ -1,4 +1,5 @@
 "use client";
+import BarTicket from "@/components/BarTicket/BarTicket";
 import MovieList from "@/components/MovieList/MovieList";
 import PromotionList from "@/components/PromotionList/PromotionList";
 const dataF = [
@@ -55,11 +56,17 @@ const dataF = [
 ];
 
 const dataF2 = ["/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp"];
+
 export default function Home() {
   return (
     <div>
       <div className="px-10 bg ">
         <div className="h-(--width-header)"></div>
+
+        <div>
+          <BarTicket />
+        </div>
+
         <div>
           <div className="pb-[50px]">
             <MovieList
