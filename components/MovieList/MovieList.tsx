@@ -86,7 +86,7 @@ function MovieList({
       </div>
 
       {/* Dots */}
-      <div className="w-full flex justify-center p-2 space-x-2">
+      <div className="w-full flex justify-center p-2 gap-2">
         {Array.from({ length: totalPages }).map((_, i) => (
           <button
             key={i}

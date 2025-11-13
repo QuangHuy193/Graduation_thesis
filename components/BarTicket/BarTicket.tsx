@@ -39,28 +39,44 @@ function BarTicket() {
       <div className="flex gap-2">
         <Select
           className={styles.select}
-          dropdownClassName="my-custom-dropdown"
+          classNames={{
+            popup: {
+              root: "my-custom-dropdown",
+            },
+          }}
           placeholder="Chọn rạp"
           value={valueSelected.cinema || undefined}
           onChange={(v) => setValueSelected((p) => ({ ...p, cinema: v }))}
-          options={cinemas.map((c: CinemaOnlyCity) => ({
-            label: c.name,
-            value: String(c.cinema_id),
-          }))}
+          options={
+            cinemas?.length > 0
+              ? cinemas.map((c: CinemaOnlyCity) => ({
+                  label: c.name,
+                  value: String(c.cinema_id),
+                }))
+              : []
+          }
         />
 
         {/* phim */}
         <div>
           <Select
             className={styles.select}
-            dropdownClassName="my-custom-dropdown"
+            classNames={{
+              popup: {
+                root: "my-custom-dropdown",
+              },
+            }}
             placeholder="Chọn phim"
             value={valueSelected.movie || undefined}
             onChange={(v) => setValueSelected((p) => ({ ...p, movie: v }))}
-            options={cinemas.map((c: CinemaOnlyCity) => ({
-              label: c.name,
-              value: String(c.cinema_id),
-            }))}
+            options={
+              cinemas?.length > 0
+                ? cinemas.map((c: CinemaOnlyCity) => ({
+                    label: c.name,
+                    value: String(c.cinema_id),
+                  }))
+                : []
+            }
           />
         </div>
 
@@ -68,14 +84,22 @@ function BarTicket() {
         <div>
           <Select
             className={styles.select}
-            dropdownClassName="my-custom-dropdown"
+            classNames={{
+              popup: {
+                root: "my-custom-dropdown",
+              },
+            }}
             placeholder="Chọn ngày"
             value={valueSelected.date || undefined}
             onChange={(v) => setValueSelected((p) => ({ ...p, date: v }))}
-            options={cinemas.map((c: CinemaOnlyCity) => ({
-              label: c.name,
-              value: String(c.cinema_id),
-            }))}
+            options={
+              cinemas?.length > 0
+                ? cinemas.map((c: CinemaOnlyCity) => ({
+                    label: c.name,
+                    value: String(c.cinema_id),
+                  }))
+                : []
+            }
           />
         </div>
 
@@ -83,14 +107,22 @@ function BarTicket() {
         <div>
           <Select
             className={styles.select}
-            dropdownClassName="my-custom-dropdown"
+            classNames={{
+              popup: {
+                root: "my-custom-dropdown",
+              },
+            }}
             placeholder="Chọn suất"
             value={valueSelected.times || undefined}
             onChange={(v) => setValueSelected((p) => ({ ...p, times: v }))}
-            options={cinemas.map((c: CinemaOnlyCity) => ({
-              label: c.name,
-              value: String(c.cinema_id),
-            }))}
+            options={
+              cinemas?.length > 0
+                ? cinemas.map((c: CinemaOnlyCity) => ({
+                    label: c.name,
+                    value: String(c.cinema_id),
+                  }))
+                : []
+            }
           />
         </div>
         <div>

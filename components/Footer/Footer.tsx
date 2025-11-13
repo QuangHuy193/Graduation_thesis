@@ -92,7 +92,7 @@ function Footer() {
         <div>
           <div className={`${styles.ft_title}`}>HỆ THỐNG RẠP</div>
           <div className="flex flex-col">
-            {cinemas.length > 0 &&
+            {cinemas?.length > 0 &&
               cinemas.map((cinema) => (
                 <Link
                   href={`/cinema/${cinema.cinema_id}`}
