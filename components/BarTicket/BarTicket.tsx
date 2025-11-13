@@ -21,7 +21,7 @@ function BarTicket() {
   useEffect(() => {
     const getDataCinemas = async () => {
       const res = await getCinemasWithCityAPI();
-      setCinemas(res.data);
+      setCinemas(res);
     };
 
     getDataCinemas();
