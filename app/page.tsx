@@ -54,25 +54,37 @@ const dataF = [
   },
 ];
 
-const dataF2 = ["/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp"];
+const dataF2 = ["/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp"];
 export default function Home() {
   return (
     <div>
       <div className="px-10 bg ">
         <div className="h-(--width-header)"></div>
         <div>
-          <div>
+          <div className="pb-[50px]">
             <MovieList
               data={dataF}
               title="PHIM ĐANG CHIẾU"
               link="/movie/showing"
             />
           </div>
-          <div>
-            <PromotionList data={dataF2} title="KHUYẾN MÃI" />
+
+          <div className="pb-[50px]">
+            <MovieList
+              data={dataF}
+              title="PHIM SẮP CHIẾU"
+              link="/movie/upcoming"
+            />
+          </div>
+
+          <div className="pb-[50px]">
+            <PromotionList
+              data={dataF2}
+              title="KHUYẾN MÃI"
+              link={"/promotions"}
+            />
           </div>
         </div>
-        <div></div>
       </div>
     </div>
   );

@@ -94,7 +94,6 @@ body {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(31, 41, 55, 0.9); /* bg-gray-800/90 */
   color: #fff;
   padding: 0.5rem;
   border-radius: 9999px;

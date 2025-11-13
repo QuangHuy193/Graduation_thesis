@@ -6,13 +6,12 @@ import {
   faChevronLeft,
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
-import styles from "./MovieList.module.scss";
 import Button from "../Button/Button";
 
 function MovieList({
   data,
   title,
-  link,
+  link = "",
 }: {
   data: MovieItemITF[];
   title: string;

@@ -21,12 +21,12 @@ function MovieItem({ data }: { data: MovieItemITF }) {
           width={250}
           height={50}
           alt={data.name}
-          className="w-full cursor-pointer"
+          className="w-full cursor-pointer rounded-sm"
         />
 
         <div
           className="absolute top-0 left-0 text-xl font-bold px-2 py-1 bg-red-500
-        group-hover:opacity-0 transition-opacity duration-300 ease-in-out"
+        group-hover:opacity-0 transition-opacity duration-300 ease-in-out rounded-tl-sm"
         >
           T{data.age}
         </div>

@@ -10,7 +10,7 @@ import {
 function PromotionList({
   data,
   title,
-  link,
+  link = "",
 }: {
   data: string[];
   title: string;
@@ -62,7 +62,7 @@ function PromotionList({
                     <div className="grid grid-cols-3 gap-6">
                       {slice.map((img, index) => (
                         <div key={index}>
-                          <PromotionItem image={img} />
+                          <PromotionItem image={img} link={link} />
                         </div>
                       ))}
                     </div>
@@ -100,7 +100,7 @@ function PromotionList({
       </div>
 
       <div className="w-full flex justify-center pt-3 pb-5">
-        <Button text="XEM THÊM" p_l_r="80px" link={link} />
+        <Button text="XEM THÊM" p_l_r="80px" link={link} text_size="15px" />
       </div>
     </div>
   );
