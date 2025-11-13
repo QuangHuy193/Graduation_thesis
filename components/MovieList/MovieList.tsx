@@ -9,7 +9,15 @@ import {
 import styles from "./MovieList.module.scss";
 import Button from "../Button/Button";
 
-function MovieList({ data, title }: { data: MovieItemITF[]; title: string }) {
+function MovieList({
+  data,
+  title,
+  link,
+}: {
+  data: MovieItemITF[];
+  title: string;
+  link: string;
+}) {
   const [page, setPage] = useState(0);
   const pageSize = 4;
 
@@ -100,10 +108,11 @@ function MovieList({ data, title }: { data: MovieItemITF[]; title: string }) {
           bg_color="transparent"
           text_color="--color-yellow"
           border="var(--color-yellow) 1px solid"
-          p_l_r="60px"
+          p_l_r="80px"
           text_size="15px"
           hover_text_color="--color-white"
           hover_bg_color="#FF9933"
+          link={link}
         />
       </div>
     </div>

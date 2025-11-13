@@ -58,7 +58,11 @@ export default function Home() {
       <div className="px-10 bg ">
         <div className="h-(--width-header)"></div>
         <div>
-          <MovieList data={dataF} title="PHIM ĐANG CHIẾU" />
+          <MovieList
+            data={dataF}
+            title="PHIM ĐANG CHIẾU"
+            link="/movie/showing"
+          />
         </div>
         <div></div>
       </div>
