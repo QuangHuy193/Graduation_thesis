@@ -104,25 +104,22 @@ export default function Button({
   // Nếu có link -> render Link (a) styled as button (không render <button> bên trong <a>)
   if (link && link.trim() !== "") {
     return (
-      <Link href={link} legacyBehavior>
-        <a
-          role="button"
-          aria-disabled={disabled}
-          className={cn(baseClass, fullClass, disabledClass, className)}
-          style={baseStyle}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          // nếu disabled, ngăn chặn nhấp chuột
-          onClick={(e) => {
-            if (disabled) e.preventDefault();
-          }}
-          {...(rest as any)}
-        >
-          {icon && (
-            <FontAwesomeIcon icon={icon} className="mr-2 relative z-10" />
-          )}
-          <span className="relative z-10">{text ?? children}</span>
-        </a>
+      <Link
+        href={link}
+        role="button"
+        aria-disabled={disabled}
+        className={cn(baseClass, fullClass, disabledClass, className)}
+        style={baseStyle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        // nếu disabled, ngăn chặn nhấp chuột
+        onClick={(e) => {
+          if (disabled) e.preventDefault();
+        }}
+        {...(rest as any)}
+      >
+        {icon && <FontAwesomeIcon icon={icon} className="mr-2 relative z-10" />}
+        <span className="relative z-10">{text ?? children}</span>
       </Link>
     );
   }

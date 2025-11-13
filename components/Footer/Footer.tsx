@@ -5,7 +5,7 @@ import Image from "next/image";
 import Button from "../Button/Button";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
-import { getCinemasWithCity } from "@/lib/axios/cinemasAPI";
+import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFacebook,
@@ -17,7 +17,7 @@ function Footer() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
   useEffect(() => {
     const getCinemas = async () => {
-      const res = await getCinemasWithCity();
+      const res = await getCinemasWithCityAPI();
       setCinemas(res);
     };
     getCinemas();
@@ -92,7 +92,7 @@ function Footer() {
         <div>
           <div className={`${styles.ft_title}`}>HỆ THỐNG RẠP</div>
           <div className="flex flex-col">
-            {cinemas.length > 0 &&
+            {cinemas?.length > 0 &&
               cinemas.map((cinema) => (
                 <Link
                   href={`/cinema/${cinema.cinema_id}`}

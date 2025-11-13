@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export async function getCinemasWithCity() {
+export async function getCinemasWithCityAPI() {
   try {
     const response = await axios.get("/api/cinemas");
     return response.data;

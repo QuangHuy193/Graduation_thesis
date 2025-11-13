@@ -14,7 +14,7 @@ import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
-
+import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
 
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
@@ -28,10 +28,20 @@ function Header() {
     exp?: number;
   }
 
+  // ✅ Lấy danh sách rạp
+  useEffect(() => {
+    const getCinemas = async () => {
+      const res = await getCinemasWithCityAPI();
+      setCinemas(res);
+    };
+    getCinemas();
+  }, []);
+
   // ✅ Kiểm tra user login (token + user info)
   useEffect(() => {
     try {
-      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      const token =
+        localStorage.getItem("token") || sessionStorage.getItem("token");
       if (token) {
         const decoded = jwtDecode<JwtPayload>(token);
         if (decoded && decoded.name) {
@@ -146,7 +156,8 @@ function Header() {
                   className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
                 >
-                  {Array.isArray(cinemas) && cinemas.length > 0 &&
+                  {Array.isArray(cinemas) &&
+                    cinemas.length > 0 &&
                     cinemas.map((cinema: CinemaOnlyCity) => (
                       <Link
                         href={`/cinema/${cinema.cinema_id}`}
@@ -155,9 +166,7 @@ function Header() {
                       >
                         {cinema.name} ({cinema.province})
                       </Link>
-                    ))
-                  }
-
+                    ))}
                 </div>
               }
             >

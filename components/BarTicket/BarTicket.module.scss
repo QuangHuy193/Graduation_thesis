@@ -1,0 +1,19 @@
+.select {
+  :global(.ant-select-selector) {
+    color: var(--color-purple) !important;
+    width: 170px !important;
+    font-weight: bold !important;
+  }
+
+  :global(.ant-select-selection-placeholder),
+  :global(.ant-select-selection-item) {
+    color: var(--color-purple) !important;
+    font-weight: bold !important;
+  }
+}
+
+:global(.my-custom-dropdown) {
+  width: auto !important;
+  min-width: auto !important;
+  max-width: max-content !important;
+}
