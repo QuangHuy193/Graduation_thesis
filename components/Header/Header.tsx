@@ -31,7 +31,7 @@ function Header() {
   // ✅ Kiểm tra user login (token + user info)
   useEffect(() => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
       if (token) {
         const decoded = jwtDecode<JwtPayload>(token);
         if (decoded && decoded.name) {

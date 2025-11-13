@@ -62,8 +62,15 @@ export default function FormLogin({
 
         if (data.token) {
           try {
-            localStorage.setItem("token", data.token);
-          } catch { }
+            if (state.saveLogin) {
+              localStorage.setItem("token", data.token); // giữ lâu dài
+            } else {
+              sessionStorage.setItem("token", data.token); // chỉ trong session/tab
+            }
+          } catch (err) {
+            // optional: log lỗi storage (VD: private mode)
+            console.warn("Storage error:", err);
+          }
         }
 
 
