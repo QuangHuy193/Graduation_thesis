@@ -66,3 +66,78 @@ body {
   border-color: black;
 }
 /* end login, register page */
+
+/* start  movieList, promotionList page */
+/* Viewport: ẩn overflow, giữ chiều ngang */
+.sliderViewport {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Track: flex row, sẽ dịch chuyển theo translateX */
+.sliderTrack {
+  display: flex;
+  /* chuyển mượt, easing đẹp cho slide */
+  transition: transform 600ms cubic-bezier(0.22, 0.8, 0.26, 1);
+  will-change: transform;
+}
+
+/* Mỗi slide bằng 100% viewport (chứa 4 item) */
+.slide {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+}
+
+/* Buttons base */
+.btn_move_slider {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  padding: 0.5rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.25);
+  z-index: 9;
+  cursor: pointer;
+  border: none;
+  transition: transform 180ms ease, background 180ms ease, opacity 180ms ease;
+  width: 40px;
+  height: 40px;
+}
+
+.slideInner {
+  /* same horizontal spacing as mx-10 (2.5rem) */
+  padding: 0 2.5rem;
+  box-sizing: border-box;
+}
+
+.btn_move_slider:hover {
+  transform: translateY(-50%) scale(1.05);
+  background: rgba(17, 24, 39, 1); /* hover darker */
+}
+
+.btn_move_slider:disabled {
+  opacity: 0.28;
+  cursor: auto;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Vị trí trái / phải (thêm class từ jsx) */
+.left {
+  left: 8px;
+}
+
+.right {
+  right: 8px;
+}
+
+/* Tùy chỉnh icon kích thước nếu cần */
+.btn_move_slider svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+/* end movieList, promotionList page */
