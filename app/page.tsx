@@ -15,7 +15,6 @@ export default function Home() {
       try {
         const res = await getMovieShowingBanerAPI();
         setBannerMovieShowng(res);
-        //console.log(res);
       } catch (error) {
         console.log(error);
       }
