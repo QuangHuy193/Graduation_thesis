@@ -1,23 +1,25 @@
 export interface MovieFullITF {
-  id: number;
+  movie_id: number;
   name: string;
   image: string;
+  trailer_url: string;
   description: string;
-  age: number;
+  release_date: Date;
+  age_require: number;
   contruy: string;
   subtitle: string;
   duration: number;
-  genre: string[];
-  actor: string[];
+  genres: string[];
+  actors: string[];
 }
 
 export interface MovieItemITF {
-  id: number;
+  movie_id: number;
   name: string;
   image: string;
-  age: number;
+  age_require: number;
   contruy: string;
   subtitle: string;
   duration: number;
-  genre: string[];
+  genres: string[];
 }

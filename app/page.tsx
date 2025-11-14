@@ -2,62 +2,28 @@
 import BarTicket from "@/components/BarTicket/BarTicket";
 import MovieList from "@/components/MovieList/MovieList";
 import PromotionList from "@/components/PromotionList/PromotionList";
-const dataF = [
-  {
-    id: 1,
-    image: "/trai-tim-que-quat-poster.webp",
-    name: "Trái tim què quặt Phần 22222",
-    age: 16,
-    contruy: "Việt Nam",
-    subtitle: "Tiếng Việt",
-    duration: 120,
-    genre: ["Hồi hộp", "Tâm lý"],
-  },
-  {
-    id: 2,
-    image: "/trai-tim-que-quat-poster.webp",
-    name: "Trái tim què quặt",
-    age: 16,
-    contruy: "Việt Nam",
-    subtitle: "Tiếng Việt",
-    duration: 120,
-    genre: ["Hồi hộp", "Tâm lý"],
-  },
-  {
-    id: 3,
-    image: "/trai-tim-que-quat-poster.webp",
-    name: "Trái tim què quặt",
-    age: 16,
-    contruy: "Việt Nam",
-    subtitle: "Tiếng Việt",
-    duration: 120,
-    genre: ["Hồi hộp", "Tâm lý"],
-  },
-  {
-    id: 4,
-    image: "/trai-tim-que-quat-poster.webp",
-    name: "Trái tim què quặt",
-    age: 16,
-    contruy: "Việt Nam",
-    subtitle: "Tiếng Việt",
-    duration: 120,
-    genre: ["Hồi hộp", "Tâm lý"],
-  },
-  {
-    id: 5,
-    image: "/trai-tim-que-quat-poster.webp",
-    name: "Trái tim què quặt",
-    age: 16,
-    contruy: "Việt Nam",
-    subtitle: "Tiếng Việt",
-    duration: 120,
-    genre: ["Hồi hộp", "Tâm lý"],
-  },
-];
+import { getMovieShowingBanerAPI } from "@/lib/axios/movieAPI";
+import { useEffect, useState } from "react";
 
 const dataF2 = ["/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp"];
 
 export default function Home() {
+  const [bannerMovieShowng, setBannerMovieShowng] = useState([]);
+
+  useEffect(() => {
+    const getMovieShowingBaner = async () => {
+      try {
+        const res = await getMovieShowingBanerAPI();
+        setBannerMovieShowng(res);
+        //console.log(res);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getMovieShowingBaner();
+  }, []);
+
   return (
     <div>
       <div>
@@ -68,19 +34,19 @@ export default function Home() {
         <div>
           <div className="pb-[50px]">
             <MovieList
-              data={dataF}
+              data={bannerMovieShowng}
               title="PHIM ĐANG CHIẾU"
               link="/movie/showing"
             />
           </div>
 
-          <div className="pb-[50px]">
+          {/* <div className="pb-[50px]">
             <MovieList
-              data={dataF}
+              data={bannerMovieShowng}
               title="PHIM SẮP CHIẾU"
               link="/movie/upcoming"
             />
-          </div>
+          </div> */}
 
           <div className="pb-[50px]">
             <PromotionList

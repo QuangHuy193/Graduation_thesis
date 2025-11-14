@@ -63,7 +63,7 @@ function MovieList({
                   <div className={`slideInner`}>
                     <div className="grid grid-cols-4 gap-6">
                       {slice.map((movie) => (
-                        <div key={movie.id}>
+                        <div key={movie.movie_id}>
                           <MovieItem data={movie} />
                         </div>
                       ))}

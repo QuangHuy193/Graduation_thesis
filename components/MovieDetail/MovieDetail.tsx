@@ -10,7 +10,7 @@ function MovieDetail({ data }: { data: MovieFullITF }) {
       </div>
       <div className="flex-6">
         <div>
-          {data.name} (T{data.age})
+          {data.name} (T{data.age_require})
         </div>
         <div>
           <div></div>
@@ -31,8 +31,8 @@ function MovieDetail({ data }: { data: MovieFullITF }) {
         <div>
           <div></div>
           <div>
-            T{data.age}: Phim dành cho khán giả từ đủ {data.age} tuổi trở lên (
-            {data.age}+)
+            T{data.age_require}: Phim dành cho khán giả từ đủ {data.age_require}{" "}
+            tuổi trở lên ({data.age_require}+)
           </div>
         </div>
         <div>MÔ TẢ</div>

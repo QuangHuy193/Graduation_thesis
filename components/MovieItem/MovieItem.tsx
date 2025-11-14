@@ -28,10 +28,10 @@ function MovieItem({ data }: { data: MovieItemITF }) {
           className="absolute top-0 left-0 text-xl font-bold px-2 py-1 bg-red-500
         group-hover:opacity-0 transition-opacity duration-300 ease-in-out rounded-tl-sm"
         >
-          T{data.age}
+          T{data.age_require}
         </div>
 
-        <Link href={`/movie/${data.id}`}>
+        <Link href={`/movie/${data.movie_id}`}>
           <div
             className="cursor-pointer absolute top-0 left-0 right-0 bottom-0 flex 
           items-center justify-center bg-linear-to-t from-black
@@ -40,7 +40,7 @@ function MovieItem({ data }: { data: MovieItemITF }) {
           >
             <div className="flex flex-col px-5 ">
               <div className="uppercase font-bold text-[18px] pb-4">
-                {data.name} (T{data.age})
+                {data.name} (T{data.age_require})
               </div>
               <div>
                 <FontAwesomeIcon
@@ -48,10 +48,10 @@ function MovieItem({ data }: { data: MovieItemITF }) {
                   className={`${styles.icon_item}`}
                 />
                 <span className={`${styles.text_item}`}>
-                  {data.genre.map((g, i) => (
+                  {data?.genres?.map((g, i) => (
                     <span key={i}>
                       {g}
-                      {i < data.genre.length - 1 && " , "}
+                      {i < data.genres.length - 1 && " , "}
                     </span>
                   ))}
                 </span>
@@ -87,8 +87,8 @@ function MovieItem({ data }: { data: MovieItemITF }) {
         className="uppercase hover:text-(--color-yellow) font-bold flex justify-center
         cursor-pointer pt-5 pb-18 text-xl text-center min-h-[90px]"
       >
-        <Link href={`/movie/${data.id}`}>
-          {data.name} (T{data.age})
+        <Link href={`/movie/${data.movie_id}`}>
+          {data.name} (T{data.age_require})
         </Link>
       </div>
       <div className="flex gap-2 pb-5 absolute left-0 right-0 bottom-0">
@@ -96,7 +96,7 @@ function MovieItem({ data }: { data: MovieItemITF }) {
           <WatchTrailer size="s" />
         </div>
         <div className="flex-1">
-          <Button text="ĐẶT VÉ" wfull={true} />
+          <Button text="ĐẶT VÉ" wfull={true} link={`/movie/${data.movie_id}`} />
         </div>
       </div>
     </div>
