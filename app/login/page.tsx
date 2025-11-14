@@ -53,7 +53,6 @@ export default function Login() {
       className="pl-32 pr-32 text-black pb-20
       bg-[linear-gradient(180deg,var(--color-blue-black)_0%,#2b3b5e_100%)]"
     >
-      <div className="h-(--width-header)"></div>
       <div className="w-[500px]">
         <div className="flex w-full ">
           <div

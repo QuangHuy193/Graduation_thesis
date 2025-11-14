@@ -61,8 +61,6 @@ export default function Home() {
   return (
     <div>
       <div className="px-10 bg ">
-        <div className="h-(--width-header)"></div>
-
         <div>
           <BarTicket />
         </div>

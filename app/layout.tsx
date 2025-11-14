@@ -20,6 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Header />
+        <div className="h-(--width-header)"></div>
         <main>{children}</main>
         <Footer />
       </body>
