@@ -115,13 +115,9 @@ function Header() {
                    opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 
                    transition-all duration-300 min-w-[100px] z-50"
                 >
-                  <button
-                    onClick={handleLogout}
-                    className={styles.logoutBtn}
-                  >
+                  <button onClick={handleLogout} className={styles.logoutBtn}>
                     Đăng xuất
                   </button>
-
                 </div>
               </div>
             ) : (

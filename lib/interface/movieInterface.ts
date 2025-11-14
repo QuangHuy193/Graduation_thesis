@@ -7,7 +7,8 @@ export interface MovieFullITF {
   contruy: string;
   subtitle: string;
   duration: number;
-  genre: Array<string>;
+  genre: string[];
+  actor: string[];
 }
 
 export interface MovieItemITF {
@@ -18,5 +19,5 @@ export interface MovieItemITF {
   contruy: string;
   subtitle: string;
   duration: number;
-  genre: Array<string>;
+  genre: string[];
 }

@@ -60,7 +60,7 @@ const dataF2 = ["/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp"];
 export default function Home() {
   return (
     <div>
-      <div className="px-10 bg ">
+      <div>
         <div>
           <BarTicket />
         </div>

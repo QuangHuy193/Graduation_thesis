@@ -50,7 +50,7 @@ export default function Login() {
 
   return (
     <div
-      className="pl-32 pr-32 text-black pb-20
+      className=" text-black pb-20
       bg-[linear-gradient(180deg,var(--color-blue-black)_0%,#2b3b5e_100%)]"
     >
       <div className="w-[500px]">

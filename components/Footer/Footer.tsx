@@ -24,7 +24,7 @@ function Footer() {
   }, []);
   return (
     <footer
-      className="text-white px-32 w-full pt-[70px] pb-5
+      className="text-white px-10 w-full pt-[70px] pb-5
     bg-[linear-gradient(90deg,#62368e_0%,#5395e1_100%)]"
     >
       <div className="grid grid-cols-4 gap-2">
