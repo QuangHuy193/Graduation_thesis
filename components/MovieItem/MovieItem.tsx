@@ -70,7 +70,7 @@ function MovieItem({ data }: { data: MovieItemITF }) {
                   icon={faEarth}
                   className={`${styles.icon_item}`}
                 />
-                <span className={`${styles.text_item}`}>{data.contruy}</span>
+                <span className={`${styles.text_item}`}>{data.country}</span>
               </div>
               <div>
                 <FontAwesomeIcon

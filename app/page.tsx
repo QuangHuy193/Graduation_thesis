@@ -14,6 +14,7 @@ export default function Home() {
     const getMovieShowingBaner = async () => {
       try {
         const res = await getMovieShowingBanerAPI();
+        console.log(res);
         setBannerMovieShowng(res);
       } catch (error) {
         console.log(error);
@@ -39,13 +40,13 @@ export default function Home() {
             />
           </div>
 
-          {/* <div className="pb-[50px]">
+          <div className="pb-[50px]">
             <MovieList
               data={bannerMovieShowng}
               title="PHIM SẮP CHIẾU"
               link="/movie/upcoming"
             />
-          </div> */}
+          </div>
 
           <div className="pb-[50px]">
             <PromotionList

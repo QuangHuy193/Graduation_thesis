@@ -6,7 +6,7 @@ export interface MovieFullITF {
   description: string;
   release_date: Date;
   age_require: number;
-  contruy: string;
+  country: string;
   subtitle: string;
   duration: number;
   genres: string[];
@@ -18,7 +18,7 @@ export interface MovieItemITF {
   name: string;
   image: string;
   age_require: number;
-  contruy: string;
+  country: string;
   subtitle: string;
   duration: number;
   genres: string[];

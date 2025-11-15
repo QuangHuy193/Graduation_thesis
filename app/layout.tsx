@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import "antd/dist/reset.css";
 import "./globals.css";
 import "./fontawesome.ts";
 
