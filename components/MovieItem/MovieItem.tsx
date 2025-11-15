@@ -1,5 +1,7 @@
 import { MovieItemITF } from "@/lib/interface/movieInterface";
 import Image from "next/image";
+import CloudImage from "../CloudImage/CloudImage";
+import { cloudinaryUrlFromPublicId } from "@/lib/cloudinary";
 import WatchTrailer from "../Button/WatchTrailer";
 import Button from "../Button/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,19 +13,30 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MovieItem.module.scss";
 import Link from "next/link";
+const PLACEHOLDER = "/images/placeholder-vertical.png"; // đặt file placeholder public trong /public/images
 
+function resolveImageSrc(image?: string | null) {
+  if (!image) return PLACEHOLDER;
+  // nếu image đã là URL (bắt đầu bằng http/https) -> trả luôn
+  if (/^https?:\/\//.test(image)) return image;
+  // ngược lại coi như là public_id
+  return cloudinaryUrlFromPublicId(image, { w: 600, h: 900, crop: "fill" });
+}
 function MovieItem({ data }: { data: MovieItemITF }) {
+  const src = "https://res.cloudinary.com/dirw1jv5k/image/upload/v1763224316/p4l9yfhhqiedzqfcklho.jpg";
   return (
     <div className="h-full relative">
       <div className="relative group">
-        <Image
-          src={data.image}
+        {/* <Image
+          src={src}
           width={250}
           height={50}
           alt={data.name}
           className="w-full cursor-pointer rounded-sm"
+        /> */}
+        <CloudImage
+          src={src}
         />
-
         <div
           className="absolute top-0 left-0 text-xl font-bold px-2 py-1 bg-red-500
         group-hover:opacity-0 transition-opacity duration-300 ease-in-out rounded-tl-sm"

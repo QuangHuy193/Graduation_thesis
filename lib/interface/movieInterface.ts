@@ -1,7 +1,7 @@
 export interface MovieFullITF {
   id: number;
   name: string;
-  image: string;
+  image?: string | null;
   description: string;
   age: number;
   contruy: string;
@@ -13,7 +13,7 @@ export interface MovieFullITF {
 export interface MovieItemITF {
   id: number;
   name: string;
-  image: string;
+  image?: string | null;
   age: number;
   contruy: string;
   subtitle: string;

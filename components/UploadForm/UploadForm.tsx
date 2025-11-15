@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import styles from "./UploadForm.module.scss";
+import FilmDatalist from "@/components/FilmDataList/FilmDatalist";
+import { uploadToCloudinary } from "@/lib/axios/uploadCloudinaryAPI";
+import { saveImageToDB } from "@/lib/axios/saveImageToDB";
 
 type Message = { type: "error" | "success"; text: string } | null;
 
@@ -11,15 +14,6 @@ type UploadedImage = {
     caption?: string | null;
 } | null;
 
-type UploadApiResponse = {
-    success?: boolean;
-    insertId?: number | null;
-    image?: { url: string; public_id: string; caption?: string | null };
-    url?: string;
-    error?: string;
-    details?: string;
-};
-
 export default function UploadForm() {
     const [file, setFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
@@ -27,6 +21,8 @@ export default function UploadForm() {
     const [loading, setLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<Message>(null);
     const [uploaded, setUploaded] = useState<UploadedImage>(null);
+    const [movieId, setMovieId] = useState<number | null>(null);
+    const [progress, setProgress] = useState<number>(0);
 
     useEffect(() => {
         return () => {
@@ -52,40 +48,66 @@ export default function UploadForm() {
 
         setLoading(true);
         setMessage(null);
+        setProgress(0);
 
         try {
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("caption", caption);
+            // 1) Upload lên Cloudinary
+            const cloudData = await uploadToCloudinary(file, {
+                onUploadProgress: (p) => setProgress(p),
+                // folder: 'movies' // nếu muốn
+            });
 
-            const res = await fetch("/api/cloudinary", { method: "POST", body: formData });
-            const data: UploadApiResponse = await res.json().catch(() => ({} as UploadApiResponse));
+            const url = cloudData.secure_url;
+            const public_id = cloudData.public_id;
 
-            if (!res.ok) {
-                setMessage({
-                    type: "error",
-                    text: data?.error || data?.details || "Upload thất bại",
-                });
-                return;
+            // 2) Lưu vào DB bằng axios helper
+            const savePayload = {
+                url,
+                public_id,
+                movie_id: movieId ?? null,
+                type: caption ? "gallery" : "poster",
+            };
+
+            const saveRes = await saveImageToDB(savePayload);
+
+            // axios sẽ throw nếu HTTP 4xx/5xx, nhưng server có thể trả success: false
+            if (!saveRes || !saveRes.success) {
+                throw new Error((saveRes as any)?.error ?? "Save to DB failed");
             }
 
             setMessage({ type: "success", text: "Upload & lưu thành công!" });
-            setUploaded(data.image ?? { url: data.url ?? null, caption });
+            setUploaded({ url, public_id, caption });
 
+            // reset form
             setFile(null);
             if (preview) URL.revokeObjectURL(preview);
             setPreview(null);
             setCaption("");
-        } catch (err) {
-            setMessage({ type: "error", text: String(err) });
+            setMovieId(null);
+        } catch (err: any) {
+            // axios error handling
+            const text = err?.response?.data?.error ?? err?.message ?? String(err);
+            setMessage({ type: "error", text });
         } finally {
             setLoading(false);
+            setProgress(0);
         }
     }
 
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Upload ảnh</h2>
+
+            <div style={{ marginBottom: 12 }}>
+                <label className="block text-sm font-medium mb-1">Gán cho phim (tuỳ chọn)</label>
+                <FilmDatalist
+                    placeholder="Gõ tên phim..."
+                    onSelect={(id) => {
+                        setMovieId(id);
+                    }}
+                />
+                <div className="text-xs text-gray-500 mt-1">Movie ID hiện tại: {movieId ?? "-"}</div>
+            </div>
 
             <form onSubmit={handleSubmit}>
                 <div className={styles.formGroup}>
@@ -114,16 +136,21 @@ export default function UploadForm() {
                     />
                 </div>
 
+                {progress > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                        <div style={{ height: 8, background: "#eee", borderRadius: 6, overflow: "hidden" }}>
+                            <div style={{ width: `${progress}%`, height: "100%", background: "#06f" }} />
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">{progress}%</div>
+                    </div>
+                )}
+
                 <button type="submit" className={styles.button} disabled={loading}>
                     {loading ? "Đang upload..." : "Upload và Lưu"}
                 </button>
             </form>
 
-            {message && (
-                <div className={`${styles.message} ${styles[message.type]}`}>
-                    {message.text}
-                </div>
-            )}
+            {message && <div className={`${styles.message} ${styles[message?.type ?? ""]}`}>{message.text}</div>}
 
             {uploaded && uploaded.url && (
                 <div className={styles.uploaded}>
