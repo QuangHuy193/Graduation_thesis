@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
 
-
 export function scrollToPosition(y?: number, smooth: boolean = true) {
   if (typeof window === "undefined") return; // tránh lỗi khi SSR
 
@@ -11,22 +10,14 @@ export function scrollToPosition(y?: number, smooth: boolean = true) {
   });
 }
 
-export function successResponse<T>(
-  data: T,
-  message?: string,
-  status = 200
-) {
+export function successResponse<T>(data: T, message?: string, status = 200) {
   return NextResponse.json<ApiResponse<T>>(
     { success: true, message, data },
     { status }
   );
 }
 
-export function errorResponse(
-  message: string,
-  status = 400,
-  error?: string
-) {
+export function errorResponse(message: string, status = 400, error?: string) {
   return NextResponse.json<ApiResponse<null>>(
     { success: false, message, error },
     { status }
@@ -57,4 +48,26 @@ export function computeAge(birth: string | Date): number | null {
   } catch {
     return null;
   }
+}
+
+// format date từ db để hiển thị
+export function formatDateWithDay(isoString: Date) {
+  const date = new Date(isoString);
+
+  const days = [
+    "Chủ nhật",
+    "Thứ hai",
+    "Thứ ba",
+    "Thứ tư",
+    "Thứ năm",
+    "Thứ sáu",
+    "Thứ bảy",
+  ];
+
+  const day = days[date.getDay()];
+  const dayNum = date.getDate();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
+  return `${day}, ${dayNum}/${month}/${year}`;
 }

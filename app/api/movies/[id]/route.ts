@@ -4,7 +4,7 @@ import { MovieFullITF } from "@/lib/interface/movieInterface";
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: number } }
 ) {
   const { id } = await params;
   try {

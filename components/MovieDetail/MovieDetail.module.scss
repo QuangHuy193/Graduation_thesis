@@ -1,0 +1,18 @@
+.info_Item {
+  display: flex;
+  gap: 8px;
+  font-size: large;
+  font-weight: 400;
+}
+
+.info_Item div {
+  color: var(--color-yellow);
+}
+
+.sub_title {
+  font-size: 22px;
+  font-weight: 700;
+  padding: 2px 0px;
+  margin-bottom: 4px;
+  margin-top: 16px;
+}

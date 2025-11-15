@@ -38,7 +38,7 @@ function MovieItem({ data }: { data: MovieItemITF }) {
            via-black/40 to-transparent opacity-0 group-hover:opacity-100 
            transition-opacity duration-500 ease-in-out"
           >
-            <div className="flex flex-col px-5 ">
+            <div className="flex flex-col px-5">
               <div className="uppercase font-bold text-[18px] pb-4">
                 {data.name} (T{data.age_require})
               </div>
@@ -51,7 +51,7 @@ function MovieItem({ data }: { data: MovieItemITF }) {
                   {data?.genres?.map((g, i) => (
                     <span key={i}>
                       {g}
-                      {i < data.genres.length - 1 && " , "}
+                      {i < data.genres.length - 1 && ", "}
                     </span>
                   ))}
                 </span>
