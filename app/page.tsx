@@ -1,5 +1,6 @@
 "use client";
 import BarTicket from "@/components/BarTicket/BarTicket";
+import LoadingPage from "@/components/LoadingPage/LoadingPage";
 import MovieList from "@/components/MovieList/MovieList";
 import PromotionList from "@/components/PromotionList/PromotionList";
 import { getMovieShowingBanerAPI } from "@/lib/axios/movieAPI";
@@ -14,7 +15,6 @@ export default function Home() {
     const getMovieShowingBaner = async () => {
       try {
         const res = await getMovieShowingBanerAPI();
-        console.log(res);
         setBannerMovieShowng(res);
       } catch (error) {
         console.log(error);
@@ -23,6 +23,14 @@ export default function Home() {
 
     getMovieShowingBaner();
   }, []);
+
+  if (!bannerMovieShowng || bannerMovieShowng.length === 0) {
+    return (
+      <div>
+        <LoadingPage />
+      </div>
+    );
+  }
 
   return (
     <div>

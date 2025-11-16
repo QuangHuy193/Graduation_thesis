@@ -1,11 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
+import LoadingLink from "../Link/LinkLoading";
 
 function PromotionItem({ image, link = "" }: { image: string; link: string }) {
   console.log(image);
   return (
     <div className="mb-5">
-      <Link href={link}>
+      <LoadingLink href={link}>
         <Image
           src={image}
           width={300}
@@ -13,7 +13,7 @@ function PromotionItem({ image, link = "" }: { image: string; link: string }) {
           alt="Promotion"
           className="rounded-sm"
         />
-      </Link>
+      </LoadingLink>
     </div>
   );
 }

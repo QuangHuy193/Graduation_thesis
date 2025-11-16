@@ -3,7 +3,7 @@ import axiosInstance from "./config";
 export async function getMovieShowingBanerAPI() {
   try {
     const response = await axiosInstance.get("/api/movies/showing/banners");
-
+    console.log(response.data.data);
     return response.data.data;
   } catch (error: any) {
     console.error("Error fetching movies:", error);

@@ -10,7 +10,7 @@ import {
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MovieItem.module.scss";
-import Link from "next/link";
+import LoadingLink from "../Link/LinkLoading";
 
 function MovieItem({ data }: { data: MovieItemITF }) {
   return (
@@ -31,7 +31,7 @@ function MovieItem({ data }: { data: MovieItemITF }) {
           T{data.age_require}
         </div>
 
-        <Link href={`/movie/${data.movie_id}`}>
+        <LoadingLink href={`/movie/${data.movie_id}`}>
           <div
             className="cursor-pointer absolute top-0 left-0 right-0 bottom-0 flex 
           items-center justify-center bg-linear-to-t from-black
@@ -81,15 +81,15 @@ function MovieItem({ data }: { data: MovieItemITF }) {
               </div>
             </div>
           </div>
-        </Link>
+        </LoadingLink>
       </div>
       <div
         className="uppercase hover:text-(--color-yellow) font-bold flex justify-center
         cursor-pointer pt-5 pb-18 text-xl text-center min-h-[90px]"
       >
-        <Link href={`/movie/${data.movie_id}`}>
+        <LoadingLink href={`/movie/${data.movie_id}`}>
           {data.name} (T{data.age_require})
-        </Link>
+        </LoadingLink>
       </div>
       <div className="flex gap-2 pb-5 absolute left-0 right-0 bottom-0">
         <div className="flex-1">

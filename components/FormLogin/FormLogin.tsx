@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Button from "../Button/Button";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,10 +10,14 @@ import type { ApiResponse } from "@/lib/interface/apiInterface";
 import AlertMessage from "../MessageBox/MessageBox";
 import axios, { AxiosError } from "axios";
 import { sendOtp } from "@/lib/axios/sendotpAPI";
-import { getEmailByPhone, GetEmailByPhoneResponse } from "@/lib/axios/getEmailByPhone";
+import {
+  getEmailByPhone,
+  GetEmailByPhoneResponse,
+} from "@/lib/axios/getEmailByPhone";
 import { checkUserStatus } from "@/lib/axios/checkUserStatusAPI";
 import { useRouter } from "next/navigation";
 import styles from "./FormLogin.module.scss";
+import LoadingLink from "../Link/LinkLoading";
 
 export default function FormLogin({
   state,
@@ -37,16 +40,24 @@ export default function FormLogin({
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       try {
-        const res = (await getEmailByPhone(identifier)) as GetEmailByPhoneResponse;
+        const res = (await getEmailByPhone(
+          identifier
+        )) as GetEmailByPhoneResponse;
         console.log("getEmailByPhone response:", res);
         if (!res.success || !res.data?.email) {
-          setMsg({ type: "error", text: "Không tìm thấy email cho số điện thoại này." });
+          setMsg({
+            type: "error",
+            text: "Không tìm thấy email cho số điện thoại này.",
+          });
           return;
         }
         email = res.data.email;
       } catch (err) {
         console.error(err);
-        setMsg({ type: "error", text: "Lỗi khi tìm email theo số điện thoại." });
+        setMsg({
+          type: "error",
+          text: "Lỗi khi tìm email theo số điện thoại.",
+        });
         return;
       }
     }
@@ -58,10 +69,16 @@ export default function FormLogin({
         router.push(`/verifyotp?email=${encodeURIComponent(email)}`);
         return;
       } else {
-        setMsg({ type: "error", text: res?.message ?? "Không thể gửi mã. Vui lòng thử lại." });
+        setMsg({
+          type: "error",
+          text: res?.message ?? "Không thể gửi mã. Vui lòng thử lại.",
+        });
       }
     } catch (err: any) {
-      setMsg({ type: "error", text: err?.message ?? "Lỗi khi gửi mã. Vui lòng thử lại." });
+      setMsg({
+        type: "error",
+        text: err?.message ?? "Lỗi khi gửi mã. Vui lòng thử lại.",
+      });
     } finally {
       setLoading(false);
     }
@@ -93,7 +110,8 @@ export default function FormLogin({
       const loginData = loginResp.data;
 
       if (!loginData || loginData.success === false) {
-        const message = loginData?.message ?? loginData?.error ?? "Đăng nhập thất bại";
+        const message =
+          loginData?.message ?? loginData?.error ?? "Đăng nhập thất bại";
         setMsg({ type: "error", text: message });
         setLoading(false);
         return;
@@ -138,7 +156,10 @@ export default function FormLogin({
         }
       }
 
-      setMsg({ type: "success", text: loginData?.message ?? "Đăng nhập thành công" });
+      setMsg({
+        type: "success",
+        text: loginData?.message ?? "Đăng nhập thành công",
+      });
 
       setTimeout(() => {
         window.location.href = "/";
@@ -147,7 +168,11 @@ export default function FormLogin({
       if (axios.isAxiosError(err)) {
         const aErr = err as AxiosError;
         const serverData = aErr.response?.data as ApiResponse<any> | undefined;
-        const message = serverData?.message ?? serverData?.error ?? aErr.message ?? "Lỗi server";
+        const message =
+          serverData?.message ??
+          serverData?.error ??
+          aErr.message ??
+          "Lỗi server";
         setMsg({ type: "error", text: message });
       } else {
         console.error("Login error (non-axios):", err);
@@ -227,8 +252,9 @@ export default function FormLogin({
             onClick={() => handleToggleVisibility("saveLogin")}
           >
             <div
-              className={`w-3.5 h-3.5  rounded-xs border border-black relative ${state.saveLogin === true ? "bg-orange-300" : ""
-                }`}
+              className={`w-3.5 h-3.5  rounded-xs border border-black relative ${
+                state.saveLogin === true ? "bg-orange-300" : ""
+              }`}
             >
               {state.saveLogin && (
                 <FontAwesomeIcon
@@ -242,12 +268,12 @@ export default function FormLogin({
         </div>
 
         <div className="w-full flex justify-end p-2 text-[13px]">
-          <Link
+          <LoadingLink
             href={"/change-pass"}
             className="underline  hover:text-(--color-purple) "
           >
             Quên mật khẩu?
-          </Link>
+          </LoadingLink>
         </div>
 
         <Button

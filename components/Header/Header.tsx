@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import Button from "../Button/Button";
-import Link from "next/link";
 import {
   faLocationDot,
   faMagnifyingGlass,
@@ -15,6 +14,7 @@ import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
+import LoadingLink from "../Link/LinkLoading";
 
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
@@ -72,7 +72,7 @@ function Header() {
       >
         <div className="flex gap-5">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center ">
+            <LoadingLink href="/" className="flex items-center ">
               <Image
                 src="/logo.png"
                 alt="CineGo"
@@ -80,7 +80,7 @@ function Header() {
                 height={20}
                 className="w-[130px] h-[60px]"
               />
-            </Link>
+            </LoadingLink>
           </div>
 
           <div className="flex items-center gap-4">
@@ -121,19 +121,19 @@ function Header() {
                 </div>
               </div>
             ) : (
-              <Link
+              <LoadingLink
                 href={"/login"}
                 className="cursor-pointer hover:text-(--color-yellow)"
               >
                 Đăng nhập
-              </Link>
+              </LoadingLink>
             )}
           </div>
         </div>
       </div>
 
       {/* Dòng dưới của header */}
-      <div className="flex items-center justify-between py-2">
+      <div className="flex items-center justify-between pt-2 pb-4">
         <div className="flex gap-3">
           <div className={`${styles.hd_bottom_left_item}`}>
             <div>
@@ -156,13 +156,13 @@ function Header() {
                   {Array.isArray(cinemas) &&
                     cinemas.length > 0 &&
                     cinemas.map((cinema: CinemaOnlyCity) => (
-                      <Link
+                      <LoadingLink
                         href={`/cinema/${cinema.cinema_id}`}
                         key={cinema.cinema_id}
                         className="hover:text-(--color-yellow) cursor-pointer py-1 px-2 rounded transition-colors duration-200"
                       >
                         {cinema.name} ({cinema.province})
-                      </Link>
+                      </LoadingLink>
                     ))}
                 </div>
               }
@@ -174,20 +174,23 @@ function Header() {
             <div>
               <FontAwesomeIcon icon={faLocationDot} />
             </div>
-            <Link href={"/showtimes"}>Lịch chiếu</Link>
+            <LoadingLink href={"/showtimes"}>Lịch chiếu</LoadingLink>
           </div>
         </div>
 
         <div className="flex gap-3">
-          <Link
+          <LoadingLink
             href={"/promotions"}
             className={`${styles.hd_bottom_right_item}`}
           >
             Khuyến mãi
-          </Link>
-          <Link href={"/about"} className={`${styles.hd_bottom_right_item}`}>
+          </LoadingLink>
+          <LoadingLink
+            href={"/about"}
+            className={`${styles.hd_bottom_right_item}`}
+          >
             Giới thiệu
-          </Link>
+          </LoadingLink>
         </div>
       </div>
     </header>

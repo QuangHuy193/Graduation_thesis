@@ -4,6 +4,7 @@ import "./fontawesome.ts";
 
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
+import GlobalLoading from "@/components/GlobalLoading/GlobalLoading";
 
 export const metadata: Metadata = {
   title: "CineGo",
@@ -18,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <GlobalLoading />
         <Header />
         <div className="h-(--width-header)"></div>
         <main className="px-10 bg">{children}</main>

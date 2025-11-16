@@ -10,11 +10,12 @@ export async function GET(
   try {
     const [row] = await db.query(
       `SELECT 
-      m.movie_id, m.name, m.description, m.image, m.duration, m.trailer_url, 
+      m.movie_id, m.name, m.description, m.duration, m.trailer_url, 
       m.release_date, m.status, m.age_require,
       c1.name AS country,
       c2.language AS subtitle,
-       GROUP_CONCAT(DISTINCT g.name) AS genres,
+      MAX(i.url) as image,
+      GROUP_CONCAT(DISTINCT g.name) AS genres,
       GROUP_CONCAT(DISTINCT a.name) AS actors
       FROM movies m
       LEFT JOIN country c1 ON m.country_id = c1.country_id
@@ -23,6 +24,7 @@ export async function GET(
       LEFT JOIN genres g ON mg.genre_id = g.genre_id
       LEFT JOIN movie_actor ma ON m.movie_id = ma.movie_id
       LEFT JOIN actors a ON ma.actor_id = a.actor_id
+      JOIN images i ON m.movie_id = i.movie_id
       WHERE m.movie_id = ? 
       GROUP BY m.movie_id`,
       [id]
