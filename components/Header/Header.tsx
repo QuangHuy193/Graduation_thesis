@@ -149,22 +149,24 @@ function Header() {
               offset={[0, 3]}
               theme="cinego"
               content={
-                <div
-                  className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
+                cinemas && (
+                  <div
+                    className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
-                >
-                  {Array.isArray(cinemas) &&
-                    cinemas.length > 0 &&
-                    cinemas.map((cinema: CinemaOnlyCity) => (
-                      <LoadingLink
-                        href={`/cinema/${cinema.cinema_id}`}
-                        key={cinema.cinema_id}
-                        className="hover:text-(--color-yellow) cursor-pointer py-1 px-2 rounded transition-colors duration-200"
-                      >
-                        {cinema.name} ({cinema.province})
-                      </LoadingLink>
-                    ))}
-                </div>
+                  >
+                    {Array.isArray(cinemas) &&
+                      cinemas.length > 0 &&
+                      cinemas.map((cinema: CinemaOnlyCity) => (
+                        <LoadingLink
+                          href={`/cinema/${cinema.cinema_id}`}
+                          key={cinema.cinema_id}
+                          className="hover:text-(--color-yellow) cursor-pointer py-1 px-2 rounded transition-colors duration-200"
+                        >
+                          {cinema.name} ({cinema.province})
+                        </LoadingLink>
+                      ))}
+                  </div>
+                )
               }
             >
               <div>Chọn rạp</div>

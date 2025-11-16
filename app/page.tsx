@@ -3,13 +3,17 @@ import BarTicket from "@/components/BarTicket/BarTicket";
 import LoadingPage from "@/components/LoadingPage/LoadingPage";
 import MovieList from "@/components/MovieList/MovieList";
 import PromotionList from "@/components/PromotionList/PromotionList";
-import { getMovieShowingBanerAPI } from "@/lib/axios/movieAPI";
+import {
+  getMovieShowingBanerAPI,
+  getMovieUpcommingBanerAPI,
+} from "@/lib/axios/movieAPI";
 import { useEffect, useState } from "react";
 
 const dataF2 = ["/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp"];
 
 export default function Home() {
   const [bannerMovieShowng, setBannerMovieShowng] = useState([]);
+  const [bannerMovieUpcoming, setBannerMovieUpcoming] = useState([]);
 
   useEffect(() => {
     const getMovieShowingBaner = async () => {
@@ -21,7 +25,17 @@ export default function Home() {
       }
     };
 
+    const getMovieUpcomingBanner = async () => {
+      try {
+        const res = await getMovieUpcommingBanerAPI();
+        setBannerMovieUpcoming(res);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
     getMovieShowingBaner();
+    getMovieUpcomingBanner();
   }, []);
 
   if (!bannerMovieShowng || bannerMovieShowng.length === 0) {
@@ -50,7 +64,7 @@ export default function Home() {
 
           <div className="pb-[50px]">
             <MovieList
-              data={bannerMovieShowng}
+              data={bannerMovieUpcoming}
               title="PHIM SẮP CHIẾU"
               link="/movie/upcoming"
             />

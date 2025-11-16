@@ -38,6 +38,7 @@ function BarTicket() {
       {/* rạp */}
       <div className="flex gap-2">
         <Select
+          notFoundContent={"Đang tải danh sách rạp..."}
           className={styles.select}
           classNames={{
             popup: {
@@ -50,9 +51,9 @@ function BarTicket() {
           options={
             cinemas?.length > 0
               ? cinemas.map((c: CinemaOnlyCity) => ({
-                label: c.name,
-                value: String(c.cinema_id),
-              }))
+                  label: c.name,
+                  value: String(c.cinema_id),
+                }))
               : []
           }
         />
@@ -60,6 +61,8 @@ function BarTicket() {
         {/* phim */}
         <div>
           <Select
+            notFoundContent={"Đang tải danh sách phim..."}
+            disabled={valueSelected.cinema === ""}
             className={styles.select}
             classNames={{
               popup: {
@@ -72,9 +75,9 @@ function BarTicket() {
             options={
               cinemas?.length > 0
                 ? cinemas.map((c: CinemaOnlyCity) => ({
-                  label: c.name,
-                  value: String(c.cinema_id),
-                }))
+                    label: c.name,
+                    value: String(c.cinema_id),
+                  }))
                 : []
             }
           />
@@ -83,6 +86,8 @@ function BarTicket() {
         {/* ngày */}
         <div>
           <Select
+            notFoundContent={"Đang tải danh sách ngày chiếu..."}
+            disabled={valueSelected.movie === ""}
             className={styles.select}
             classNames={{
               popup: {
@@ -95,9 +100,9 @@ function BarTicket() {
             options={
               cinemas?.length > 0
                 ? cinemas.map((c: CinemaOnlyCity) => ({
-                  label: c.name,
-                  value: String(c.cinema_id),
-                }))
+                    label: c.name,
+                    value: String(c.cinema_id),
+                  }))
                 : []
             }
           />
@@ -106,6 +111,8 @@ function BarTicket() {
         {/* suất */}
         <div>
           <Select
+            notFoundContent={"Đang tải danh sách suất chiếu..."}
+            disabled={valueSelected.date === ""}
             className={styles.select}
             classNames={{
               popup: {
@@ -118,9 +125,9 @@ function BarTicket() {
             options={
               cinemas?.length > 0
                 ? cinemas.map((c: CinemaOnlyCity) => ({
-                  label: c.name,
-                  value: String(c.cinema_id),
-                }))
+                    label: c.name,
+                    value: String(c.cinema_id),
+                  }))
                 : []
             }
           />

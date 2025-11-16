@@ -22,7 +22,7 @@ export async function GET() {
       LEFT JOIN movie_actor ma ON m.movie_id = ma.movie_id
       LEFT JOIN actors a ON ma.actor_id = a.actor_id
       JOIN images i ON m.movie_id = i.movie_id
-      WHERE status = 1
+      WHERE status = 0
       GROUP BY m.movie_id      
       ORDER BY m.release_date DESC
       LIMIT 12`
