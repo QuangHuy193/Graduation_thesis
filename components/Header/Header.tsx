@@ -149,7 +149,7 @@ function Header() {
               offset={[0, 3]}
               theme="cinego"
               content={
-                cinemas && (
+                cinemas.length > 0 ? (
                   <div
                     className="grid grid-cols-3 gap-2 bg-(--color-blue-black) text-white 
                   p-2 rounded-md shadow-lg "
@@ -166,6 +166,8 @@ function Header() {
                         </LoadingLink>
                       ))}
                   </div>
+                ) : (
+                  "Đang tải dữ liệu..."
                 )
               }
             >

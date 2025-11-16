@@ -1,3 +1,4 @@
+"use client";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import Image from "next/image";
 import WatchTrailer from "../Button/WatchTrailer";
@@ -12,10 +13,15 @@ import {
 import styles from "./MovieDetail.module.scss";
 import { formatDateWithDay } from "@/lib/function";
 import LoadingPage from "../LoadingPage/LoadingPage";
+import { useState } from "react";
+import VideoTrailer from "../VideoTrailer/VideoTrailer";
 
 function MovieDetail({ data }: { data: MovieFullITF[] }) {
+  const [state, setState] = useState({
+    watchTrailer: false,
+  });
+
   if (!data || data.length === 0) {
-    console.log("errrrr");
     return (
       <div>
         <LoadingPage />
@@ -27,7 +33,7 @@ function MovieDetail({ data }: { data: MovieFullITF[] }) {
       {/* chi tiết phim */}
       <div className="flex">
         <div className="flex-4 px-2 ">
-          <div className="relative ">
+          <div className="relative h-[550px]">
             <Image
               src={data[0].image}
               width={120}
@@ -104,9 +110,20 @@ function MovieDetail({ data }: { data: MovieFullITF[] }) {
           </div>
           <h3 className={`${styles.sub_title}`}>NỘI DUNG</h3>
           <div>{data[0].description}</div>
-          <div className="my-2">
+          <div
+            className="my-2 w-fit"
+            onClick={() =>
+              setState((prev) => ({ ...prev, watchTrailer: true }))
+            }
+          >
             <WatchTrailer size="m" />
           </div>
+          {state.watchTrailer && (
+            <VideoTrailer
+              onClose={() => setState({ watchTrailer: false })}
+              src={data[0].trailer_url}
+            />
+          )}
         </div>
       </div>
       <div></div>
