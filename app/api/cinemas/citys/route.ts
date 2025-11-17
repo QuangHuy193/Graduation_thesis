@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const [rows] = await db.query("SELECT distinct province FROM cinemas");
+    const [rows] = await db.query(`SELECT distinct province FROM cinemas`);
     return NextResponse.json(rows);
   } catch (error) {
     console.error(error);

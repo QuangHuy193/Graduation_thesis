@@ -7,6 +7,7 @@ import { Select } from "antd";
 import { useEffect, useState } from "react";
 import styles from "./ShowTime.module.scss";
 import ShowTimeCard from "../ShowTimeCard/ShowTimeCard";
+import Spinner from "../Spinner/Spinner";
 const dataF = [
   {
     cinemas: {
@@ -56,14 +57,18 @@ function ShowTime() {
   });
 
   const [citys, setCitys] = useState([]);
-  const [citySelectd, setCitySelectd] = useState("");
+  const [showTimes, setShowtimes] = useState([]);
+  const [selected, setSelected] = useState({
+    provinceSelected: "",
+    dateSelected: 0,
+  });
 
   useEffect(() => {
     const getCitys = async () => {
       try {
         const res = await getCityAPI();
         setCitys(res);
-        setCitySelectd(res[0].province);
+        setSelected((prev) => ({ ...prev, provinceSelected: res[0].province }));
       } catch (error) {
         console.log(error);
       }
@@ -79,9 +84,14 @@ function ShowTime() {
       <div className="flex gap-5 justify-center mb-6">
         {days.map((day, idx) => (
           <div
+            onClick={() =>
+              setSelected((prev) => ({ ...prev, dateSelected: idx }))
+            }
             key={idx}
-            className="h-20 w-24 border border-(--color-yellow) rounded-sm flex flex-col 
-            items-center justify-center cursor-pointer"
+            className={`h-20 w-24 border border-(--color-yellow) rounded-sm flex flex-col 
+            items-center justify-center cursor-pointer ${
+              selected.dateSelected === idx ? styles.date_selected : ""
+            }`}
           >
             <span className="text-lg font-semibold">
               {day.getDate()}/{day.getMonth() + 1}
@@ -95,10 +105,11 @@ function ShowTime() {
         <div className="text-4xl font-bold">DANH SÁCH RẠP</div>
         <Select
           onChange={(value) => {
-            setCitySelectd(value);
+            setSelected((prev) => ({ ...prev, provinceSelected: value }));
           }}
+          notFoundContent={"Đang tải dữ liệu..."}
           className={`${styles.select} w-[180px]`}
-          value={citySelectd}
+          value={selected.provinceSelected}
           options={
             citys?.length
               ? citys.map((city) => ({
@@ -121,11 +132,15 @@ function ShowTime() {
       </div>
 
       <div>
-        {dataF.map((data, i) => (
-          <div key={i} className="mt-5">
-            <ShowTimeCard data={data} />
-          </div>
-        ))}
+        {showTimes.length > 0 ? (
+          showTimes.map((data, i) => (
+            <div key={i} className="mt-5">
+              <ShowTimeCard data={data} />
+            </div>
+          ))
+        ) : (
+          <Spinner text="Đang tải dang sách rạp, suất chiếu..." />
+        )}
       </div>
     </div>
   );
