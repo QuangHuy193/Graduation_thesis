@@ -5,6 +5,7 @@ import styles from "./UploadForm.module.scss";
 import FilmDatalist from "@/components/FlimDataList/FilmDatalist";
 import { uploadToCloudinary } from "@/lib/axios/uploadCloudinaryAPI";
 import { saveImageToDB } from "@/lib/axios/saveImageToDB";
+import Button from "../Button/Button";
 
 type Message = { type: "error" | "success"; text: string } | null;
 
@@ -111,13 +112,31 @@ export default function UploadForm() {
 
             <form onSubmit={handleSubmit}>
                 <div className={styles.formGroup}>
+                    {/* input ẩn, vẫn dùng onChange để set file */}
                     <input
+                        id="upload-file"
                         type="file"
                         accept="image/*"
                         onChange={handleFileChange}
                         className={styles.inputFile}
+                        aria-label="Chọn ảnh để upload"
                     />
+
+                    {/* label sẽ hiện như button */}
+                    <label htmlFor="upload-file" className={styles.fileButton} aria-hidden={loading}>
+                        Chọn ảnh
+                    </label>
+
+                    {/* hiển thị tên file nếu đã chọn */}
+                    <div className={styles.fileMeta}>
+                        {file ? (
+                            <span className={styles.fileName}>{file.name}</span>
+                        ) : (
+                            <span className={styles.noFile}>Chưa chọn file</span>
+                        )}
+                    </div>
                 </div>
+
 
                 {preview && (
                     <div className={styles.preview}>
@@ -145,9 +164,9 @@ export default function UploadForm() {
                     </div>
                 )}
 
-                <button type="submit" className={styles.button} disabled={loading}>
+                <Button type="submit" className={styles.button} disabled={loading}>
                     {loading ? "Đang upload..." : "Upload và Lưu"}
-                </button>
+                </Button>
             </form>
 
             {message && <div className={`${styles.message} ${styles[message?.type ?? ""]}`}>{message.text}</div>}

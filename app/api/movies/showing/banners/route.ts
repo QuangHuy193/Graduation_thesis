@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
+import { RowDataPacket } from "mysql2"; // nếu dùng mysql2
 
-//Lấy danh sách vài phim đang chiếu làm baner trượt
 export async function GET() {
   try {
-    const [rows] = await db.query(
+    const [rows] = await db.query<RowDataPacket[]>(
       `SELECT 
       m.movie_id, m.name, m.description, m.duration, m.trailer_url, 
       m.release_date, m.status, m.age_require,
@@ -27,13 +27,24 @@ export async function GET() {
       ORDER BY m.release_date DESC
       LIMIT 12`
     );
-    // Chuyển từ chuỗi thành mảng
-    const movies = rows.map((row: any) => ({
+
+    // đảm bảo rows là mảng
+    const rawRows = Array.isArray(rows) ? rows : [];
+
+    const movies: MovieFullITF[] = rawRows.map((row: any) => ({
       ...row,
-      genres: row.genres ? row.genres.split(",") : [],
-      actors: row.actors ? row.actors.split(",") : [],
+      // Nếu genres/actors có thể null, xử lý về mảng rỗng
+      genres: row.genres ? String(row.genres).split(",") : [],
+      actors: row.actors ? String(row.actors).split(",") : [],
+      image: row.image ?? null,
+      // chuyển đổi kiểu nếu cần, ví dụ duration number, release_date -> string/Date...
     }));
-    return successResponse<MovieFullITF>(movies, "success", 201);
+
+    return successResponse<MovieFullITF[]>(
+      movies,
+      "success",
+      200 // GET trả 200
+    );
   } catch (error) {
     console.error(error);
     return errorResponse("Lấy danh sách thất bại", 500);

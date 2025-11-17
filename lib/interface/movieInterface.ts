@@ -9,8 +9,8 @@ export interface MovieFullITF {
   country: string;
   subtitle: string;
   duration: number;
-  genres: string[];
-  actors: string[];
+  genres?: string[] | [];
+  actors?: string[] | [];
 }
 
 export interface MovieItemITF {

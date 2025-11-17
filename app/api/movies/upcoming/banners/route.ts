@@ -27,8 +27,9 @@ export async function GET() {
       ORDER BY m.release_date DESC
       LIMIT 12`
     );
+    const rawRows = Array.isArray(rows) ? rows : [];
     // Chuyển từ chuỗi thành mảng
-    const movies = rows.map((row: any) => ({
+    const movies = rawRows.map((row: any) => ({
       ...row,
       genres: row.genres ? row.genres.split(",") : [],
       actors: row.actors ? row.actors.split(",") : [],
