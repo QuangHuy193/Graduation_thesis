@@ -1,0 +1,17 @@
+.select {
+  :global(.ant-select-selection-item) {
+    color: var(--color-yellow) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    width: 160px;
+  }
+
+  :global(.ant-select-selector) {
+    border: 1px var(--color-yellow) solid !important;
+    background-color: transparent !important;
+  }
+
+  :global(.ant-select-arrow) {
+    color: var(--color-yellow) !important;
+  }
+}

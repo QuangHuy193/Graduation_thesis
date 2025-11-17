@@ -15,6 +15,7 @@ import { formatDateWithDay } from "@/lib/function";
 import LoadingPage from "../LoadingPage/LoadingPage";
 import { useState } from "react";
 import VideoTrailer from "../VideoTrailer/VideoTrailer";
+import ShowTime from "../ShowTime/ShowTime";
 
 function MovieDetail({ data }: { data: MovieFullITF[] }) {
   const [state, setState] = useState({
@@ -126,7 +127,10 @@ function MovieDetail({ data }: { data: MovieFullITF[] }) {
           )}
         </div>
       </div>
-      <div></div>
+
+      <div>
+        <ShowTime />
+      </div>
     </div>
   );
 }

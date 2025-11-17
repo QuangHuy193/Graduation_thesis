@@ -21,7 +21,7 @@ export default function RootLayout({
       <body>
         <GlobalLoading />
         <Header />
-        <div className="h-(--width-header)"></div>
+        <div className="h-(--height-header) bg-(--color-blue-black)"></div>
         <main className="px-10 bg">{children}</main>
         <Footer />
       </body>

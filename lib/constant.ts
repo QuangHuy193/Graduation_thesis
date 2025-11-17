@@ -122,3 +122,13 @@ Email: cskh@cinego.vn
 Website: https://cinego.vn
 
 Chính Sách này có hiệu lực từ ngày 01/01/2026 và thay thế các phiên bản trước đó.`;
+
+export const weekdays = [
+  "Chủ nhật",
+  "Thứ 2",
+  "Thứ 3",
+  "Thứ 4",
+  "Thứ 5",
+  "Thứ 6",
+  "Thứ 7",
+];
