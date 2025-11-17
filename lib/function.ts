@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
+import { weekdays } from "./constant";
 
 export function scrollToPosition(y?: number, smooth: boolean = true) {
   if (typeof window === "undefined") return; // tránh lỗi khi SSR
@@ -54,17 +55,7 @@ export function computeAge(birth: string | Date): number | null {
 export function formatDateWithDay(isoString: Date) {
   const date = new Date(isoString);
 
-  const days = [
-    "Chủ nhật",
-    "Thứ hai",
-    "Thứ ba",
-    "Thứ tư",
-    "Thứ năm",
-    "Thứ sáu",
-    "Thứ bảy",
-  ];
-
-  const day = days[date.getDay()];
+  const day = weekdays[date.getDay()];
   const dayNum = date.getDate();
   const month = date.getMonth() + 1;
   const year = date.getFullYear();
