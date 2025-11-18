@@ -59,7 +59,11 @@ export default function AdminDashboard() {
     //     // }
     //     console.log("Xóa");
     // }
-
+    const handleDeleteFromChild = (id: number) => {
+        // simplest: fetch lại danh sách
+        fetchMovies();
+        // hoặc: setMovies(prev => prev.filter(m => m.movie_id !== id));
+    };
     // mở modal để thêm (movie = null)
     function handleOpenAdd() {
         setEditingMovie(null);
@@ -162,7 +166,7 @@ export default function AdminDashboard() {
 
                 {activeTab === "movies" && (
                     <div className="mt-4">
-                        <MovieTable movies={movies} />
+                        <MovieTable movies={movies} onDelete={handleDeleteFromChild} onEdit={handleEdit} />
                     </div>
                 )}
 

@@ -1,14 +1,16 @@
 import React, { useMemo, useState } from "react";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
+import { deleteMovie } from "@/lib/axios/admin/movieAPI";
 import Button from "../Button/Button";
+import axios from "axios";
 type Props = {
     movies: MovieFullITF[];
     onEdit: (m: MovieFullITF) => void;
     onDelete: (id: number) => void;
 };
 
-export default function AdminMovieTable({ movies, onEdit }: Props) {
+export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(8);
@@ -27,6 +29,33 @@ export default function AdminMovieTable({ movies, onEdit }: Props) {
         onEdit(updated);
         // hoặc nếu muốn cập nhật local state movies, gọi fetch lại...
     };
+    const handleDel = async (id: number) => {
+        if (!id || id <= 0) {
+            alert("ID không hợp lệ");
+            return;
+        }
+
+        const confirmDelete = confirm(`Bạn có chắc muốn xoá phim này ?`);
+        if (!confirmDelete) return;
+
+        try {
+            const res = await deleteMovie(id);
+
+            if (res?.success) {
+                alert("Xóa phim thành công!");
+                onDelete(id);
+                // Nếu bạn có hàm refresh list thì gọi ở đây
+                // await fetchMovies();
+
+            } else {
+                alert("Xóa thất bại: " + (res?.error || "Không rõ lỗi"));
+            }
+        } catch (error: any) {
+            console.error("Lỗi xóa movie:", error);
+            alert("Lỗi: " + (error.response?.data?.error || error.message));
+        }
+    };
+
     // Filters + search + sort
     const filtered = useMemo(() => {
         let list = movies.slice();
@@ -232,9 +261,7 @@ export default function AdminMovieTable({ movies, onEdit }: Props) {
                                     <div className="inline-flex gap-2">
                                         <Button onClick={() => handleOpenEdit(m)} className="px-3 py-1 rounded border text-sm">Sửa</Button>
                                         <Button
-                                            onClick={() => {
-                                                if (confirm(`Xác nhận xóa phim: ${m.name} ?`)) console.log("Xóa");
-                                            }}
+                                            onClick={() => handleDel(m.movie_id)}
                                             className="px-3 py-1 rounded border text-sm text-red-600"
                                         >
                                             Xóa

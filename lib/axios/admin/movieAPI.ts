@@ -19,3 +19,13 @@ export async function createMovie(data: MovieFullITF) {
         throw error;
     }
 }
+export async function deleteMovie(movie_id: number) {
+    try {
+        const res = await axiosInstance.delete(`/api/movies/admin/delMovie/${movie_id}`);
+        console.log("Xoá movie thành công:", res.data);
+        return res.data;
+    } catch (error: any) {
+        console.error("Lỗi khi xoá movie:", error.response?.data || error.message);
+        throw error;
+    }
+}
