@@ -1,53 +1,14 @@
 "use client";
 import { getCityAPI } from "@/lib/axios/cinemasAPI";
 import { weekdays } from "@/lib/constant";
-import { faLocationDot } from "@fortawesome/free-solid-svg-icons";
+import { faLocationDot, faVideoSlash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "antd";
 import { useEffect, useState } from "react";
 import styles from "./ShowTime.module.scss";
 import ShowTimeCard from "../ShowTimeCard/ShowTimeCard";
 import Spinner from "../Spinner/Spinner";
-const dataF = [
-  {
-    cinemas: {
-      cinema_id: 1,
-      name: "Rạp A",
-      specific_address: "Số 123 đường Võ Thị Sáu",
-      ward: "Phường 5",
-      province: "Quảng Ninh",
-      time: [
-        {
-          start_time: "18:00",
-          end_time: "19:45",
-        },
-        {
-          start_time: "11:00",
-          end_time: "13:05",
-        },
-      ],
-    },
-  },
-  {
-    cinemas: {
-      cinema_id: 2,
-      name: "Rạp B",
-      specific_address: "Số 74 đường Võ Thị Sáu",
-      ward: "Phường 9",
-      province: "TP. Hồ Chí Minh",
-      time: [
-        {
-          start_time: "18:00",
-          end_time: "19:45",
-        },
-        {
-          start_time: "11:00",
-          end_time: "13:05",
-        },
-      ],
-    },
-  },
-];
+import { getShowtimeByDateAPI } from "@/lib/axios/showTimeAPI";
 
 function ShowTime() {
   const days = Array.from({ length: 5 }, (_, i) => {
@@ -57,10 +18,16 @@ function ShowTime() {
   });
 
   const [citys, setCitys] = useState([]);
-  const [showTimes, setShowtimes] = useState([]);
+  const [showTimes, setShowtimes] = useState({
+    dataApi: {},
+    dataDisplay: {},
+  });
   const [selected, setSelected] = useState({
     provinceSelected: "",
     dateSelected: 0,
+  });
+  const [toggle, setToggle] = useState({
+    fetchData: false,
   });
 
   useEffect(() => {
@@ -68,13 +35,67 @@ function ShowTime() {
       try {
         const res = await getCityAPI();
         setCitys(res);
-        setSelected((prev) => ({ ...prev, provinceSelected: res[0].province }));
+        setSelected((prev) => ({
+          ...prev,
+          provinceSelected: "TP. Hồ Chí Minh",
+        }));
       } catch (error) {
         console.log(error);
       }
     };
     getCitys();
   }, []);
+
+  useEffect(() => {
+    const getShowtime = async (day: number) => {
+      setToggle((prev) => ({ ...prev, fetchData: true }));
+      try {
+        const res = await getShowtimeByDateAPI(day);
+        const filtered = filterByProvince(res, selected.provinceSelected);
+        await setShowtimes((prev) => ({
+          ...prev,
+          dataDisplay: {
+            ...prev.dataDisplay,
+            [day]: {
+              data: res,
+            },
+          },
+          dataApi: {
+            ...prev.dataApi,
+            [day]: {
+              data: filtered,
+            },
+          },
+        }));
+        setToggle((prev) => ({ ...prev, fetchData: false }));
+      } catch (error) {
+        console.log(error);
+        setToggle((prev) => ({ ...prev, fetchData: false }));
+      }
+    };
+
+    const filterByProvince = (data: any[], province: string) => {
+      if (!province) return data;
+
+      return data.filter((item) => item.cinema.province === province);
+    };
+
+    const day = selected.dateSelected ? selected.dateSelected : 0;
+    if (!showTimes.dataApi[day]) {
+      getShowtime(day);
+    } else {
+      const raw = showTimes.dataApi[day].data;
+      const filtered = filterByProvince(raw, selected.provinceSelected);
+
+      setShowtimes((prev) => ({
+        ...prev,
+        dataDisplay: {
+          ...prev.dataDisplay,
+          [day]: { data: filtered },
+        },
+      }));
+    }
+  }, [selected.dateSelected, selected.provinceSelected]);
 
   return (
     <div className="px-35">
@@ -131,15 +152,31 @@ function ShowTime() {
         />
       </div>
 
-      <div>
-        {showTimes.length > 0 ? (
-          showTimes.map((data, i) => (
-            <div key={i} className="mt-5">
-              <ShowTimeCard data={data} />
-            </div>
-          ))
+      <div className="pb-4">
+        {toggle.fetchData ? (
+          <div>
+            <Spinner />
+          </div>
         ) : (
-          <Spinner text="Đang tải dang sách rạp, suất chiếu..." />
+          <div>
+            {showTimes.dataDisplay[selected.dateSelected]?.data?.length > 0 ? (
+              showTimes.dataDisplay[selected.dateSelected]?.data?.map(
+                (d, i: number) => (
+                  <div key={i}>
+                    <ShowTimeCard data={d} />
+                  </div>
+                )
+              )
+            ) : (
+              <div
+                className="flex justify-center items-center text-4xl text-(--color-yellow) 
+                py-10 gap-3"
+              >
+                <FontAwesomeIcon icon={faVideoSlash} />
+                <span>HIỆN CHƯA CÓ LỊCH CHIẾU</span>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

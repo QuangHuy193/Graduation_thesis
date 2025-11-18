@@ -7,22 +7,22 @@ function ShowTimeCard({ data }) {
     <div className="bg-(--color-purple) rounded-sm p-6">
       <div className="flex justify-between mb-5">
         <div className="font-semibold text-(--color-yellow) text-2xl">
-          {data.cinemas.name} ({data.cinemas.province})
+          {data.cinema.name} ({data.cinema.province})
         </div>
         <div className="cursor-pointer p-1">
           <FontAwesomeIcon icon={faChevronDown} />
         </div>
       </div>
       <div className="mb-5">
-        {data.cinemas.specific_address}, {data.cinemas.ward},{" "}
-        {data.cinemas.province}
+        {data.cinema.specific_address}, {data.cinema.ward},{" "}
+        {data.cinema.province}
       </div>
       <div className="mb-3">Suất chiếu</div>
       <div className="flex gap-2">
-        {data.cinemas.time.map((t, i) => (
+        {data.start_time.map((t, i) => (
           <div key={i}>
             <Button
-              text={t.start_time}
+              text={t}
               bg_color="transparent"
               hover_bg_color="transparent"
               border="1px white solid"
