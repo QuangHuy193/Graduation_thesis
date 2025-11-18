@@ -9,6 +9,8 @@ export interface MovieFullITF {
   country: string;
   subtitle: string;
   duration: number;
+  status: number;
+  price_base?: number | 0;
   genres?: string[] | [];
   actors?: string[] | [];
 }
@@ -22,4 +24,16 @@ export interface MovieItemITF {
   subtitle: string;
   duration: number;
   genres: string[];
+}
+export interface MoviePayload {
+  name: string;
+  description?: string | null;
+  trailer_url?: string | null;
+  release_date?: string | null;
+  price_base?: number | null;
+  status?: number | null;
+  age_require?: number | null;
+  country_id?: number | null;
+  subtitle_id?: number | null;
+  duration?: number | null;
 }

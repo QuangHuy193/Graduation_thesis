@@ -7,7 +7,24 @@ export async function GET() {
         const conn = await db.getConnection();
         try {
             const [rows] = await conn.execute(
-                "SELECT movie_id, name, description, trailer_url, release_date, price_base, status, age_require, country_id, subtitle_id, duration FROM movies ORDER BY name"
+                `SELECT 
+      m.movie_id, m.name, m.description, m.duration, m.trailer_url, 
+      m.release_date, m.status, m.age_require, m.price_base,
+      c1.name AS country,
+      c2.language AS subtitle,
+      MAX(i.url) as image,
+      GROUP_CONCAT(DISTINCT g.name) AS genres,
+      GROUP_CONCAT(DISTINCT a.name) AS actors
+      FROM movies m
+      LEFT JOIN country c1 ON m.country_id = c1.country_id
+      LEFT JOIN country c2 ON m.subtitle_id = c2.country_id
+      LEFT JOIN movie_genre mg ON m.movie_id = mg.movie_id
+      LEFT JOIN genres g ON mg.genre_id = g.genre_id
+      LEFT JOIN movie_actor ma ON m.movie_id = ma.movie_id
+      LEFT JOIN actors a ON ma.actor_id = a.actor_id
+      LEFT JOIN images i ON m.movie_id = i.movie_id
+      GROUP BY m.movie_id      
+      ORDER BY m.name DESC`
             );
             conn.release();
 

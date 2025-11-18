@@ -4,20 +4,27 @@ import React, { useEffect, useState } from "react";
 import { getAllMovies } from "@/lib/axios/admin/movieAPI";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
-
+import Button from "@/components/Button/Button";
+import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [movies, setMovies] = useState<MovieFullITF[]>([]);
     const [bookings, setBookings] = useState([]);
-    const [selectedMovie, setSelectedMovie] = useState(null);
-    const [showMovieModal, setShowMovieModal] = useState(false);
-    const [stats, setStats] = useState({ totalMovies: 0, totalBookings: 0, revenue: 0 });
+
+    // modal
+    const [editOpen, setEditOpen] = useState(false);
+    const [editingMovie, setEditingMovie] = useState<MovieFullITF | null>(null);
+
+    // loading
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    // const [selectedMovie, setSelectedMovie] = useState(null);
+    // const [showMovieModal, setShowMovieModal] = useState(false);
+    // const [stats, setStats] = useState({ totalMovies: 0, totalBookings: 0, revenue: 0 });
 
     useEffect(() => {
-        // load initial data
         fetchMovies();
-        // fetchBookings();
-        // fetchStats();
     }, []);
 
     async function fetchMovies() {
@@ -35,10 +42,68 @@ export default function AdminDashboard() {
     }
 
     // Khi bấm nút Xóa
-    function handleDelete(id: number) {
-        console.log("Delete movie id:", id);
+    // async function handleDelete(id: number) {
+    //     // if (!confirm("Xác nhận xóa phim này?")) return;
+    //     // setDeletingId(id);
+    //     // try {
+    //     //     const res = await fetch(`/api/admin/movies/${id}`, {
+    //     //         method: "DELETE",
+    //     //     });
+    //     //     if (!res.ok) throw new Error(`Delete failed (${res.status})`);
+    //     //     await fetchMovies();
+    //     // } catch (err) {
+    //     //     console.error("delete movie error:", err);
+    //     //     alert("Xóa thất bại. Kiểm tra console để biết chi tiết.");
+    //     // } finally {
+    //     //     setDeletingId(null);
+    //     // }
+    //     console.log("Xóa");
+    // }
+
+    // mở modal để thêm (movie = null)
+    function handleOpenAdd() {
+        setEditingMovie(null);
+        setEditOpen(true);
     }
 
+    // mở modal để sửa
+    function handleOpenEdit(movie: MovieFullITF) {
+        setEditingMovie(movie);
+        setEditOpen(true);
+    }
+    async function handleSave(movie: MovieFullITF) {
+        setSaving(true);
+        try {
+            // nếu có movie_id > 0 -> update, ngược lại create
+            if (movie.movie_id && Number(movie.movie_id) > 0) {
+                const id = movie.movie_id;
+                const res = await fetch(`/api/admin/movies/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(movie),
+                });
+                if (!res.ok) throw new Error(`Update failed (${res.status})`);
+            } else {
+                // create new
+                const res = await fetch(`/api/admin/movies`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(movie),
+                });
+                if (!res.ok) throw new Error(`Create failed (${res.status})`);
+            }
+
+            // reload list
+            await fetchMovies();
+        } catch (err) {
+            console.error("save movie error:", err);
+            alert("Lưu phim thất bại. Kiểm tra console để biết chi tiết.");
+        } finally {
+            setSaving(false);
+            setEditOpen(false);
+            setEditingMovie(null);
+        }
+    }
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900 flex">
             <aside className="w-64 bg-white shadow-md p-6">
@@ -76,7 +141,7 @@ export default function AdminDashboard() {
                     <h1 className="text-2xl font-bold">{activeTab === "dashboard" ? "Dashboard" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h1>
                     <div className="flex items-center gap-3">
                         {activeTab === "movies" && (
-                            <button /*onClick={ }*/ className="px-4 py-2 bg-blue-600 text-white rounded">Thêm phim</button>
+                            <Button onClick={handleOpenAdd} className="px-4 py-2 bg-blue-600 text-white rounded">Thêm phim</Button>
                         )}
                         <div className="p-2 bg-white rounded shadow">Admin</div>
                     </div>
@@ -97,7 +162,7 @@ export default function AdminDashboard() {
 
                 {activeTab === "movies" && (
                     <div className="mt-4">
-                        <MovieTable movies={movies} onDelete={handleDelete} onEdit={handleEdit} />
+                        <MovieTable movies={movies} />
                     </div>
                 )}
 
@@ -116,12 +181,12 @@ export default function AdminDashboard() {
             </main>
 
             {/* Movie Modal */}
-            {/* {showMovieModal && (
-                <MovieModal
-                    movie={selectedMovie}
-                    onClose={() => { setShowMovieModal(false); fetchMovies(); fetchStats(); }}
-                />
-            )} */}
+            <AddOrEditMovieModal
+                movie={editingMovie}
+                open={editOpen}
+                onClose={() => { setEditOpen(false); setEditingMovie(null); }}
+                onSave={handleSave}
+            />
             movie modal
         </div>
     );
@@ -162,8 +227,11 @@ function BookingsTable({ bookings = [] }) {
                     ))} */}
                 </tbody>
             </table>
+
         </div>
+
     );
+
 }
 
 // function MovieModal({ movie, onClose }) {
