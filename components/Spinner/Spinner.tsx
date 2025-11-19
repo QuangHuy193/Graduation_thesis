@@ -11,6 +11,7 @@ function Spinner({ color = "blue", text = "" }: propSpiner) {
        rounded-full animate-spin"
         style={{
           color: color,
+          borderTopColor: "transparent",
         }}
       ></div>
       <div>{text}</div>
