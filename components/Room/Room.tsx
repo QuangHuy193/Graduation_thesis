@@ -1,133 +1,10 @@
 import { numberToLetter } from "@/lib/function";
 import Image from "next/image";
+import Spinner from "../Spinner/Spinner";
 
-const data = {
-  name: "phòng 1",
-  width: 7,
-  height: 9,
-  capacity: 45,
-  aside_gap: [
-    {
-      gap_row: 1,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-    {
-      gap_row: 2,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-    {
-      gap_row: 3,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-    {
-      gap_row: 4,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-    {
-      gap_row: 5,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-    {
-      gap_row: 6,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-    {
-      gap_row: 7,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-    {
-      gap_row: 8,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-    {
-      gap_row: 9,
-      aside: [
-        {
-          gap_index: 2,
-          gap_width: 1,
-        },
-        {
-          gap_index: 6,
-          gap_width: 1,
-        },
-      ],
-    },
-  ],
-};
+function Room({ data }) {
+  if (!data || !Array.isArray(data.aside_gap)) return <Spinner />;
 
-function Room() {
   return (
     <div>
       <div className="flex justify-center text-4xl font-bold my-16 uppercase">
@@ -193,7 +70,7 @@ function Room() {
       <div className="flex justify-between ">
         <div className="flex gap-3">
           <div className="bg-white w-10 h-8 rounded-xl"> </div>
-          <div>Ghế Thường</div>
+          <div>Ghế trống</div>
         </div>
         <div className="flex gap-3">
           <div className="bg-(--color-yellow) w-10 h-8 rounded-xl"> </div>

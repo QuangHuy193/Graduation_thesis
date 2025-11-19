@@ -2,12 +2,35 @@ import { NextResponse } from "next/server";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
 import { weekdays } from "./constant";
 
-export function scrollToPosition(y?: number, smooth: boolean = true) {
-  if (typeof window === "undefined") return; // tránh lỗi khi SSR
+export function scrollToPosition(
+  y?: number,
+  smooth: boolean = true,
+  elementId?: string,
+  offset: number = 0 // khoảng cách với top
+) {
+  if (typeof window === "undefined") return;
 
+  const behavior = smooth ? "smooth" : "auto";
+
+  // Nếu truyền ID → ưu tiên scroll tới element theo offset
+  if (elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const absoluteY = rect.top + window.scrollY; // vị trí thật trên trang
+
+      window.scrollTo({
+        top: absoluteY - offset,
+        behavior,
+      });
+      return;
+    }
+  }
+
+  // fallback → scroll theo y như logic cũ
   window.scrollTo({
-    top: y ?? 0,
-    behavior: smooth ? "smooth" : "auto",
+    top: (y ?? 0) - offset,
+    behavior,
   });
 }
 

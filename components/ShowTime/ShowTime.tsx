@@ -59,7 +59,7 @@ function ShowTime({
       setToggle((prev) => ({ ...prev, fetchData: true }));
       try {
         const res = await getShowtimeByDateAPI(day, movie_id);
-        console.log(res);
+
         const filtered = filterByProvince(res, selected.provinceSelected);
         await setShowtimes((prev) => ({
           ...prev,

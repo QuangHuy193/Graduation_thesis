@@ -11,14 +11,15 @@ import {
   faUserCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MovieDetail.module.scss";
-import { formatDateWithDay } from "@/lib/function";
+import { formatDateWithDay, scrollToPosition } from "@/lib/function";
 import LoadingPage from "../LoadingPage/LoadingPage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import VideoTrailer from "../VideoTrailer/VideoTrailer";
 import ShowTime from "../ShowTime/ShowTime";
 import { dataTicketFake } from "@/lib/constant";
 import PriceCard from "../PriceCard/PriceCard";
 import Room from "../Room/Room";
+import { getRoomAsileWithIdAPI } from "@/lib/axios/roomAPI";
 
 function MovieDetail({
   data,
@@ -29,8 +30,30 @@ function MovieDetail({
 }) {
   const [state, setState] = useState({
     watchTrailer: false,
-    timesSelected: { showtime_id: "", room_id: "" },
+    timesSelected: { showtime_id: "", room_id: -1 },
+    ticketSelected: {},
+    room_asile: {},
   });
+  useEffect(() => {
+    scrollToPosition(0, true, "select_ticket_type", 120);
+
+    const getRoomAsile = async (room_id: number) => {
+      try {
+        const res = await getRoomAsileWithIdAPI(room_id);
+        setState((prev) => ({ ...prev, room_asile: res }));
+        console.log(res);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    if (state.timesSelected.room_id !== -1) {
+      getRoomAsile(state.timesSelected.room_id);
+    }
+  }, [state.timesSelected]);
+
+  useEffect(() => {
+    scrollToPosition(0, true, "select_seat", 100);
+  }, [state.ticketSelected]);
 
   if (!data || data.length === 0) {
     return (
@@ -39,6 +62,7 @@ function MovieDetail({
       </div>
     );
   }
+
   return (
     <div>
       {/* chi tiết phim */}
@@ -152,20 +176,46 @@ function MovieDetail({
       </div>
 
       {state.timesSelected.showtime_id !== "" && (
-        <div>
-          <div className="flex justify-center text-4xl font-bold my-16">
+        <div id="select_ticket_type" className="mt-16">
+          <div className="flex justify-center text-4xl font-bold mb-16">
             CHỌN LOẠI VÉ
           </div>
           <div className="flex gap-6 justify-center">
             {dataTicketFake.map((t, i) => (
               <div key={i} className="h-[150px] w-[300px]">
-                <PriceCard data={t} />
+                <PriceCard
+                  data={t}
+                  setTicketSelected={(name, inc) => {
+                    setState((prev) => {
+                      const oldValue = prev.ticketSelected?.[name] ?? 0;
+                      let newValue;
+                      if (inc) {
+                        newValue = oldValue + 1;
+                      } else {
+                        if (oldValue === 0) {
+                          newValue = 0;
+                        } else {
+                          newValue = oldValue - 1;
+                        }
+                      }
+
+                      return {
+                        ...prev,
+                        ticketSelected: {
+                          ...prev.ticketSelected,
+                          [name]: newValue,
+                        },
+                      };
+                    });
+                  }}
+                  ticketSelected={state.ticketSelected}
+                />
               </div>
             ))}
           </div>
 
-          <div className="py-4">
-            <Room />
+          <div id="select_seat" className="py-4">
+            <Room data={state.room_asile} />
           </div>
         </div>
       )}
