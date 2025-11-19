@@ -1,0 +1,11 @@
+import axiosInstance from "../config";
+
+export async function getCountries() {
+    try {
+        const res = await axiosInstance.get("/api/country/getAllCountry");
+        return res.data.data || [];
+    } catch (error) {
+        console.error("Lỗi khi gọi API countries:", error);
+        throw error;
+    }
+}

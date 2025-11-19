@@ -1,16 +1,35 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
 import { deleteMovie } from "@/lib/axios/admin/movieAPI";
 import Button from "../Button/Button";
-import axios from "axios";
+import { useRouter } from "next/navigation";
 type Props = {
     movies: MovieFullITF[];
     onEdit: (m: MovieFullITF) => void;
     onDelete: (id: number) => void;
 };
-
+function shallowMovieComparable(m: MovieFullITF) {
+    // trả về object chỉ chứa các field chúng ta so sánh để đơn giản hóa
+    return {
+        movie_id: m.movie_id,
+        name: m.name || "",
+        description: m.description || "",
+        trailer_url: m.trailer_url || "",
+        release_date: m.release_date ? String(m.release_date) : "",
+        price_base: m.price_base ?? null,
+        status: m.status ?? null,
+        age_require: m.age_require ?? null,
+        country: m.country ?? "",
+        subtitle: m.subtitle ?? "",
+        duration: m.duration ?? null,
+        // genres & actors so sánh dưới dạng string chuẩn
+        genres: Array.isArray(m.genres) ? m.genres.join(",") : (m.genres || ""),
+        actors: Array.isArray(m.actors) ? m.actors.join(",") : (m.actors || "")
+    };
+}
 export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
+    const [localMovies, setLocalMovies] = useState<MovieFullITF[]>(movies || []);
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(8);
@@ -19,15 +38,53 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     const [selectedTrailer, setSelectedTrailer] = useState<string | null>(null);
     const [editing, setEditing] = useState<MovieFullITF | null>(null);
     const [editOpen, setEditOpen] = useState(false);
+    const router = useRouter();
+    useEffect(() => {
+        setLocalMovies(movies || []);
+    }, [movies]);
+    function goToUploadWithId(m: MovieFullITF) {
+        router.push(`/uploadpic?movieId=${encodeURIComponent(String(m.movie_id))}`);
+    }
     const handleOpenEdit = (m: MovieFullITF) => {
         setEditing(m);
         setEditOpen(true);
     };
     const handleSaveEdit = (updated: MovieFullITF) => {
-        // gọi API ở đây hoặc truyền lên parent qua onEdit prop
-        // ví dụ: onEdit(updated)  <-- nếu parent xử lý update
-        onEdit(updated);
-        // hoặc nếu muốn cập nhật local state movies, gọi fetch lại...
+        if (!updated || !updated.movie_id) {
+            alert("Dữ liệu trả về không hợp lệ");
+            return;
+        }
+
+        const idx = localMovies.findIndex((x) => x.movie_id === updated.movie_id);
+        const old = idx >= 0 ? localMovies[idx] : null;
+
+        if (old) {
+            const a = shallowMovieComparable(old);
+            const b = shallowMovieComparable(updated);
+            const same = JSON.stringify(a) === JSON.stringify(b);
+
+            if (same) {
+                // không có thay đổi thực tế
+                alert("Không có thay đổi nào được lưu.");
+            } else {
+                // update local list
+                const next = localMovies.slice();
+                next[idx] = { ...next[idx], ...updated };
+                setLocalMovies(next);
+                // thông báo cho parent (nếu cần)
+                onEdit(updated);
+                alert("Cập nhật phim thành công!");
+            }
+        } else {
+            // item không tồn tại trong local (có thể là mới) -> thêm/replace
+            setLocalMovies((prev) => [updated, ...prev]);
+            onEdit(updated);
+            alert("Đã thêm phim (fallback).");
+        }
+
+        // đóng modal và reset editing
+        setEditOpen(false);
+        setEditing(null);
     };
     const handleDel = async (id: number) => {
         if (!id || id <= 0) {
@@ -58,19 +115,8 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
 
     // Filters + search + sort
     const filtered = useMemo(() => {
-        let list = movies.slice();
+        let list = localMovies.slice();
 
-        // if (query.trim()) {
-        //     const q = query.toLowerCase();
-        //     list = list.filter((m) => {
-        //         return (
-        //             (m.name || "").toLowerCase().includes(q) ||
-        //             (m.description || "").toLowerCase().includes(q) ||
-        //             (m.genres?.join(",") || "").toLowerCase().includes(q) ||
-        //             (m.actors?.join(",") || "").toLowerCase().includes(q)
-        //         );
-        //     });
-        // }
         if (query.trim()) {
             const q = query.toLowerCase();
 
@@ -98,13 +144,12 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
         list.sort((a, b) => {
             const dir = sortDir === "asc" ? 1 : -1;
             if (sortBy === "name") return dir * a.name.localeCompare(b.name);
-            if (sortBy === "duration") return dir * (a.duration - b.duration);
-            // release_date
+            if (sortBy === "duration") return dir * ((a.duration ?? 0) - (b.duration ?? 0));
             return dir * (new Date(a.release_date).getTime() - new Date(b.release_date).getTime());
         });
 
         return list;
-    }, [movies, query, sortBy, sortDir]);
+    }, [localMovies, query, sortBy, sortDir]);
 
     const total = filtered.length;
     const pages = Math.max(1, Math.ceil(total / perPage));
@@ -120,11 +165,11 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
         }
     };
 
-    // const truncate = (s = "", n = 120) => (s.length > n ? s.slice(0, n).trimEnd() + "..." : s);
     const truncate = (s: any, n = 120) => {
         s = typeof s === "string" ? s : "";
         return s.length > n ? s.slice(0, n).trimEnd() + "..." : s;
     };
+
 
 
     return (
@@ -200,7 +245,12 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                     <div className="w-16 h-24 bg-slate-100 rounded overflow-hidden flex items-center justify-center">
                                         {m.image ? (
                                             // eslint-disable-next-line @next/next/no-img-element
-                                            <img src={m.image} alt={m.name} className="w-full h-full object-cover" />
+                                            <img
+                                                src={m.image}
+                                                alt={m.name}
+                                                className="w-full h-full object-cover cursor-pointer"
+                                                onClick={() => goToUploadWithId(m)}
+                                            />
                                         ) : (
                                             <span className="text-xs">No image</span>
                                         )}

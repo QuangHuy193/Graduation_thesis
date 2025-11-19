@@ -25,7 +25,7 @@ export async function getMovieUpcommingBanerAPI() {
 export async function getMovieWithIdAPI(id: number) {
   try {
     const response = await axiosInstance.get(
-      `http://localhost:3000/api/movies/${id}`
+      `/api/movies/${id}`
     );
 
     return response.data.data;

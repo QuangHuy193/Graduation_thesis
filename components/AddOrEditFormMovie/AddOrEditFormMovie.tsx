@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
-import { createMovie } from "@/lib/axios/admin/movieAPI";
+import { getCountries } from "@/lib/axios/admin/countryAPI";
+import { createMovie, updateMovie } from "@/lib/axios/admin/movieAPI";
 type Props = {
     movie: MovieFullITF | null; // null = tạo mới
     open: boolean;
@@ -33,10 +34,22 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
         actorsCSV: "",
     });
     const [submitting, setSubmitting] = useState(false);
+    const [countries, setCountries] = useState<any[]>([]);
+    const [subtiles, setSubtitles] = useState<any[]>([]);
     // Khi open thay đổi: nếu có movie -> populate, nếu null -> reset (dùng cho add)
     useEffect(() => {
         if (!open) return;
-
+        (async () => {
+            try {
+                const data = await getCountries(); // gọi axios
+                setCountries(data); // lưu danh sách
+                setSubtitles(data);
+            } catch (err) {
+                console.error("Lỗi load countries:", err);
+                setCountries([]);
+                setSubtitles([]);
+            }
+        })();
         if (!movie) {
             // reset form for "add"
             setForm({
@@ -110,31 +123,48 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
             genres: parseCSV(form.genresCSV),
             actors: parseCSV(form.actorsCSV),
         };
-
-        // Nếu đang edit: tuỳ API, bạn có thể gọi update endpoint thay vì create.
-        // Ở đây mặc định gọi createMovie cho cả 2 trường hợp. Nếu backend có /update, thay logic tương ứng.
+        const isEdit = Boolean(payload.movie_id && payload.movie_id > 0);
         setSubmitting(true);
         try {
-            const res = await createMovie(payload); // gọi axios
-            // xử lý response:
-            // giả định res.movie hoặc res.movie_id
-            const returnedMovie: MovieFullITF | null = res?.movie
-                ? (res.movie as MovieFullITF)
-                : res?.movie_id
-                    ? { ...payload, movie_id: Number(res.movie_id) }
-                    : { ...payload, movie_id: payload.movie_id || 0 };
+            let resData: any;
 
-            // call parent
+            if (isEdit) {
+                // gọi update endpoint -- dùng id hiện có
+                resData = await updateMovie(payload.movie_id, payload);
+            } else {
+                // gọi create
+                resData = await createMovie(payload);
+            }
+
+            // xử lý response chung: tìm movie trả về
+            // backend có thể trả { movie } hoặc { movie_id } hoặc { data: movie }
+            let returnedMovie: MovieFullITF | null = null;
+
+            if (resData?.movie) {
+                returnedMovie = resData.movie as MovieFullITF;
+            } else if (resData?.data?.movie) {
+                returnedMovie = resData.data.movie as MovieFullITF;
+            } else if (resData?.movie_id) {
+                returnedMovie = { ...payload, movie_id: Number(resData.movie_id) };
+            } else if (isEdit) {
+                // nếu update không trả movie nhưng thành công, dùng payload
+                returnedMovie = payload;
+            } else {
+                // fallback: dùng payload (create nhưng backend không trả id)
+                returnedMovie = { ...payload, movie_id: payload.movie_id || 0 };
+            }
+
             onSave(returnedMovie);
             onClose();
-            alert("Thêm phim thành công!");
+            alert(isEdit ? "Cập nhật phim thành công!" : "Thêm phim thành công!");
         } catch (err: any) {
             console.error("Lỗi khi gọi API:", err);
-            const msg = err?.response?.data?.error || err?.message || "Lỗi khi thêm phim";
+            const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Lỗi khi lưu phim";
             alert("Lỗi: " + msg);
         } finally {
             setSubmitting(false);
         }
+
     };
 
     const isEdit = !!(movie && movie.movie_id);
@@ -191,15 +221,46 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                         <input type="number" min={0} className="w-full border rounded px-2 py-1" value={String(form.age_require)} onChange={(e) => update({ age_require: Number(e.target.value) })} />
                     </div>
 
-                    <div>
+                    {/* <div>
                         <label className="text-xs">Quốc gia</label>
                         <input className="w-full border rounded px-2 py-1" value={form.country} onChange={(e) => update({ country: e.target.value })} />
+                    </div> */}
+                    <div>
+                        <label className="text-xs">Quốc gia</label>
+                        <input
+                            className="w-full border rounded px-2 py-1"
+                            list="country-list"
+                            value={form.country}
+                            onChange={(e) => update({ country: e.target.value })}
+                            placeholder="Chọn quốc gia..."
+                        />
+
+                        <datalist id="country-list">
+                            {Array.isArray(countries) &&
+                                countries.map((c: any) => (
+                                    <option key={c.country_id} value={c.name} />
+                                ))}
+                        </datalist>
                     </div>
 
                     <div>
                         <label className="text-xs">Subtitle</label>
-                        <input className="w-full border rounded px-2 py-1" value={form.subtitle} onChange={(e) => update({ subtitle: e.target.value })} />
+                        <input
+                            className="w-full border rounded px-2 py-1"
+                            list="country-list"
+                            value={form.subtitle}
+                            onChange={(e) => update({ subtitle: e.target.value })}
+                            placeholder="Chọn phụ đề..."
+                        />
+
+                        <datalist id="subtitle-list">
+                            {Array.isArray(subtiles) &&
+                                subtiles.map((c: any) => (
+                                    <option key={c.country_id} value={c.name} />
+                                ))}
+                        </datalist>
                     </div>
+
 
                     <div className="md:col-span-2">
                         <label className="text-xs">Poster (image URL)</label>

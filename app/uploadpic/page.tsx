@@ -1,10 +1,9 @@
 // app/upload/page.tsx
-import UploadClient from "./uploadCilent";
-import styles from "./page.module.scss";
+"use client";
 
-export const metadata = {
-    title: "Upload ảnh",
-};
+import styles from "./page.module.scss";
+import UploadForm from "@/components/UploadForm/UploadForm";
+
 
 export default function UploadPage() {
     return (
@@ -54,7 +53,7 @@ export default function UploadPage() {
                         </div>
 
                         <div className={styles.right}>
-                            <UploadClient />
+                            <UploadForm />
                         </div>
                     </div>
                 </div>
