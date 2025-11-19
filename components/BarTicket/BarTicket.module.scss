@@ -2,6 +2,7 @@
   :global(.ant-select-selector) {
     color: var(--color-purple) !important;
     font-weight: bold !important;
+    width: 160px !important;
   }
 
   :global(.ant-select-selection-placeholder),

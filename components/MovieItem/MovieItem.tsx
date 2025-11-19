@@ -21,7 +21,7 @@ function MovieItem({ data }: { data: MovieItemITF }) {
           width={250}
           height={50}
           alt={data.name}
-          className="w-full cursor-pointer rounded-sm"
+          className="w-full h-[360px] cursor-pointer rounded-sm"
         />
 
         <div

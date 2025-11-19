@@ -10,7 +10,7 @@ export default async function Movie(props: {
 
   return (
     <div>
-      <MovieDetail data={dataMovie} />
+      <MovieDetail data={dataMovie} movie_id={id} />
     </div>
   );
 }

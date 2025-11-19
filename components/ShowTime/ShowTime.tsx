@@ -10,7 +10,15 @@ import ShowTimeCard from "../ShowTimeCard/ShowTimeCard";
 import Spinner from "../Spinner/Spinner";
 import { getShowtimeByDateAPI } from "@/lib/axios/showTimeAPI";
 
-function ShowTime() {
+function ShowTime({
+  movie_id,
+  setTimesSelect,
+  timeSelected,
+}: {
+  movie_id: number;
+  setTimesSelect: (obj: { showtime_id: string; room_id: string }) => void;
+  timeSelected: object;
+}) {
   const days = Array.from({ length: 5 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
@@ -50,7 +58,8 @@ function ShowTime() {
     const getShowtime = async (day: number) => {
       setToggle((prev) => ({ ...prev, fetchData: true }));
       try {
-        const res = await getShowtimeByDateAPI(day);
+        const res = await getShowtimeByDateAPI(day, movie_id);
+        console.log(res);
         const filtered = filterByProvince(res, selected.provinceSelected);
         await setShowtimes((prev) => ({
           ...prev,
@@ -77,7 +86,7 @@ function ShowTime() {
     const filterByProvince = (data: any[], province: string) => {
       if (!province) return data;
 
-      return data.filter((item) => item.cinema.province === province);
+      return data.filter((item) => item.province === province);
     };
 
     const day = selected.dateSelected ? selected.dateSelected : 0;
@@ -162,8 +171,12 @@ function ShowTime() {
             {showTimes.dataDisplay[selected.dateSelected]?.data?.length > 0 ? (
               showTimes.dataDisplay[selected.dateSelected]?.data?.map(
                 (d, i: number) => (
-                  <div key={i}>
-                    <ShowTimeCard data={d} />
+                  <div key={i} className="pb-3">
+                    <ShowTimeCard
+                      data={d}
+                      setTimesSelect={setTimesSelect}
+                      timeSelected={timeSelected}
+                    />
                   </div>
                 )
               )

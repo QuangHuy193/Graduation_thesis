@@ -1,9 +1,9 @@
 "use client";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Link from "next/link";
 import React from "react";
 import cn from "clsx";
+import LoadingLink from "../Link/LinkLoading";
 
 type ButtonProps = {
   text?: React.ReactNode;
@@ -104,7 +104,7 @@ export default function Button({
   // Nếu có link -> render Link (a) styled as button (không render <button> bên trong <a>)
   if (link && link.trim() !== "") {
     return (
-      <Link
+      <LoadingLink
         href={link}
         role="button"
         aria-disabled={disabled}
@@ -120,7 +120,7 @@ export default function Button({
       >
         {icon && <FontAwesomeIcon icon={icon} className="mr-2 relative z-10" />}
         <span className="relative z-10">{text ?? children}</span>
-      </Link>
+      </LoadingLink>
     );
   }
 

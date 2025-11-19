@@ -16,10 +16,19 @@ import LoadingPage from "../LoadingPage/LoadingPage";
 import { useState } from "react";
 import VideoTrailer from "../VideoTrailer/VideoTrailer";
 import ShowTime from "../ShowTime/ShowTime";
+import { dataTicketFake } from "@/lib/constant";
+import PriceCard from "../PriceCard/PriceCard";
 
-function MovieDetail({ data }: { data: MovieFullITF[] }) {
+function MovieDetail({
+  data,
+  movie_id,
+}: {
+  data: MovieFullITF[];
+  movie_id: number;
+}) {
   const [state, setState] = useState({
     watchTrailer: false,
+    timesSelected: { showtime_id: "", room_id: "" },
   });
 
   if (!data || data.length === 0) {
@@ -129,8 +138,27 @@ function MovieDetail({ data }: { data: MovieFullITF[] }) {
       </div>
 
       <div>
-        <ShowTime />
+        <ShowTime
+          movie_id={movie_id}
+          setTimesSelect={(obj) =>
+            setState((prev) => ({
+              ...prev,
+              timesSelected: obj,
+            }))
+          }
+          timeSelected={state}
+        />
       </div>
+
+      {state.timesSelected.showtime_id !== "" && (
+        <div className="flex gap-6 justify-center">
+          {dataTicketFake.map((t, i) => (
+            <div key={i} className="h-[150px] w-[300px]">
+              <PriceCard data={t} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
