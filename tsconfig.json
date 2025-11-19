@@ -6,6 +6,9 @@
       "dom.iterable",
       "esnext"
     ],
+    "types": [
+      "next-auth"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -36,7 +39,9 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     ".next\\dev/types/**/*.ts",
-    ".next\\dev/types/**/*.ts"
+    ".next\\dev/types/**/*.ts",
+    "components/AppRouter",
+    "src/types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules"

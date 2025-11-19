@@ -1,0 +1,134 @@
+/* FilmDatalist.module.scss
+   Styles cho FilmDatalist component
+   - Dùng module CSS (scoped)
+   - Mục tiêu: input đẹp hơn, spinner nhỏ khi loading, hint text, và responsive
+*/
+
+:root {
+    --fd-border: #e6e9ee;
+    --fd-bg: #ffffff;
+    --fd-focus: #2563eb;
+    /* blue-600 */
+    --fd-muted: #6b7280;
+    --fd-radius: 0.375rem;
+    /* 6px */
+    --fd-shadow: 0 6px 18px rgba(2, 6, 23, 0.06);
+}
+
+/* Wrapper */
+.wrapper {
+    display: block;
+    width: 100%;
+    position: relative;
+    font-family: inherit;
+}
+
+/* Input cơ bản */
+.input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    border-radius: var(--fd-radius);
+    border: 1px solid var(--fd-border);
+    background: var(--fd-bg);
+    outline: none;
+    transition: box-shadow 140ms ease, border-color 140ms ease;
+}
+
+/* Focus */
+.input:focus {
+    border-color: var(--fd-focus);
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.06);
+}
+
+/* Disabled / read-only */
+.input[disabled],
+.input[readonly] {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Small inline spinner (absolute, right side) */
+.spinner {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--fd-focus);
+    border-left-color: rgba(37, 99, 235, 0.25);
+    animation: fd-spin 0.9s linear infinite;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+/* Hiện spinner khi cần */
+.loading {
+    opacity: 1;
+}
+
+/* Keyframes */
+@keyframes fd-spin {
+    from {
+        transform: translateY(-50%) rotate(0deg);
+    }
+
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}
+
+/* Hint / note text dưới input */
+.hint {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.8rem;
+    color: var(--fd-muted);
+}
+
+/* Fallback list preview (nếu bạn muốn render list thay datalist native) */
+.suggestionList {
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-top: 0.375rem;
+    background: #fff;
+    border: 1px solid var(--fd-border);
+    border-radius: 0.375rem;
+    box-shadow: var(--fd-shadow);
+    z-index: 60;
+    max-height: 220px;
+    overflow: auto;
+    padding: 0.25rem 0;
+}
+
+/* Single suggestion (if used) */
+.suggestion {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.suggestion:hover,
+.suggestion:focus {
+    background: #f8fafc;
+}
+
+/* Small responsive tweaks */
+@media (max-width: 640px) {
+    .input {
+        font-size: 0.92rem;
+        padding: 0.45rem 0.65rem;
+    }
+
+    .spinner {
+        right: 8px;
+        width: 14px;
+        height: 14px;
+    }
+}

@@ -41,25 +41,25 @@ export async function updateMovie(id: number, payload: Partial<MovieFullITF>) {
     }
 
 }
-export async function getMovieWithIdAPI(id: number): Promise<MovieFullITF | null> {
+export async function getMovieWithIdAPI(id: number) {
     try {
-        const response = await axiosInstance.get(`/api/movies/${id}`);
-        // hỗ trợ nhiều định dạng response
-        const data = response?.data?.data ?? response?.data?.movie ?? response?.data ?? null;
-        return data as MovieFullITF | null;
+        const response = await axiosInstance.get(`/api/movies/admin/getMovie/${id}`);
+        // hỗ trợ nhiều dạng response: data có thể là object hoặc mảng
+        let data = response?.data?.data ?? response?.data?.movie ?? response?.data ?? null;
+
+        // nếu backend trả mảng rows (vd: [row]) -> lấy phần tử đầu
+        if (Array.isArray(data) && data.length > 0) data = data[0];
+
+        return data;
     } catch (error: any) {
         console.error("Error fetching movie:", error);
-
-        // chuẩn hóa message + status
         const msg =
             error?.response?.data?.message ??
             error?.response?.data?.error ??
             error?.message ??
             "Lỗi khi lấy movie";
-        const status = error?.response?.status ?? null;
-
         const e = new Error(msg) as any;
-        e.status = status;
+        e.status = error?.response?.status ?? null;
         e.original = error;
         throw e;
     }

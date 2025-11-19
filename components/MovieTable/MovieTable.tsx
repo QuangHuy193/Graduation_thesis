@@ -42,9 +42,17 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     useEffect(() => {
         setLocalMovies(movies || []);
     }, [movies]);
-    function goToUploadWithId(m: MovieFullITF) {
-        router.push(`/uploadpic?movieId=${encodeURIComponent(String(m.movie_id))}`);
+    // function goToUploadWithId(m: MovieFullITF) {
+    //     router.push(`/uploadpic?movieId=${encodeURIComponent(String(m.movie_id))}`);
+    // }
+    function goToUploadWithId(movieId: number) {
+        if (!movieId || Number.isNaN(Number(movieId))) {
+            console.warn("Invalid movieId:", movieId);
+            return;
+        }
+        router.push(`/admin/uploadpic?movieId=${encodeURIComponent(String(movieId))}`);
     }
+
     const handleOpenEdit = (m: MovieFullITF) => {
         setEditing(m);
         setEditOpen(true);
@@ -249,10 +257,10 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                                 src={m.image}
                                                 alt={m.name}
                                                 className="w-full h-full object-cover cursor-pointer"
-                                                onClick={() => goToUploadWithId(m)}
+                                                onClick={() => goToUploadWithId(m.movie_id)}
                                             />
                                         ) : (
-                                            <span className="text-xs">No image</span>
+                                            <span className="text-xs cursor-pointer" onClick={() => goToUploadWithId(m.movie_id)}>No image</span>
                                         )}
                                     </div>
                                 </td>

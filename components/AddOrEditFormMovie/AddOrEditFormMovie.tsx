@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import { getCountries } from "@/lib/axios/admin/countryAPI";
 import { createMovie, updateMovie } from "@/lib/axios/admin/movieAPI";
+import styles from "./AddOrEditFormMovie.module.scss";
 type Props = {
     movie: MovieFullITF | null; // null = tạo mới
     open: boolean;
@@ -171,9 +172,9 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
 
     return (
         <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/50 p-4 overflow-auto">
-            <form onSubmit={handleSubmit} className="bg-white rounded shadow max-w-3xl w-full p-4 space-y-3 overflow-auto max-h-[90vh]">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">{isEdit ? "Sửa phim" : "Thêm phim mới"}</h3>
+            <form onSubmit={handleSubmit} className={`${styles.modal} ${styles.scrollable} bg-white rounded shadow max-w-3xl w-full p-4 space-y-3 overflow-auto max-h-[90vh]`}>
+                <div className={`${styles.header}`}>
+                    <h3 className={`${styles.title} text-lg`}>{isEdit ? "Sửa phim" : "Thêm phim mới"}</h3>
                     <div className="flex items-center gap-2">
                         <button type="button" onClick={() => {
                             // reset if adding
@@ -196,39 +197,35 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                                 });
                             }
                             onClose();
-                        }} className="px-3 py-1 border rounded">Đóng</button>
+                        }} className="px-3 py-1 border rounded cursor-pointer bg-red-500 text-white">Đóng</button>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label className="text-xs">Tiêu đề</label>
-                        <input className="w-full border rounded px-2 py-1" value={form.name} onChange={(e) => update({ name: e.target.value })} />
+                        <label className={`${styles.label} text-xs`}>Tiêu đề</label>
+                        <input className={`${styles.input} w-full`} value={form.name} onChange={(e) => update({ name: e.target.value })} />
                     </div>
 
                     <div>
-                        <label className="text-xs">Ngày công chiếu</label>
-                        <input type="date" className="w-full border rounded px-2 py-1" value={form.release_date} onChange={(e) => update({ release_date: e.target.value })} />
+                        <label className={`${styles.label} text-xs`}>Ngày công chiếu</label>
+                        <input type="date" className={`${styles.input} w-full`} value={form.release_date} onChange={(e) => update({ release_date: e.target.value })} />
                     </div>
 
                     <div>
-                        <label className="text-xs">Thời lượng (phút)</label>
-                        <input type="number" min={0} className="w-full border rounded px-2 py-1" value={String(form.duration)} onChange={(e) => update({ duration: Number(e.target.value) })} />
+                        <label className={`${styles.label} text-xs`}>Thời lượng (phút)</label>
+                        <input type="number" min={0} className={`${styles.input} w-full`} value={String(form.duration)} onChange={(e) => update({ duration: Number(e.target.value) })} />
                     </div>
 
                     <div>
-                        <label className="text-xs">Độ tuổi</label>
-                        <input type="number" min={0} className="w-full border rounded px-2 py-1" value={String(form.age_require)} onChange={(e) => update({ age_require: Number(e.target.value) })} />
+                        <label className={`${styles.label} text-xs`}>Độ tuổi</label>
+                        <input type="number" min={0} className={`${styles.input} w-full`} value={String(form.age_require)} onChange={(e) => update({ age_require: Number(e.target.value) })} />
                     </div>
 
-                    {/* <div>
-                        <label className="text-xs">Quốc gia</label>
-                        <input className="w-full border rounded px-2 py-1" value={form.country} onChange={(e) => update({ country: e.target.value })} />
-                    </div> */}
                     <div>
-                        <label className="text-xs">Quốc gia</label>
+                        <label className={`${styles.label} text-xs`}>Quốc gia</label>
                         <input
-                            className="w-full border rounded px-2 py-1"
+                            className={`${styles.input} w-full`}
                             list="country-list"
                             value={form.country}
                             onChange={(e) => update({ country: e.target.value })}
@@ -244,10 +241,10 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                     </div>
 
                     <div>
-                        <label className="text-xs">Subtitle</label>
+                        <label className={`${styles.label} text-xs`}>Subtitle</label>
                         <input
-                            className="w-full border rounded px-2 py-1"
-                            list="country-list"
+                            className={`${styles.input} w-full`}
+                            list="subtitle-list"
                             value={form.subtitle}
                             onChange={(e) => update({ subtitle: e.target.value })}
                             placeholder="Chọn phụ đề..."
@@ -262,44 +259,46 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                     </div>
 
 
-                    <div className="md:col-span-2">
-                        <label className="text-xs">Poster (image URL)</label>
-                        <input className="w-full border rounded px-2 py-1" value={form.image} onChange={(e) => update({ image: e.target.value })} />
+                    <div className={`${styles.colSpan2} md:col-span-2`}>
+                        <label className={`${styles.label} text-xs`}>Poster (image URL)</label>
+                        <input className={`${styles.input} w-full`} value={form.image} onChange={(e) => update({ image: e.target.value })} />
                         {form.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={form.image} alt="preview" className="mt-2 w-32 h-48 object-cover border rounded" />
+                            <div className={styles.posterWrap}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={form.image} alt="preview" className={styles.poster} />
+                            </div>
                         ) : null}
                     </div>
 
-                    <div className="md:col-span-2">
-                        <label className="text-xs">Trailer (embed URL)</label>
-                        <input className="w-full border rounded px-2 py-1" value={form.trailer_url} onChange={(e) => update({ trailer_url: e.target.value })} />
+                    <div className={`${styles.colSpan2} md:col-span-2`}>
+                        <label className={`${styles.label} text-xs`}>Trailer (embed URL)</label>
+                        <input className={`${styles.input} w-full`} value={form.trailer_url} onChange={(e) => update({ trailer_url: e.target.value })} />
                         {form.trailer_url ? (
-                            <div className="mt-2 aspect-video w-full">
+                            <div className={`mt-2 ${styles.embed}`}>
                                 {/* Render only if looks like an embed src (you may adjust) */}
                                 <iframe title="preview-trailer" className="w-full h-full" src={form.trailer_url} allowFullScreen />
                             </div>
                         ) : null}
                     </div>
 
-                    <div className="md:col-span-2">
-                        <label className="text-xs">Thể loại (phân tách bởi dấu phẩy)</label>
-                        <input className="w-full border rounded px-2 py-1" value={form.genresCSV} onChange={(e) => update({ genresCSV: e.target.value })} placeholder="Hài, Hành động, ..." />
+                    <div className={`${styles.colSpan2} md:col-span-2`}>
+                        <label className={`${styles.label} text-xs`}>Thể loại (phân tách bởi dấu phẩy)</label>
+                        <input className={`${styles.input} w-full`} value={form.genresCSV} onChange={(e) => update({ genresCSV: e.target.value })} placeholder="Hài, Hành động, ..." />
                     </div>
 
-                    <div className="md:col-span-2">
-                        <label className="text-xs">Diễn viên (phân tách bởi dấu phẩy)</label>
-                        <input className="w-full border rounded px-2 py-1" value={form.actorsCSV} onChange={(e) => update({ actorsCSV: e.target.value })} placeholder="Tên A, Tên B, ..." />
+                    <div className={`${styles.colSpan2} md:col-span-2`}>
+                        <label className={`${styles.label} text-xs`}>Diễn viên (phân tách bởi dấu phẩy)</label>
+                        <input className={`${styles.input} w-full`} value={form.actorsCSV} onChange={(e) => update({ actorsCSV: e.target.value })} placeholder="Tên A, Tên B, ..." />
                     </div>
 
-                    <div className="md:col-span-2">
-                        <label className="text-xs">Mô tả</label>
-                        <textarea rows={4} className="w-full border rounded px-2 py-1" value={form.description} onChange={(e) => update({ description: e.target.value })} />
+                    <div className={`${styles.colSpan2} md:col-span-2`}>
+                        <label className={`${styles.label} text-xs`}>Mô tả</label>
+                        <textarea rows={4} className={`${styles.textarea} w-full`} value={form.description} onChange={(e) => update({ description: e.target.value })} />
                     </div>
 
                     <div>
-                        <label className="text-xs">Trạng thái</label>
-                        <select className="w-full border rounded px-2 py-1" value={String(form.status)} onChange={(e) => update({ status: Number(e.target.value) })}>
+                        <label className={`${styles.label} text-xs`}>Trạng thái</label>
+                        <select className={`${styles.select} w-full`} value={String(form.status)} onChange={(e) => update({ status: Number(e.target.value) })}>
                             <option value={1}>Đang chiếu</option>
                             <option value={0}>Sắp chiếu</option>
                             <option value={-1}>Ẩn</option>
@@ -307,16 +306,16 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                     </div>
 
                     <div>
-                        <label className="text-xs">Giá cơ bản</label>
-                        <input type="number" className="w-full border rounded px-2 py-1" value={String(form.price_base)} onChange={(e) => update({ price_base: Number(e.target.value) })} />
+                        <label className={`${styles.label} text-xs`}>Giá cơ bản</label>
+                        <input type="number" className={`${styles.input} w-full`} value={String(form.price_base)} onChange={(e) => update({ price_base: Number(e.target.value) })} />
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2 mt-2">
-                    <button type="button" onClick={onClose} className="px-3 py-1 border rounded">Hủy</button>
+                <div className={`${styles.footer}`}>
+                    <button type="button" onClick={onClose} className={`${styles.btn} px-3 py-1 border rounded`}>Hủy</button>
                     <button
                         type="submit"
-                        className="px-3 py-1 rounded bg-blue-600 text-white"
+                        className={`${styles.btn} ${styles.btnPrimary} px-3 py-1 rounded`}
                         disabled={submitting}
                     >
                         {submitting ? (isEdit ? "Đang lưu..." : "Đang tạo...") : isEdit ? "Lưu" : "Tạo"}
