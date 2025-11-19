@@ -18,6 +18,7 @@ import VideoTrailer from "../VideoTrailer/VideoTrailer";
 import ShowTime from "../ShowTime/ShowTime";
 import { dataTicketFake } from "@/lib/constant";
 import PriceCard from "../PriceCard/PriceCard";
+import Room from "../Room/Room";
 
 function MovieDetail({
   data,
@@ -151,12 +152,21 @@ function MovieDetail({
       </div>
 
       {state.timesSelected.showtime_id !== "" && (
-        <div className="flex gap-6 justify-center">
-          {dataTicketFake.map((t, i) => (
-            <div key={i} className="h-[150px] w-[300px]">
-              <PriceCard data={t} />
-            </div>
-          ))}
+        <div>
+          <div className="flex justify-center text-4xl font-bold my-16">
+            CHỌN LOẠI VÉ
+          </div>
+          <div className="flex gap-6 justify-center">
+            {dataTicketFake.map((t, i) => (
+              <div key={i} className="h-[150px] w-[300px]">
+                <PriceCard data={t} />
+              </div>
+            ))}
+          </div>
+
+          <div className="py-4">
+            <Room />
+          </div>
         </div>
       )}
     </div>

@@ -62,3 +62,7 @@ export function formatDateWithDay(isoString: Date) {
 
   return `${day}, ${dayNum}/${month}/${year}`;
 }
+
+export function numberToLetter(n: number) {
+  return String.fromCharCode(65 + n);
+}

@@ -14,7 +14,9 @@ function PriceCard({ data }) {
       >
         {data.name}
       </div>
-      <div className="text-[16px] font-semibold">{data.price} VNĐ</div>
+      <div className="text-[16px] font-semibold">
+        {data.price.toLocaleString("en-US")} VNĐ
+      </div>
       <div
         className="text-black w-[100px] flex bg-gray-50 items-center justify-between
       rounded-sm font-semibold px-1.5 py-2 hover:bg-(--color-yellow) "
