@@ -20,6 +20,7 @@ import { dataTicketFake } from "@/lib/constant";
 import PriceCard from "../PriceCard/PriceCard";
 import Room from "../Room/Room";
 import { getRoomAsileWithIdAPI } from "@/lib/axios/roomAPI";
+import { getSeatsWithRoomShowtimeAPI } from "@/lib/axios/seatsAPI";
 
 function MovieDetail({
   data,
@@ -30,29 +31,98 @@ function MovieDetail({
 }) {
   const [state, setState] = useState({
     watchTrailer: false,
-    timesSelected: { showtime_id: "", room_id: -1 },
+    timesSelected: { showtime_id: -1, room_id: -1 },
     ticketSelected: {},
     room_asile: {},
+    seats: [],
+    seatSelected: [],
   });
+  const handleSelectSeat = (seat_id: number) => {
+    const { ticketSelected, seatSelected } = state;
+
+    // tổng số vé đã chọn
+    const totalTickets = Object.values(ticketSelected).reduce(
+      (acc, val) => acc + val,
+      0
+    );
+
+    // tổng số ghế đã chọn
+    const totalSeats = seatSelected.length;
+
+    // kiểm tra nếu ghế đã chọn thì bỏ chọn
+    const existing = seatSelected.find((s) => s.seat_id === seat_id);
+    if (existing) {
+      setState((prev) => ({
+        ...prev,
+        seatSelected: prev.seatSelected.filter((s) => s.seat_id !== seat_id),
+      }));
+      return;
+    }
+
+    // nếu chưa đủ số ghế → chọn tiếp
+    if (totalSeats < totalTickets) {
+      // tự động phân loại theo thứ tự loại vé
+      let typeToUse = "";
+      const countByType = seatSelected.reduce((acc, s) => {
+        acc[s.type] = (acc[s.type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      for (const type in ticketSelected) {
+        if ((countByType[type] || 0) < ticketSelected[type]) {
+          typeToUse = type;
+          break;
+        }
+      }
+
+      setState((prev) => ({
+        ...prev,
+        seatSelected: [...prev.seatSelected, { seat_id, type: typeToUse }],
+      }));
+    } else {
+      // đủ ghế rồi → không chọn thêm
+      console.log("Đã chọn đủ ghế rồi!");
+    }
+  };
+
   useEffect(() => {
+    if (
+      state.timesSelected.room_id === -1 ||
+      state.timesSelected.showtime_id === -1
+    ) {
+      return;
+    }
     scrollToPosition(0, true, "select_ticket_type", 120);
 
     const getRoomAsile = async (room_id: number) => {
       try {
         const res = await getRoomAsileWithIdAPI(room_id);
         setState((prev) => ({ ...prev, room_asile: res }));
-        console.log(res);
       } catch (error) {
         console.log(error);
       }
     };
-    if (state.timesSelected.room_id !== -1) {
+
+    const getSeats = async (room: number, showtime: number) => {
+      try {
+        const res = await getSeatsWithRoomShowtimeAPI(room, showtime);
+        setState((prev) => ({ ...prev, seats: res }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    if (
+      state.timesSelected.room_id !== -1 &&
+      state.timesSelected.showtime_id !== -1
+    ) {
       getRoomAsile(state.timesSelected.room_id);
+      getSeats(state.timesSelected.room_id, state.timesSelected.showtime_id);
     }
   }, [state.timesSelected]);
 
   useEffect(() => {
-    scrollToPosition(0, true, "select_seat", 100);
+    scrollToPosition(0, true, "select_seat", 100, 2000);
   }, [state.ticketSelected]);
 
   if (!data || data.length === 0) {
@@ -175,7 +245,7 @@ function MovieDetail({
         />
       </div>
 
-      {state.timesSelected.showtime_id !== "" && (
+      {state.timesSelected.showtime_id !== -1 && (
         <div id="select_ticket_type" className="mt-16">
           <div className="flex justify-center text-4xl font-bold mb-16">
             CHỌN LOẠI VÉ
@@ -215,7 +285,14 @@ function MovieDetail({
           </div>
 
           <div id="select_seat" className="py-4">
-            <Room data={state.room_asile} />
+            <Room
+              data={state.room_asile}
+              seats={state.seats}
+              selectSeat={(seat_id) => {
+                handleSelectSeat(seat_id);
+              }}
+              seatSelected={state.seatSelected}
+            />
           </div>
         </div>
       )}

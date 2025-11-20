@@ -6,32 +6,43 @@ export function scrollToPosition(
   y?: number,
   smooth: boolean = true,
   elementId?: string,
-  offset: number = 0 // khoảng cách với top
+  offset: number = 0, // khoảng cách với
+  delay: number = 0
 ) {
   if (typeof window === "undefined") return;
 
   const behavior = smooth ? "smooth" : "auto";
 
   // Nếu truyền ID → ưu tiên scroll tới element theo offset
-  if (elementId) {
-    const el = document.getElementById(elementId);
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      const absoluteY = rect.top + window.scrollY; // vị trí thật trên trang
+  const runScroll = () => {
+    // Nếu truyền ID → ưu tiên scroll tới element
+    if (elementId) {
+      const el = document.getElementById(elementId);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const absoluteY = rect.top + window.scrollY;
 
-      window.scrollTo({
-        top: absoluteY - offset,
-        behavior,
-      });
-      return;
+        window.scrollTo({
+          top: absoluteY - offset,
+          behavior,
+        });
+        return;
+      }
     }
-  }
 
-  // fallback → scroll theo y như logic cũ
-  window.scrollTo({
-    top: (y ?? 0) - offset,
-    behavior,
-  });
+    // fallback → scroll theo y
+    window.scrollTo({
+      top: (y ?? 0) - offset,
+      behavior,
+    });
+  };
+
+  // nếu delay > 0 → chờ xong rồi scroll
+  if (delay > 0) {
+    setTimeout(runScroll, delay);
+  } else {
+    runScroll();
+  }
 }
 
 export function successResponse<T>(data: T, message?: string, status = 200) {
@@ -88,4 +99,44 @@ export function formatDateWithDay(isoString: Date) {
 
 export function numberToLetter(n: number) {
   return String.fromCharCode(65 + n);
+}
+
+export function isSingleGap(rowSeats, col: number) {
+  // rowSeats: mảng ghế trong 1 hàng (có status + column)
+  // col: ghế user muốn chọn (0-based)
+
+  // tạo array trạng thái liên tục theo cột
+  // 0 = trống, 1 = đã đặt hoặc đã chọn
+  const seats = [...rowSeats]
+    .sort((a, b) => Number(a.seat_column) - Number(b.seat_column))
+    .map((s) => ({
+      col: Number(s.seat_column),
+      booked: s.status === 1 || s.selected === true,
+    }));
+
+  // check ghế 2 bên
+  const left = seats.find((s) => s.col === col - 1);
+  const right = seats.find((s) => s.col === col + 1);
+
+  // check ghế 2 bên tiếp theo
+  const left2 = seats.find((s) => s.col === col - 2);
+  const right2 = seats.find((s) => s.col === col + 2);
+
+  /***
+   * Trường hợp tạo khoảng trống 1 ghế:
+   * [ X ][ _ ][ YOU ]  -> không cho
+   * [ YOU ][ _ ][ X ]  -> không cho
+   */
+
+  // tạo gap bên trái
+  if (left && !left.booked && left2 && left2.booked) {
+    return true;
+  }
+
+  // tạo gap bên phải
+  if (right && !right.booked && right2 && right2.booked) {
+    return true;
+  }
+
+  return false;
 }

@@ -2,7 +2,14 @@ import { numberToLetter } from "@/lib/function";
 import Image from "next/image";
 import Spinner from "../Spinner/Spinner";
 
-function Room({ data }) {
+function Room({
+  data,
+  seats,
+  selectSeat,
+  seatSelected,
+}: {
+  selectSeat: (seat_id: number) => void;
+}) {
   if (!data || !Array.isArray(data.aside_gap)) return <Spinner />;
 
   return (
@@ -43,6 +50,46 @@ function Room({ data }) {
 
                   // nếu không phải aside → tạo mã ghế
                   let seatLabel = "";
+                  let isBooked = false;
+                  let seat_id = -1;
+
+                  if (!isAside) {
+                    seatLabel = `${numberToLetter(i)}${seatIndex}`;
+
+                    // tìm ghế trong data seats
+                    const seat = seats.find(
+                      (s) =>
+                        s.seat_row === numberToLetter(i) &&
+                        Number(s.seat_column) === col // seat_column BE bắt đầu từ 0
+                    );
+
+                    if (seat) {
+                      seat_id = seat.seat_id;
+                    }
+
+                    if (seat?.status === 1) {
+                      isBooked = true;
+                    }
+
+                    seatIndex++;
+                  }
+                  if (!isAside) {
+                    seatLabel = `${numberToLetter(i)}${seatIndex}`;
+
+                    // tìm ghế trong data seats
+                    const seat = seats.find(
+                      (s) =>
+                        s.seat_row === numberToLetter(i) &&
+                        Number(s.seat_column) === col // seat_column BE bắt đầu từ 0
+                    );
+
+                    if (seat?.status === 1) {
+                      isBooked = true;
+                    }
+
+                    seatIndex++;
+                  }
+
                   if (!isAside) {
                     seatLabel = `${numberToLetter(i)}${seatIndex}`;
                     seatIndex++; // tăng cho ghế tiếp theo
@@ -54,9 +101,14 @@ function Room({ data }) {
                       className={`${
                         isAside
                           ? "bg-transparent"
+                          : isBooked
+                          ? "bg-gray-500 text-white"
+                          : seatSelected.some((s) => s.seat_id === seat_id)
+                          ? "bg-(--color-yellow) hover:cursor-pointer"
                           : "bg-white hover:cursor-pointer"
                       } w-10 h-8 rounded-xl flex items-center justify-center text-(--color-purple)
                           font-semibold`}
+                      onClick={() => selectSeat(seat_id)}
                     >
                       {!isAside && seatLabel}
                     </div>

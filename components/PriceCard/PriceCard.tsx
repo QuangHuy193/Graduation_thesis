@@ -1,6 +1,7 @@
 import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./PriceCard.module.scss";
+import Swal from "sweetalert2";
 
 function PriceCard({
   data,
@@ -10,10 +11,38 @@ function PriceCard({
   setTicketSelected: (name: string, inc: boolean) => void;
   ticketSelected: object;
 }) {
+  const handleInc = (name: string, inc: boolean, flag: boolean) => {
+    if (!ticketSelected[data.name] && name === "HS-SV") {
+      {
+        Swal.fire({
+          text: `Bạn đang mua hạng vé đặc biệt dành cho HSSV. 
+          Vui lòng mang theo CCCD hoặc thẻ HSSV có dán ảnh để xác minh trước khi vào rạp. 
+          Nhân viên rạp có thể từ chối không cho bạn vào xem 
+          nếu không thực hiện đúng quy định này. Trân trọng cảm ơn`,
+          showCancelButton: true,
+          confirmButtonText: "ĐỒNG Ý",
+          cancelButtonText: "HỦY",
+          buttonsStyling: false,
+          customClass: {
+            popup:
+              "rounded-xl !bg-gradient-to-r from-[#64369C] via-[#4D4CB2] to-[#3961C7] !text-white",
+            confirmButton: `${styles.btn_alert}`,
+            cancelButton: `${styles.btn_alert}`,
+          },
+        }).then((result: any) => {
+          if (result.isConfirmed) {
+            setTicketSelected(name, inc);
+          }
+        });
+      }
+    } else {
+      setTicketSelected(name, inc);
+    }
+  };
   return (
     <div
       className="bg-transparent border border-gray-300 rounded-sm p-5 flex flex-col
-    justify-between h-full"
+    justify-between h-full "
     >
       <div
         className="text-[16px] font-semibold uppercase hover:text-(--color-yellow)
@@ -37,7 +66,7 @@ function PriceCard({
         <FontAwesomeIcon
           className={`${styles.btn_inc_dec}`}
           icon={faPlus}
-          onClick={() => setTicketSelected(data.name, true)}
+          onClick={() => handleInc(data.name, true, true)}
         />
       </div>
     </div>

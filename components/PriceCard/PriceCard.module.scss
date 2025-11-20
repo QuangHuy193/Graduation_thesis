@@ -8,3 +8,17 @@
     background-color: var(--color-purple);
   }
 }
+
+.btn_alert {
+  border: 1px var(--color-yellow) solid;
+  padding: 8px 16px;
+  margin: auto 8px;
+  border-radius: 8px;
+  color: var(--color-yellow);
+  cursor: pointer;
+
+  &:hover {
+    color: white;
+    background-image: linear-gradient(to right, #ff4500, var(--color-yellow));
+  }
+}
