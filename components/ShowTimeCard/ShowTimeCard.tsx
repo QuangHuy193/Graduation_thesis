@@ -7,7 +7,13 @@ function ShowTimeCard({
   setTimesSelect,
   timeSelected,
 }: {
-  setTimesSelect: (obj: { showtime_id: string; room_id: string }) => void;
+  setTimesSelect: (obj: {
+    showtime_id: string;
+    room_id: string;
+    cinema_name: string;
+    room_name: string;
+    time: string;
+  }) => void;
   timeSelected: object;
 }) {
   const handleSelectTimes = (data) => {
@@ -36,7 +42,10 @@ function ShowTimeCard({
                 onClick={() =>
                   handleSelectTimes({
                     showtime_id: s.showtime_id,
+                    cinema_name: data.cinema_name + " (" + data.province + ") ",
                     room_id: s.room.room_id,
+                    room_name: s.room.room_name,
+                    time: t,
                   })
                 }
               >

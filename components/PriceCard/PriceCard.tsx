@@ -24,10 +24,9 @@ function PriceCard({
           cancelButtonText: "HỦY",
           buttonsStyling: false,
           customClass: {
-            popup:
-              "rounded-xl !bg-gradient-to-r from-[#64369C] via-[#4D4CB2] to-[#3961C7] !text-white",
-            confirmButton: `${styles.btn_alert}`,
-            cancelButton: `${styles.btn_alert}`,
+            popup: "popup_alert",
+            confirmButton: `btn_alert`,
+            cancelButton: `btn_alert`,
           },
         }).then((result: any) => {
           if (result.isConfirmed) {

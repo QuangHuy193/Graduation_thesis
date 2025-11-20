@@ -16,7 +16,13 @@ function ShowTime({
   timeSelected,
 }: {
   movie_id: number;
-  setTimesSelect: (obj: { showtime_id: string; room_id: string }) => void;
+  setTimesSelect: (obj: {
+    showtime_id: number;
+    room_id: number;
+    cinema_name: string;
+    room_name: string;
+    time: string;
+  }) => void;
   timeSelected: object;
 }) {
   const days = Array.from({ length: 5 }, (_, i) => {
@@ -55,6 +61,14 @@ function ShowTime({
   }, []);
 
   useEffect(() => {
+    // xóa giờ, loại vé đã chọn
+    setTimesSelect({
+      showtime_id: -1,
+      room_id: -1,
+      cinema_name: "",
+      room_name: "",
+      time: "",
+    });
     const getShowtime = async (day: number) => {
       setToggle((prev) => ({ ...prev, fetchData: true }));
       try {

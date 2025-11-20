@@ -21,6 +21,8 @@ import PriceCard from "../PriceCard/PriceCard";
 import Room from "../Room/Room";
 import { getRoomAsileWithIdAPI } from "@/lib/axios/roomAPI";
 import { getSeatsWithRoomShowtimeAPI } from "@/lib/axios/seatsAPI";
+import Swal from "sweetalert2";
+import Button from "../Button/Button";
 
 function MovieDetail({
   data,
@@ -31,12 +33,20 @@ function MovieDetail({
 }) {
   const [state, setState] = useState({
     watchTrailer: false,
-    timesSelected: { showtime_id: -1, room_id: -1 },
+    timesSelected: {
+      showtime_id: -1,
+      room_id: -1,
+      cinema_name: "",
+      room_name: "",
+      time: "",
+    },
     ticketSelected: {},
     room_asile: {},
     seats: [],
     seatSelected: [],
+    clock: { minute: 5, second: 0 },
   });
+
   const handleSelectSeat = (seat_id: number) => {
     const { ticketSelected, seatSelected } = state;
 
@@ -45,6 +55,43 @@ function MovieDetail({
       (acc, val) => acc + val,
       0
     );
+
+    //chưa chọn ghế
+    if (totalTickets === 0) {
+      Swal.fire({
+        title: "Lưu ý!",
+        text: "Bạn chưa chọn loại vé!",
+        confirmButtonText: "ĐỒNG Ý",
+        customClass: {
+          popup: "popup_alert",
+          confirmButton: `btn_alert`,
+          cancelButton: `btn_alert`,
+        },
+      });
+      return;
+    }
+
+    // bật đếm giờ
+    const timer = setInterval(() => {
+      setState((prev) => {
+        let { minute, second } = prev.clock;
+
+        // Nếu đã đến 00:00 thì dừng ngay
+        if (minute === 0 && second === 0) {
+          clearInterval(timer);
+          return prev; // giữ nguyên 00:00
+        }
+
+        // Giảm thời gian
+        if (second > 0) {
+          second -= 1;
+        } else {
+          second = 59;
+          minute -= 1;
+        }
+        return { ...prev, clock: { minute, second } };
+      });
+    }, 1000);
 
     // tổng số ghế đã chọn
     const totalSeats = seatSelected.length;
@@ -80,19 +127,32 @@ function MovieDetail({
         seatSelected: [...prev.seatSelected, { seat_id, type: typeToUse }],
       }));
     } else {
-      // đủ ghế rồi → không chọn thêm
-      console.log("Đã chọn đủ ghế rồi!");
+      Swal.fire({
+        title: "Lưu ý!",
+        text: "Bạn đã mua đủ số ghế!",
+        confirmButtonText: "ĐỒNG Ý",
+        customClass: {
+          popup: "popup_alert",
+          confirmButton: `btn_alert`,
+          cancelButton: `btn_alert`,
+        },
+      });
     }
   };
 
+  // khi giờ chiếu thay đổi
   useEffect(() => {
+    setState((prev) => ({ ...prev, seatSelected: [], ticketSelected: {} }));
     if (
       state.timesSelected.room_id === -1 ||
       state.timesSelected.showtime_id === -1
     ) {
       return;
     }
-    scrollToPosition(0, true, "select_ticket_type", 120);
+
+    if (state.timesSelected.showtime_id !== -1) {
+      scrollToPosition(0, true, "select_ticket_type", 120);
+    }
 
     const getRoomAsile = async (room_id: number) => {
       try {
@@ -121,8 +181,13 @@ function MovieDetail({
     }
   }, [state.timesSelected]);
 
+  // khi vé thay đổi
   useEffect(() => {
-    scrollToPosition(0, true, "select_seat", 100, 2000);
+    if (!state.ticketSelected) {
+      scrollToPosition(0, true, "select_seat", 100, 2000);
+    }
+
+    setState((prev) => ({ ...prev, seatSelected: [] }));
   }, [state.ticketSelected]);
 
   if (!data || data.length === 0) {
@@ -231,7 +296,7 @@ function MovieDetail({
           )}
         </div>
       </div>
-
+      {/* hiện lịch chiếu */}
       <div>
         <ShowTime
           movie_id={movie_id}
@@ -244,7 +309,7 @@ function MovieDetail({
           timeSelected={state}
         />
       </div>
-
+      {/* chọn loại vé */}
       {state.timesSelected.showtime_id !== -1 && (
         <div id="select_ticket_type" className="mt-16">
           <div className="flex justify-center text-4xl font-bold mb-16">
@@ -283,7 +348,7 @@ function MovieDetail({
               </div>
             ))}
           </div>
-
+          {/* hiện phòng */}
           <div id="select_seat" className="py-4">
             <Room
               data={state.room_asile}
@@ -296,6 +361,49 @@ function MovieDetail({
           </div>
         </div>
       )}
+
+      {/* thanh tổng kết */}
+      <div className="flex justify-between border-t border-t-gray-50 py-3 items-center">
+        <div>
+          <div className="text-2xl font-bold my-1">
+            {data[0].name} ({data[0].age_require})
+          </div>
+          <div className="my-1">
+            {state.timesSelected.cinema_name}
+            {Object.keys(state.ticketSelected).map((key) => (
+              <span key={key}>
+                | {state.ticketSelected[key]} {key}{" "}
+              </span>
+            ))}
+          </div>
+          <div className="my-1">
+            {state.timesSelected.room_name} | {state.timesSelected.time}
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <div className="text-black bg-(--color-yellow) rounded-sm px-2 py-4">
+            <div className="text-sm">Thời gian giữ vé:</div>
+            <div className="font-bold">
+              {state.clock.minute.toString().padStart(2, "0")}:
+              {state.clock.second.toString().padStart(2, "0")}
+            </div>
+          </div>
+          <div className="flex flex-col justify-between">
+            <div className="flex justify-between">
+              <span>Tạm tính:</span>
+              <span className="font-bold">0 VNĐ</span>
+            </div>
+            <div>
+              <Button
+                text="ĐẶT VÉ"
+                text_color="black"
+                hover_bg_color="#5E4CA2"
+                p_l_r="80px"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

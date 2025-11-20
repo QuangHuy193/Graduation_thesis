@@ -141,3 +141,26 @@ body {
   height: 0.9rem;
 }
 /* end movieList, promotionList page */
+
+/* start alert */
+.popup_alert {
+  background-image: linear-gradient(to right, #64369c, #3961c7) !important;
+  color: white;
+  border-radius: 8px;
+}
+.btn_alert {
+  border: 1px var(--color-yellow) solid;
+  padding: 8px 16px;
+  margin: auto 8px;
+  border-radius: 8px;
+  color: var(--color-yellow);
+  cursor: pointer;
+  background-color: transparent;
+}
+
+.btn_alert:hover {
+  color: white;
+  background-image: linear-gradient(to right, #ff4500, var(--color-yellow));
+}
+
+/* end alert */
