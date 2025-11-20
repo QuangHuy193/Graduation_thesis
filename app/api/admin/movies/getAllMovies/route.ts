@@ -9,7 +9,7 @@ export async function GET() {
             const [rows] = await conn.execute(
                 `SELECT 
       m.movie_id, m.name, m.description, m.duration, m.trailer_url, 
-      m.release_date, m.status, m.age_require, m.price_base,
+      m.release_date, m.status, m.age_require,
       c1.name AS country,
       c2.language AS subtitle,
       MAX(i.url) as image,
@@ -23,8 +23,7 @@ export async function GET() {
       LEFT JOIN movie_actor ma ON m.movie_id = ma.movie_id
       LEFT JOIN actors a ON ma.actor_id = a.actor_id
       LEFT JOIN images i ON m.movie_id = i.movie_id
-      GROUP BY m.movie_id      
-      ORDER BY m.name DESC`
+      GROUP BY m.movie_id`
             );
             conn.release();
 

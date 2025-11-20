@@ -4,6 +4,7 @@ import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMo
 import { deleteMovie } from "@/lib/axios/admin/movieAPI";
 import Button from "../Button/Button";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 type Props = {
     movies: MovieFullITF[];
     onEdit: (m: MovieFullITF) => void;
@@ -17,7 +18,6 @@ function shallowMovieComparable(m: MovieFullITF) {
         description: m.description || "",
         trailer_url: m.trailer_url || "",
         release_date: m.release_date ? String(m.release_date) : "",
-        price_base: m.price_base ?? null,
         status: m.status ?? null,
         age_require: m.age_require ?? null,
         country: m.country ?? "",
@@ -59,7 +59,8 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     };
     const handleSaveEdit = (updated: MovieFullITF) => {
         if (!updated || !updated.movie_id) {
-            alert("Dữ liệu trả về không hợp lệ");
+            // alert("Dữ liệu trả về không hợp lệ");
+            Swal.fire("Dữ liệu trả về không hợp lệ");
             return;
         }
 
@@ -73,7 +74,8 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
 
             if (same) {
                 // không có thay đổi thực tế
-                alert("Không có thay đổi nào được lưu.");
+                // alert("Không có thay đổi nào được lưu.");
+                Swal.fire("Không có thay đổi nào được lưu.");
             } else {
                 // update local list
                 const next = localMovies.slice();
@@ -81,13 +83,15 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                 setLocalMovies(next);
                 // thông báo cho parent (nếu cần)
                 onEdit(updated);
-                alert("Cập nhật phim thành công!");
+                // alert("Cập nhật phim thành công!");
+                Swal.fire("Cập nhật phim thành công!");
             }
         } else {
             // item không tồn tại trong local (có thể là mới) -> thêm/replace
             setLocalMovies((prev) => [updated, ...prev]);
             onEdit(updated);
-            alert("Đã thêm phim (fallback).");
+            // alert("Đã thêm phim (fallback).");
+            Swal.fire("Đã thêm phim.");
         }
 
         // đóng modal và reset editing
@@ -96,28 +100,36 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     };
     const handleDel = async (id: number) => {
         if (!id || id <= 0) {
-            alert("ID không hợp lệ");
+            await Swal.fire("ID không hợp lệ");
             return;
         }
 
-        const confirmDelete = confirm(`Bạn có chắc muốn xoá phim này ?`);
-        if (!confirmDelete) return;
+        const result = await Swal.fire({
+            title: "Xóa phim !",
+            text: "Bạn có chắc muốn xoá phim này ?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Có, hãy xóa nó !"
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
 
         try {
             const res = await deleteMovie(id);
 
             if (res?.success) {
-                alert("Xóa phim thành công!");
+                await Swal.fire("Xóa phim thành công!");
                 onDelete(id);
-                // Nếu bạn có hàm refresh list thì gọi ở đây
-                // await fetchMovies();
-
             } else {
-                alert("Xóa thất bại: " + (res?.error || "Không rõ lỗi"));
+                await Swal.fire("Xóa thất bại", res?.error || "Không rõ lỗi", "error");
             }
         } catch (error: any) {
             console.error("Lỗi xóa movie:", error);
-            alert("Lỗi: " + (error.response?.data?.error || error.message));
+            await Swal.fire("Lỗi", error?.response?.data?.error || error?.message || "Có lỗi xảy ra", "error");
         }
     };
 

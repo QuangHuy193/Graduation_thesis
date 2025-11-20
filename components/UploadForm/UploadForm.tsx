@@ -110,7 +110,6 @@ export default function UploadForm() {
             subtitle: obj.subtitle ?? "",
             duration: obj.duration ?? 0,
             status: obj.status ?? 1,
-            price_base: obj.price_base ?? 0,
             genres: Array.isArray(obj.genres) ? obj.genres : (typeof obj.genres === "string" ? obj.genres.split(",").map((s: string) => s.trim()).filter(Boolean) : []),
             actors: Array.isArray(obj.actors) ? obj.actors : (typeof obj.actors === "string" ? obj.actors.split(",").map((s: string) => s.trim()).filter(Boolean) : []),
         } as MovieFullITF;

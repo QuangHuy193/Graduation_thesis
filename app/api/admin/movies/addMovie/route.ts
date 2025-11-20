@@ -56,7 +56,6 @@ export async function POST(req: NextRequest) {
         const image = body.image ? String(body.image) : "";
         const trailer_url = body.trailer_url ? String(body.trailer_url) : null;
         const release_date_sql = parseDateToMySQLDatetime(body.release_date as any);
-        const price_base = body.price_base != null ? Number(body.price_base) : null;
         const status = body.status != null ? Number(body.status) : null;
         const age_require = body.age_require != null ? Number(body.age_require) : null;
         const duration = body.duration != null ? Number(body.duration) : null;
@@ -116,15 +115,14 @@ export async function POST(req: NextRequest) {
             // Note: if your movies table doesn't have `image`/`genres`/`actors` columns, we don't try to write them here.
             const insertSql = `
         INSERT INTO movies
-          (name, description, trailer_url, release_date, price_base, status, age_require, country_id, subtitle_id, duration)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (name, description, trailer_url, release_date, status, age_require, country_id, subtitle_id, duration)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
             const params = [
                 name,
                 description,
                 trailer_url,
                 release_date_sql,
-                price_base,
                 status,
                 age_require,
                 country_id,
@@ -194,7 +192,7 @@ export async function POST(req: NextRequest) {
                 subtitle: body.subtitle != null ? String(body.subtitle) : "",
                 duration: duration ?? 0,
                 status: status ?? 0,
-                price_base: price_base ?? 0,
+
                 genres: genres,
                 actors: actors,
             };

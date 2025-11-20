@@ -5,8 +5,10 @@ import React, { useEffect, useState } from "react";
 import { getAllMovies } from "@/lib/axios/admin/movieAPI";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
+import BookingsTable from "@/components/BookingsTable/BookingsTable";
 import Button from "@/components/Button/Button";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
+import Swal from "sweetalert2";
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [movies, setMovies] = useState<MovieFullITF[]>([]);
@@ -42,24 +44,6 @@ export default function AdminDashboard() {
         console.log("Edit:", movie);
     }
 
-    // Khi bấm nút Xóa
-    // async function handleDelete(id: number) {
-    //     // if (!confirm("Xác nhận xóa phim này?")) return;
-    //     // setDeletingId(id);
-    //     // try {
-    //     //     const res = await fetch(`/api/admin/movies/${id}`, {
-    //     //         method: "DELETE",
-    //     //     });
-    //     //     if (!res.ok) throw new Error(`Delete failed (${res.status})`);
-    //     //     await fetchMovies();
-    //     // } catch (err) {
-    //     //     console.error("delete movie error:", err);
-    //     //     alert("Xóa thất bại. Kiểm tra console để biết chi tiết.");
-    //     // } finally {
-    //     //     setDeletingId(null);
-    //     // }
-    //     console.log("Xóa");
-    // }
     const handleDeleteFromChild = (id: number) => {
         // simplest: fetch lại danh sách
         fetchMovies();
@@ -76,33 +60,14 @@ export default function AdminDashboard() {
         setEditingMovie(movie);
         setEditOpen(true);
     }
-    async function handleSave(movie: MovieFullITF) {
+    async function handleSave() {
         setSaving(true);
         try {
-            // nếu có movie_id > 0 -> update, ngược lại create
-            // if (movie.movie_id && Number(movie.movie_id) > 0) {
-            //     const id = movie.movie_id;
-            //     const res = await fetch(`/api/admin/movies/${id}`, {
-            //         method: "PUT",
-            //         headers: { "Content-Type": "application/json" },
-            //         body: JSON.stringify(movie),
-            //     });
-            //     if (!res.ok) throw new Error(`Update failed (${res.status})`);
-            // } else {
-            //     // create new
-            //     const res = await fetch(`/api/admin/movies`, {
-            //         method: "POST",
-            //         headers: { "Content-Type": "application/json" },
-            //         body: JSON.stringify(movie),
-            //     });
-            //     if (!res.ok) throw new Error(`Create failed (${res.status})`);
-            // }
-
-            // reload list
             await fetchMovies();
         } catch (err) {
             console.error("save movie error:", err);
-            alert("Lưu phim thất bại. Kiểm tra console để biết chi tiết.");
+            // alert("Lưu phim thất bại. Kiểm tra console để biết chi tiết.");
+            Swal.fire("Lưu phim thất bại. Kiểm tra console để biết chi tiết.");
         } finally {
             setSaving(false);
             setEditOpen(false);
@@ -173,7 +138,7 @@ export default function AdminDashboard() {
 
                 {activeTab === "bookings" && (
                     <div className="mt-4">
-                        <BookingsTable bookings={bookings} />
+                        <BookingsTable />
                     </div>
                 )}
 
@@ -192,49 +157,8 @@ export default function AdminDashboard() {
                 onClose={() => { setEditOpen(false); setEditingMovie(null); }}
                 onSave={handleSave}
             />
-            movie modal
         </div>
     );
 }
 
-// function StatCard({ title, value }) {
-//     return (
-//         <div className="bg-white p-4 rounded shadow flex flex-col">
-//             <span className="text-sm text-slate-500">{title}</span>
-//             <span className="text-2xl font-bold mt-2">{value}</span>
-//         </div>
-//     );
-// }
 
-
-function BookingsTable({ bookings = [] }) {
-    return (
-        <div className="bg-white rounded shadow p-4">
-            <table className="w-full table-auto">
-                <thead className="bg-slate-50">
-                    <tr>
-                        <th className="text-left px-4 py-3">Mã</th>
-                        <th className="text-left px-4 py-3">Phim</th>
-                        <th className="text-left px-4 py-3">Ghế</th>
-                        <th className="text-left px-4 py-3">Giá</th>
-                        <th className="text-left px-4 py-3">Khách</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {/* {bookings.map((b) => (
-                        <tr key={b.id} className="border-t">
-                            <td className="px-4 py-3">{b.id}</td>
-                            <td className="px-4 py-3">{b.movieTitle}</td>
-                            <td className="px-4 py-3">{b.seats.join(", ")}</td>
-                            <td className="px-4 py-3">{b.price.toLocaleString()} VND</td>
-                            <td className="px-4 py-3">{b.customerName}</td>
-                        </tr>
-                    ))} */}
-                </tbody>
-            </table>
-
-        </div>
-
-    );
-
-}

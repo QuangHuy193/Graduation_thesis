@@ -52,7 +52,6 @@ export async function GET(
             country: raw.country ?? "",
             subtitle: raw.subtitle ?? "",
             image: raw.image ?? "",
-            price_base: raw.price_base != null ? Number(raw.price_base) : 0,
             // convert CSV -> array (defensive)
             genres: raw.genres ? String(raw.genres).split(",").map((s: string) => s.trim()).filter(Boolean) : [],
             actors: raw.actors ? String(raw.actors).split(",").map((s: string) => s.trim()).filter(Boolean) : [],

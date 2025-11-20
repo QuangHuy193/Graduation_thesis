@@ -3,6 +3,7 @@ import { MovieFullITF } from "@/lib/interface/movieInterface";
 import { getCountries } from "@/lib/axios/admin/countryAPI";
 import { createMovie, updateMovie } from "@/lib/axios/admin/movieAPI";
 import styles from "./AddOrEditFormMovie.module.scss";
+import Swal from "sweetalert2";
 type Props = {
     movie: MovieFullITF | null; // null = tạo mới
     open: boolean;
@@ -30,7 +31,6 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
         subtitle: "",
         duration: 0,
         status: 1,
-        price_base: 0,
         genresCSV: "",
         actorsCSV: "",
     });
@@ -65,7 +65,6 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                 subtitle: "",
                 duration: 0,
                 status: 1,
-                price_base: 0,
                 genresCSV: "",
                 actorsCSV: "",
             });
@@ -85,7 +84,6 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
             subtitle: movie.subtitle || "",
             duration: movie.duration ?? 0,
             status: movie.status ?? 1,
-            price_base: movie.price_base ?? 0,
             genresCSV: Array.isArray(movie.genres) ? movie.genres.join(", ") : (movie.genres as any) || "",
             actorsCSV: Array.isArray(movie.actors) ? movie.actors.join(", ") : (movie.actors as any) || "",
         });
@@ -103,8 +101,11 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!form.name.trim()) return alert("Tiêu đề không được để trống");
-        if (Number(form.duration) < 0) return alert("Thời lượng phải >= 0");
+        if (!form.name.trim()) {
+            // return alert("Tiêu đề không được để trống");
+            return Swal.fire("Tiêu đề không được để trống");
+        }
+        if (Number(form.duration) < 0) return Swal.fire("Thời lượng phải >= 0");;
 
         // build payload phù hợp MovieFullITF
         const payload: MovieFullITF = {
@@ -120,7 +121,6 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
             subtitle: form.subtitle.trim(),
             duration: Number(form.duration) || 0,
             status: Number(form.status) || 0,
-            price_base: Number(form.price_base) || 0,
             genres: parseCSV(form.genresCSV),
             actors: parseCSV(form.actorsCSV),
         };
@@ -157,11 +157,13 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
 
             onSave(returnedMovie);
             onClose();
-            alert(isEdit ? "Cập nhật phim thành công!" : "Thêm phim thành công!");
+            // alert(isEdit ? "Cập nhật phim thành công!" : "Thêm phim thành công!");
+            Swal.fire(isEdit ? "Cập nhật phim thành công!" : "Thêm phim thành công!");
         } catch (err: any) {
             console.error("Lỗi khi gọi API:", err);
             const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Lỗi khi lưu phim";
-            alert("Lỗi: " + msg);
+            // alert("Lỗi: " + msg);
+            Swal.fire("Lỗi: " + msg);
         } finally {
             setSubmitting(false);
         }
@@ -191,7 +193,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                                     subtitle: "",
                                     duration: 0,
                                     status: 1,
-                                    price_base: 0,
+
                                     genresCSV: "",
                                     actorsCSV: "",
                                 });
@@ -305,10 +307,10 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                         </select>
                     </div>
 
-                    <div>
+                    {/* <div>
                         <label className={`${styles.label} text-xs`}>Giá cơ bản</label>
                         <input type="number" className={`${styles.input} w-full`} value={String(form.price_base)} onChange={(e) => update({ price_base: Number(e.target.value) })} />
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className={`${styles.footer}`}>

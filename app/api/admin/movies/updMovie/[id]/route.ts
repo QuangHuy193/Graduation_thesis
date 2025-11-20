@@ -40,7 +40,6 @@ export async function PUT(req: Request, context: { params: Promise<{ id?: string
             "description",
             "trailer_url",
             "release_date",
-            "price_base",
             "status",
             "age_require",
             "country_id",
@@ -88,7 +87,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id?: string
 
         // Lấy bản ghi vừa cập nhật để trả về
         const [rows]: any = await db.query(
-            `SELECT movie_id, name, description, trailer_url, release_date, price_base, status, age_require, country_id, subtitle_id, duration
+            `SELECT movie_id, name, description, trailer_url, release_date, status, age_require, country_id, subtitle_id, duration
        FROM movies
        WHERE movie_id = ? LIMIT 1`,
             [movieId]

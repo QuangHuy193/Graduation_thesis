@@ -2,7 +2,7 @@ import axiosInstance from "../config";
 import { MovieFullITF } from "../../interface/movieInterface";
 export async function getAllMovies() {
     try {
-        const res = await axiosInstance.get("/api/movies/admin/getAllMovies");
+        const res = await axiosInstance.get("/api/admin/movies/getAllMovies");
         return res.data;
     } catch (error: any) {
         console.error("Error fetching movies:", error);
@@ -11,7 +11,7 @@ export async function getAllMovies() {
 }
 export async function createMovie(data: MovieFullITF) {
     try {
-        const res = await axiosInstance.post("/api/movies/admin/addMovie", data);
+        const res = await axiosInstance.post("/api/admin/movies/addMovie", data);
         console.log("Thêm phim thành công:", res.data);
         return res.data;
     } catch (error: any) {
@@ -21,7 +21,7 @@ export async function createMovie(data: MovieFullITF) {
 }
 export async function deleteMovie(movie_id: number) {
     try {
-        const res = await axiosInstance.delete(`/api/movies/admin/delMovie/${movie_id}`);
+        const res = await axiosInstance.delete(`/api/admin/movies/delMovie/${movie_id}`);
         console.log("Xoá movie thành công:", res.data);
         return res.data;
     } catch (error: any) {
@@ -32,7 +32,7 @@ export async function deleteMovie(movie_id: number) {
 export async function updateMovie(id: number, payload: Partial<MovieFullITF>) {
     // PUT hoặc PATCH /api/movies/:id
     try {
-        const res = await axiosInstance.put(`/api/movies/admin/updMovie/${id}`, payload);
+        const res = await axiosInstance.put(`/api/admin/movies/updMovie/${id}`, payload);
         console.log("Xoá movie thành công:", res.data);
         return res.data;
     } catch (error: any) {
@@ -43,7 +43,7 @@ export async function updateMovie(id: number, payload: Partial<MovieFullITF>) {
 }
 export async function getMovieWithIdAPI(id: number) {
     try {
-        const response = await axiosInstance.get(`/api/movies/admin/getMovie/${id}`);
+        const response = await axiosInstance.get(`/api/admin/movies/getMovie/${id}`);
         // hỗ trợ nhiều dạng response: data có thể là object hoặc mảng
         let data = response?.data?.data ?? response?.data?.movie ?? response?.data ?? null;
 
