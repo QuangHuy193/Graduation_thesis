@@ -41,7 +41,8 @@
     ".next\\dev/types/**/*.ts",
     ".next\\dev/types/**/*.ts",
     "components/AppRouter",
-    "src/types/**/*.d.ts"
+    "src/types/**/*.d.ts",
+    "components/ShowtimesTable"
   ],
   "exclude": [
     "node_modules"
