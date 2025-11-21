@@ -6,13 +6,17 @@ import { getAllMovies } from "@/lib/axios/admin/movieAPI";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
+import ShowtimeTimetable from "@/components/ShowtimesTable/ShowtimesTable";
 import Button from "@/components/Button/Button";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
 import Swal from "sweetalert2";
+import { getAllBookings } from "@/lib/axios/admin/bookingAPI";
+import { getAllShowtimes } from "@/lib/axios/admin/showtimeAPI";
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [movies, setMovies] = useState<MovieFullITF[]>([]);
     const [bookings, setBookings] = useState([]);
+    const [showtimes, setShowtimes] = useState([]);
 
     // modal
     const [editOpen, setEditOpen] = useState(false);
@@ -28,6 +32,8 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchMovies();
+        fetchBookings();
+        fetchShowtimes();
     }, []);
 
     async function fetchMovies() {
@@ -40,11 +46,33 @@ export default function AdminDashboard() {
             setMovies([]);
         }
     }
+    async function fetchBookings() {
+        try {
+            const res = await getAllBookings();
+            const payload = res?.data?.data ?? res?.data ?? res ?? [];
+            setBookings(payload);
+        } catch (e) {
+            console.error(e);
+            // fallback: mock
+            setBookings([]);
+        }
+    }
+    async function fetchShowtimes() {
+        try {
+            const res = await getAllShowtimes();
+            const payload = res?.data?.data ?? res?.data ?? res ?? [];
+            setShowtimes(payload);
+        } catch (e) {
+            console.error(e);
+            // fallback: mock
+            setShowtimes([]);
+        }
+    }
     function handleEdit(movie: MovieFullITF) {
         console.log("Edit:", movie);
     }
 
-    const handleDeleteFromChild = (id: number) => {
+    const handleDeleteFromChild = () => {
         // simplest: fetch lại danh sách
         fetchMovies();
         // hoặc: setMovies(prev => prev.filter(m => m.movie_id !== id));
@@ -56,10 +84,10 @@ export default function AdminDashboard() {
     }
 
     // mở modal để sửa
-    function handleOpenEdit(movie: MovieFullITF) {
-        setEditingMovie(movie);
-        setEditOpen(true);
-    }
+    // function handleOpenEdit(movie: MovieFullITF) {
+    //     setEditingMovie(movie);
+    //     setEditOpen(true);
+    // }
     async function handleSave() {
         setSaving(true);
         try {
@@ -138,14 +166,16 @@ export default function AdminDashboard() {
 
                 {activeTab === "bookings" && (
                     <div className="mt-4">
-                        <BookingsTable />
+                        <BookingsTable bookings={bookings} />
                     </div>
                 )}
 
                 {activeTab === "showtimes" && (
-                    <div className="mt-4 bg-white p-4 rounded shadow">
-                        <h3 className="font-semibold mb-2">Quản lý suất chiếu</h3>
-                        <p>Ở đây bạn có thể thêm, sửa, xóa suất chiếu cho từng phim.</p>
+                    <div className="mt-4 ">
+                        <ShowtimeTimetable
+                            showtimes={showtimes}
+                            onSelect={(st) => console.log("chọn showtime", st)}
+                        />
                     </div>
                 )}
             </main>

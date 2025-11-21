@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
-
+import { getAllBookings } from "@/lib/axios/admin/bookingAPI";
 type UserLite = {
     user_id: number;
     name?: string;
@@ -40,9 +40,9 @@ function fmtDateTime(iso?: string | null) {
         return iso;
     }
 }
-
-export default function BookingsTable({ initial = [] as BookingItem[] }) {
-    const [bookings, setBookings] = useState<BookingItem[]>(initial);
+type Props = { bookings?: BookingItem[]; initial?: BookingItem[] };
+export default function BookingsTable({ bookings: propBookings = [], initial = [] as BookingItem[] }: Props) {
+    const [bookings, setBookings] = useState<BookingItem[]>(propBookings || initial);
     const [loading, setLoading] = useState(false);
 
     // controls
@@ -56,48 +56,10 @@ export default function BookingsTable({ initial = [] as BookingItem[] }) {
 
     // detail modal
     const [selected, setSelected] = useState<BookingItem | null>(null);
-
-    const load = async () => {
-        setLoading(true);
-        try {
-            const qs = new URLSearchParams();
-            if (query.trim()) qs.set("search", query.trim());
-            if (statusFilter) qs.set("status", statusFilter);
-            qs.set("page", String(page));
-            qs.set("perPage", String(perPage));
-            qs.set("sortBy", sortBy);
-            qs.set("sortDir", sortDir);
-
-            const res = await fetch(`/api/admin/bookings?${qs.toString()}`);
-            const j = await res.json();
-            if (!res.ok) {
-                throw new Error(j?.error || "Lỗi server");
-            }
-            // expected { data: BookingItem[], total: number }
-            setBookings(j.data || []);
-            setTotal(Number(j.total || 0));
-        } catch (err: any) {
-            console.error("Load bookings error:", err);
-            Swal.fire("Lỗi", err?.message || "Không thể tải danh sách đặt vé", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        load();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, perPage, statusFilter, sortBy, sortDir]);
+        setBookings(propBookings || initial || []);
+    }, [propBookings, initial]);
 
-    // search debounce
-    useEffect(() => {
-        const t = setTimeout(() => {
-            setPage(1);
-            load();
-        }, 350);
-        return () => clearTimeout(t);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [query]);
 
     async function doRefund(bookingId: number) {
         const ok = await Swal.fire({
@@ -115,7 +77,6 @@ export default function BookingsTable({ initial = [] as BookingItem[] }) {
             const j = await res.json();
             if (!res.ok) throw new Error(j?.error || "Refund failed");
             Swal.fire("Thành công", "Đã hoàn tiền", "success");
-            load();
         } catch (err: any) {
             console.error(err);
             Swal.fire("Lỗi", err?.message || "Không thể hoàn tiền", "error");
@@ -141,14 +102,58 @@ export default function BookingsTable({ initial = [] as BookingItem[] }) {
             const j = await res.json();
             if (!res.ok) throw new Error(j?.error || "Update failed");
             Swal.fire("OK", "Đã cập nhật", "success");
-            load();
+
         } catch (err: any) {
             console.error(err);
             Swal.fire("Lỗi", err?.message || "Không thể cập nhật trạng thái", "error");
         }
     }
 
-    const pages = Math.max(1, Math.ceil(total / perPage));
+    // client-side filter + sort + paginate (giống cách movietable làm)
+    const filteredSorted = useMemo(() => {
+        // start from full fetched bookings
+        let list = (bookings || []).slice();
+
+
+        const q = (query || "").trim().toLowerCase();
+        if (q) {
+            list = list.filter((b) => {
+                const idMatch = String(b.booking_id).includes(q);
+                const userMatch = (b.user?.name || b.user?.email || "").toLowerCase().includes(q);
+                const movieMatch = (b.showtime?.movie_title || "").toLowerCase().includes(q);
+                const seatsMatch = (b.seats || []).some((s) => String(s).toLowerCase().includes(q));
+                return idMatch || userMatch || movieMatch || seatsMatch;
+            });
+        }
+
+        // status filter
+        if (statusFilter !== "" && typeof statusFilter !== "undefined") {
+            const st = Number(statusFilter);
+            if (!Number.isNaN(st)) {
+                list = list.filter((b) => Number(b.status) === st);
+            }
+        }
+
+        // sort
+        const dir = sortDir === "asc" ? 1 : -1;
+        list.sort((a, b) => {
+            if (sortBy === "total_price") {
+                return dir * ((a.total_price ?? 0) - (b.total_price ?? 0));
+            }
+            // default: booking_time
+            const ta = a.booking_time ? new Date(a.booking_time).getTime() : 0;
+            const tb = b.booking_time ? new Date(b.booking_time).getTime() : 0;
+            return dir * (ta - tb);
+        });
+
+        return list;
+    }, [bookings, query, statusFilter, sortBy, sortDir]);
+
+    const totalFiltered = filteredSorted.length;
+    const pages = Math.max(1, Math.ceil(totalFiltered / perPage));
+    const start = (page - 1) * perPage;
+    const paginated = filteredSorted.slice(start, start + perPage);
+
 
     const statusText = (s?: number) => {
         switch (s) {
@@ -165,7 +170,7 @@ export default function BookingsTable({ initial = [] as BookingItem[] }) {
         const rows = [
             ["Mã", "Phim", "Ghế", "Giá", "Khách", "Thời gian", "Trạng thái", "Thanh toán"]
         ];
-        bookings.forEach(b => {
+        filteredSorted.forEach(b => {
             rows.push([
                 String(b.booking_id),
                 b.showtime?.movie_title || "-",
@@ -224,7 +229,7 @@ export default function BookingsTable({ initial = [] as BookingItem[] }) {
                     </button>
 
                     <button className="px-3 py-1 border rounded text-sm" onClick={exportCSV}>Xuất CSV</button>
-                    <button className="px-3 py-1 border rounded text-sm" onClick={() => { setPage(1); load(); }}>
+                    <button className="px-3 py-1 border rounded text-sm" onClick={() => setPage(1)}>
                         Tải lại
                     </button>
                 </div>
@@ -248,9 +253,9 @@ export default function BookingsTable({ initial = [] as BookingItem[] }) {
                     <tbody>
                         {loading ? (
                             <tr><td colSpan={8} className="p-6 text-center">Loading...</td></tr>
-                        ) : bookings.length === 0 ? (
+                        ) : paginated.length === 0 ? (
                             <tr><td colSpan={8} className="p-6 text-center text-slate-500">Không có đặt vé</td></tr>
-                        ) : bookings.map(b => (
+                        ) : paginated.map(b => (
                             <tr key={b.booking_id} className="border-t hover:bg-slate-50">
                                 <td className="px-4 py-3">{b.booking_id}</td>
                                 <td className="px-4 py-3">
@@ -291,7 +296,7 @@ export default function BookingsTable({ initial = [] as BookingItem[] }) {
 
             {/* pagination */}
             <div className="p-4 flex items-center justify-between">
-                <div className="text-sm text-slate-600">Hiển thị {(page - 1) * perPage + 1} - {Math.min(page * perPage, total)} / {total}</div>
+                <div className="text-sm text-slate-600">Hiển thị {(page - 1) * perPage + 1} - {Math.min(start + perPage, totalFiltered)} / {totalFiltered}</div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => setPage(p => Math.max(1, p - 1))} className="px-3 py-1 border rounded" disabled={page === 1}>Prev</button>
                     <div className="text-sm">{page} / {pages}</div>
