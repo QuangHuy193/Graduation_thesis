@@ -6,7 +6,7 @@ import { getAllMovies } from "@/lib/axios/admin/movieAPI";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
-import ShowtimeTimetable from "@/components/ShowtimesTable/ShowtimesTable";
+import Showtimestable from "@/components/ShowtimesTable/ShowtimesTable";
 import Button from "@/components/Button/Button";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
 import Swal from "sweetalert2";
@@ -57,17 +57,18 @@ export default function AdminDashboard() {
             setBookings([]);
         }
     }
+
     async function fetchShowtimes() {
         try {
-            const res = await getAllShowtimes();
-            const payload = res?.data?.data ?? res?.data ?? res ?? [];
+            const payload = await getAllShowtimes();
             setShowtimes(payload);
         } catch (e) {
-            console.error(e);
-            // fallback: mock
+            console.error("fetchShowtimes error:", e);
             setShowtimes([]);
         }
     }
+
+
     function handleEdit(movie: MovieFullITF) {
         console.log("Edit:", movie);
     }
@@ -172,7 +173,7 @@ export default function AdminDashboard() {
 
                 {activeTab === "showtimes" && (
                     <div className="mt-4 ">
-                        <ShowtimeTimetable
+                        <Showtimestable
                             showtimes={showtimes}
                             onSelect={(st) => console.log("chọn showtime", st)}
                         />

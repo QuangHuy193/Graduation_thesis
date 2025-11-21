@@ -164,6 +164,11 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
             default: return "Khác";
         }
     };
+    console.log("Showtimetable props:", {
+        isArray: Array.isArray(showtimes),
+        len: Array.isArray(showtimes) ? showtimes.length : null,
+        sample: Array.isArray(showtimes) && showtimes.length ? showtimes[0] : showtimes
+    });
 
     // CSV Export (current list)
     const exportCSV = () => {
