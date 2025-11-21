@@ -13,7 +13,7 @@ import {
 import styles from "./MovieDetail.module.scss";
 import { formatDateWithDay, scrollToPosition } from "@/lib/function";
 import LoadingPage from "../LoadingPage/LoadingPage";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import VideoTrailer from "../VideoTrailer/VideoTrailer";
 import ShowTime from "../ShowTime/ShowTime";
 import { dataTicketFake } from "@/lib/constant";
@@ -47,6 +47,7 @@ function MovieDetail({
     clock: { minute: 5, second: 0 },
   });
 
+  // hàm chọn ghế
   const handleSelectSeat = (seat_id: number) => {
     const { ticketSelected, seatSelected } = state;
 
@@ -70,28 +71,6 @@ function MovieDetail({
       });
       return;
     }
-
-    // bật đếm giờ
-    const timer = setInterval(() => {
-      setState((prev) => {
-        let { minute, second } = prev.clock;
-
-        // Nếu đã đến 00:00 thì dừng ngay
-        if (minute === 0 && second === 0) {
-          clearInterval(timer);
-          return prev; // giữ nguyên 00:00
-        }
-
-        // Giảm thời gian
-        if (second > 0) {
-          second -= 1;
-        } else {
-          second = 59;
-          minute -= 1;
-        }
-        return { ...prev, clock: { minute, second } };
-      });
-    }, 1000);
 
     // tổng số ghế đã chọn
     const totalSeats = seatSelected.length;
@@ -189,6 +168,74 @@ function MovieDetail({
 
     setState((prev) => ({ ...prev, seatSelected: [] }));
   }, [state.ticketSelected]);
+
+  // bật bộ đếm giờ
+  const timerStarted = useRef(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    // Khi chưa chọn ghế => không làm gì
+    if (state.seatSelected.length === 0) return;
+
+    // Khi chọn ghế lần đầu
+    if (!timerStarted.current) {
+      timerStarted.current = true;
+      timerRef.current = null;
+      // Cho phép chạy lại timer
+      timerStarted.current = false;
+
+      timerRef.current = setInterval(() => {
+        setState((prev) => {
+          let { minute, second } = prev.clock;
+
+          if (minute === 0 && second === 0) {
+            clearInterval(timerRef.current!);
+            Swal.fire({
+              title: "LƯU Ý!",
+              text: "Đã hết thời gian giữ vé!",
+              confirmButtonText: "ĐỒNG Ý",
+              buttonsStyling: false,
+              customClass: {
+                popup: "popup_alert",
+                confirmButton: "btn_alert",
+              },
+            }).then((result: any) => {
+              if (result.isConfirmed) {
+                setState((prev) => ({
+                  ...prev,
+                  ticketSelected: {},
+                  timesSelected: {
+                    showtime_id: -1,
+                    room_id: -1,
+                    cinema_name: "",
+                    room_name: "",
+                    time: "",
+                  },
+                  clock: { minute: 5, second: 0 },
+                }));
+              }
+            });
+            return prev;
+          }
+
+          if (second > 0) {
+            second -= 1;
+          } else {
+            second = 59;
+            minute -= 1;
+          }
+
+          return { ...prev, clock: { minute, second } };
+        });
+      }, 1000);
+    }
+  }, [state.seatSelected]);
+
+  // Optional: clear khi unmount component
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   if (!data || data.length === 0) {
     return (
@@ -370,9 +417,10 @@ function MovieDetail({
           </div>
           <div className="my-1">
             {state.timesSelected.cinema_name}
+            {/* hiện vé */}
             {Object.keys(state.ticketSelected).map((key) => (
               <span key={key}>
-                | {state.ticketSelected[key]} {key}{" "}
+                | {state.ticketSelected[key]} vé {key}{" "}
               </span>
             ))}
           </div>
