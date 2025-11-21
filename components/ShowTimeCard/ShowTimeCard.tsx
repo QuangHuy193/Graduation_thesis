@@ -54,12 +54,12 @@ function ShowTimeCard({
                   bg_color="transparent"
                   hover_bg_color="transparent"
                   border={
-                    timeSelected.timesSelected.showtime_id === s.showtime_id
+                    timeSelected.showtime_id === s.showtime_id
                       ? "1px var(--color-yellow) solid"
                       : "1px white solid"
                   }
                   text_color={
-                    timeSelected.timesSelected.showtime_id === s.showtime_id
+                    timeSelected.showtime_id === s.showtime_id
                       ? "var(--color-yellow)"
                       : "white"
                   }

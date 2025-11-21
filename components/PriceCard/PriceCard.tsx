@@ -38,6 +38,7 @@ function PriceCard({
       setTicketSelected(name, inc);
     }
   };
+  console.log(data.price_final);
   return (
     <div
       className="bg-transparent border border-gray-300 rounded-sm p-5 flex flex-col
@@ -50,7 +51,7 @@ function PriceCard({
         {data.name}
       </div>
       <div className="text-[16px] font-semibold">
-        {data.price.toLocaleString("en-US")} VNĐ
+        {Number(data.price_final).toLocaleString("vi-VN")} VNĐ
       </div>
       <div
         className="text-black w-[100px] flex bg-gray-50 items-center justify-between

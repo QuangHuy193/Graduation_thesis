@@ -132,14 +132,3 @@ export const weekdays = [
   "Thứ 6",
   "Thứ 7",
 ];
-
-export const dataTicketFake = [
-  {
-    name: "Thường",
-    price: 59000,
-  },
-  {
-    name: "HS-SV",
-    price: 49000,
-  },
-];

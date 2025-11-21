@@ -9,7 +9,10 @@ export async function GET(req: Request) {
 
   try {
     const [rows] = await db.query(
-      `SELECT seat_id, seat_row, seat_column, status FROM seats WHERE room_id = ? AND showtime_id = ?`,
+      `SELECT s.seat_id, s.seat_row, s.seat_column, ss.status
+      FROM seats s
+      JOIN showtime_seat ss on ss.seat_id = s.seat_id
+      WHERE s.room_id = ? AND ss.showtime_id = ?`,
       [room, showtime]
     );
 

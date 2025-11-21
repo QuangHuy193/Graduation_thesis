@@ -9,11 +9,13 @@ import styles from "./ShowTime.module.scss";
 import ShowTimeCard from "../ShowTimeCard/ShowTimeCard";
 import Spinner from "../Spinner/Spinner";
 import { getShowtimeByDateAPI } from "@/lib/axios/showTimeAPI";
+import { getTicketTypeByShowtimeDateAPI } from "@/lib/axios/ticketTypeAPI";
 
 function ShowTime({
   movie_id,
   setTimesSelect,
   timeSelected,
+  setTicketTypes,
 }: {
   movie_id: number;
   setTimesSelect: (obj: {
@@ -69,6 +71,7 @@ function ShowTime({
       room_name: "",
       time: "",
     });
+    // gọi api lấy showtime
     const getShowtime = async (day: number) => {
       setToggle((prev) => ({ ...prev, fetchData: true }));
       try {
@@ -97,6 +100,7 @@ function ShowTime({
       }
     };
 
+    // lọc showtime lấy rạp, giờ theo tỉnh của rạp
     const filterByProvince = (data: any[], province: string) => {
       if (!province) return data;
 
@@ -119,6 +123,23 @@ function ShowTime({
       }));
     }
   }, [selected.dateSelected, selected.provinceSelected]);
+
+  useEffect(() => {
+    // gọi api lấy ds loại vé và giá theo showtime và ngày
+    const getTicketType = async (showtime_id: number, day: number) => {
+      try {
+        const res = await getTicketTypeByShowtimeDateAPI(showtime_id, day);
+
+        setTicketTypes(res);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    if (timeSelected.showtime_id !== -1) {
+      getTicketType(timeSelected.showtime_id, selected.dateSelected);
+    }
+  }, [selected.dateSelected, timeSelected]);
 
   return (
     <div className="px-35">
