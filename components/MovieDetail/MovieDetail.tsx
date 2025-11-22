@@ -499,13 +499,20 @@ function MovieDetail({
                 VNĐ
               </span>
             </div>
-            <div>
+            <div className="relative">
               <Button
                 text="ĐẶT VÉ"
                 text_color="black"
                 hover_bg_color="#5E4CA2"
                 p_l_r="80px"
+                link="/checkout"
               />
+              {Object.values(state.ticketSelected).reduce(
+                (s, v) => s + Number(v),
+                0
+              ) !== state.seatSelected.length && (
+                <div className="bg-black/30 absolute top-0 left-0 h-full w-full z-10"></div>
+              )}
             </div>
           </div>
         </div>
