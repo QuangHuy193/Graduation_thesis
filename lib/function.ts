@@ -101,41 +101,53 @@ export function numberToLetter(n: number) {
   return String.fromCharCode(65 + n);
 }
 
-export function isSingleGap(rowSeats, col: number) {
-  // rowSeats: mảng ghế trong 1 hàng (có status + column)
-  // col: ghế user muốn chọn (0-based)
-
-  // tạo array trạng thái liên tục theo cột
-  // 0 = trống, 1 = đã đặt hoặc đã chọn
+export function isSingleGap(
+  rowSeats: Array<{ seat_column: number; status: number; selected?: boolean }>,
+  col: number
+) {
+  console.log(rowSeats, col);
+  // Chuẩn hóa seats: booked = true nếu từ DB có status=1 hoặc đang được chọn
   const seats = [...rowSeats]
-    .sort((a, b) => Number(a.seat_column) - Number(b.seat_column))
+    .sort((a, b) => a.seat_column - b.seat_column)
     .map((s) => ({
-      col: Number(s.seat_column),
+      col: s.seat_column,
       booked: s.status === 1 || s.selected === true,
     }));
 
-  // check ghế 2 bên
-  const left = seats.find((s) => s.col === col - 1);
-  const right = seats.find((s) => s.col === col + 1);
+  const get = (c: number) => seats.find((s) => s.col === c);
 
-  // check ghế 2 bên tiếp theo
-  const left2 = seats.find((s) => s.col === col - 2);
-  const right2 = seats.find((s) => s.col === col + 2);
+  const left = get(col - 1);
+  const right = get(col + 1);
+  const left2 = get(col - 2);
+  const right2 = get(col + 2);
 
-  /***
-   * Trường hợp tạo khoảng trống 1 ghế:
-   * [ X ][ _ ][ YOU ]  -> không cho
-   * [ YOU ][ _ ][ X ]  -> không cho
-   */
+  // RULE 1: CHỐNG LẺ 1 GHẾ
+  if (left && !left.booked && left2?.booked) return true;
 
-  // tạo gap bên trái
-  if (left && !left.booked && left2 && left2.booked) {
-    return true;
+  if (right && !right.booked && right2?.booked) return true;
+
+  // RULE 2: KHÔNG CHO CHỌN 2 GHẾ GIỮA KHI CHUỖI CÒN 4 GHẾ TRỐNG
+  let g1 = get(col - 1);
+  let g2 = get(col);
+  let g3 = get(col + 1);
+  let g4 = get(col + 2);
+  if (g4 === undefined) {
+    g1 = get(col - 2);
+    g2 = get(col - 1);
+    g3 = get(col);
+    g4 = get(col + 1);
   }
 
-  // tạo gap bên phải
-  if (right && !right.booked && right2 && right2.booked) {
-    return true;
+  // nếu đủ 4 ghế liên tiếp
+  if (g1 && g2 && g3 && g4) {
+    const allFourEmpty = !g1.booked && !g2.booked && !g3.booked && !g4.booked;
+
+    if (allFourEmpty) {
+      // vị trí giữa là col hoặc col+1
+      if (col === g2.col || col === g3.col) {
+        return true; // không cho chọn vì rơi vào 2 ghế giữa
+      }
+    }
   }
 
   return false;

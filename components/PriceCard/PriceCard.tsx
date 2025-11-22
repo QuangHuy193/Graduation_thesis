@@ -38,7 +38,7 @@ function PriceCard({
       setTicketSelected(name, inc);
     }
   };
-  console.log(data.price_final);
+
   return (
     <div
       className="bg-transparent border border-gray-300 rounded-sm p-5 flex flex-col

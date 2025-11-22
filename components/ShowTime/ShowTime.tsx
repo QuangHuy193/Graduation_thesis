@@ -16,6 +16,7 @@ function ShowTime({
   setTimesSelect,
   timeSelected,
   setTicketTypes,
+  setDateSelected,
 }: {
   movie_id: number;
   setTimesSelect: (obj: {
@@ -26,6 +27,7 @@ function ShowTime({
     time: string;
   }) => void;
   timeSelected: object;
+  setDateSelected: (date: number) => void;
 }) {
   const days = Array.from({ length: 5 }, (_, i) => {
     const d = new Date();
@@ -61,6 +63,10 @@ function ShowTime({
     };
     getCitys();
   }, []);
+
+  useEffect(() => {
+    setDateSelected(selected.dateSelected);
+  }, [selected.dateSelected]);
 
   useEffect(() => {
     // xóa giờ, loại vé đã chọn

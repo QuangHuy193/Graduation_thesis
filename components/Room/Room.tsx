@@ -8,7 +8,12 @@ function Room({
   selectSeat,
   seatSelected,
 }: {
-  selectSeat: (seat_id: number) => void;
+  selectSeat: (
+    seat_id: number,
+    label: string,
+    rowSeat: [],
+    colSeat: number
+  ) => void;
 }) {
   if (!data || !Array.isArray(data.aside_gap)) return <Spinner />;
 
@@ -33,6 +38,11 @@ function Room({
           </div>
           {data.aside_gap.map((asg, i) => {
             let seatIndex = 1; // bắt đầu đếm ghế từ 1 cho mỗi dòng
+            let rowSeats: Array<{
+              seat_column: number;
+              status: number;
+              selected: boolean;
+            }> = [];
 
             return (
               <div key={i} className="flex gap-4 p-3">
@@ -71,28 +81,14 @@ function Room({
                       isBooked = true;
                     }
 
-                    seatIndex++;
-                  }
-                  if (!isAside) {
-                    seatLabel = `${numberToLetter(i)}${seatIndex}`;
-
-                    // tìm ghế trong data seats
-                    const seat = seats.find(
-                      (s) =>
-                        s.seat_row === numberToLetter(i) &&
-                        Number(s.seat_column) === col // seat_column BE bắt đầu từ 0
-                    );
-
-                    if (seat?.status === 1) {
-                      isBooked = true;
-                    }
+                    //TẠO MẢNG rowSeats
+                    rowSeats.push({
+                      seat_column: Number(col),
+                      status: seat?.status ?? 0,
+                      selected: seatSelected.some((s) => s.seat_id === seat_id),
+                    });
 
                     seatIndex++;
-                  }
-
-                  if (!isAside) {
-                    seatLabel = `${numberToLetter(i)}${seatIndex}`;
-                    seatIndex++; // tăng cho ghế tiếp theo
                   }
 
                   return (
@@ -108,7 +104,11 @@ function Room({
                           : "bg-white hover:cursor-pointer"
                       } w-10 h-8 rounded-xl flex items-center justify-center text-(--color-purple)
                           font-semibold`}
-                      onClick={() => selectSeat(seat_id)}
+                      onClick={
+                        !isBooked && !isAside
+                          ? () => selectSeat(seat_id, seatLabel, rowSeats, col)
+                          : undefined
+                      }
                     >
                       {!isAside && seatLabel}
                     </div>

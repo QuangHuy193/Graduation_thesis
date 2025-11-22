@@ -11,7 +11,11 @@ import {
   faUserCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MovieDetail.module.scss";
-import { formatDateWithDay, scrollToPosition } from "@/lib/function";
+import {
+  formatDateWithDay,
+  isSingleGap,
+  scrollToPosition,
+} from "@/lib/function";
 import LoadingPage from "../LoadingPage/LoadingPage";
 import { useEffect, useRef, useState } from "react";
 import VideoTrailer from "../VideoTrailer/VideoTrailer";
@@ -22,7 +26,6 @@ import { getRoomAsileWithIdAPI } from "@/lib/axios/roomAPI";
 import { getSeatsWithRoomShowtimeAPI } from "@/lib/axios/seatsAPI";
 import Swal from "sweetalert2";
 import Button from "../Button/Button";
-import Spinner from "../Spinner/Spinner";
 
 function MovieDetail({
   data,
@@ -46,10 +49,16 @@ function MovieDetail({
     seatSelected: [],
     ticketTypes: [],
     clock: { minute: 5, second: 0 },
+    dateSelected: 0,
   });
-  console.log(state.ticketTypes);
+
   // hàm chọn ghế
-  const handleSelectSeat = (seat_id: number) => {
+  const handleSelectSeat = (
+    seat_id: number,
+    label: string,
+    rowSeat: [],
+    colSeat: number
+  ) => {
     const { ticketSelected, seatSelected } = state;
 
     // tổng số vé đã chọn
@@ -88,6 +97,21 @@ function MovieDetail({
 
     // nếu chưa đủ số ghế → chọn tiếp
     if (totalSeats < totalTickets) {
+      // kiểm tra vị trí ghế
+      if (isSingleGap(rowSeat, colSeat)) {
+        Swal.fire({
+          title: "Lưu ý!",
+          text: "Việc chọn ghế của bạn không được để trống 1 ghế ở bên trái, giữa hoặc bên phải trên cùng một hàng ghế mà bạn vừa chọn!",
+          confirmButtonText: "ĐỒNG Ý",
+          buttonsStyling: false,
+          customClass: {
+            popup: "popup_alert",
+            confirmButton: `btn_alert`,
+            cancelButton: `btn_alert`,
+          },
+        });
+        return;
+      }
       // tự động phân loại theo thứ tự loại vé
       let typeToUse = "";
       const countByType = seatSelected.reduce((acc, s) => {
@@ -104,13 +128,17 @@ function MovieDetail({
 
       setState((prev) => ({
         ...prev,
-        seatSelected: [...prev.seatSelected, { seat_id, type: typeToUse }],
+        seatSelected: [
+          ...prev.seatSelected,
+          { seat_id, type: typeToUse, label },
+        ],
       }));
     } else {
       Swal.fire({
         title: "Lưu ý!",
         text: "Bạn đã mua đủ số ghế!",
         confirmButtonText: "ĐỒNG Ý",
+        buttonsStyling: false,
         customClass: {
           popup: "popup_alert",
           confirmButton: `btn_alert`,
@@ -145,7 +173,11 @@ function MovieDetail({
 
     const getSeats = async (room: number, showtime: number) => {
       try {
-        const res = await getSeatsWithRoomShowtimeAPI(room, showtime);
+        const res = await getSeatsWithRoomShowtimeAPI(
+          room,
+          showtime,
+          state.dateSelected
+        );
         setState((prev) => ({ ...prev, seats: res }));
       } catch (error) {
         console.log(error);
@@ -170,6 +202,7 @@ function MovieDetail({
     setState((prev) => ({ ...prev, seatSelected: [] }));
   }, [state.ticketSelected]);
 
+  // bật bộ đếm giờ
   const timerStarted = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -197,6 +230,7 @@ function MovieDetail({
               },
             }).then((result: any) => {
               if (result.isConfirmed) {
+                scrollToPosition(0);
                 setState((prev) => ({
                   ...prev,
                   ticketSelected: {},
@@ -353,67 +387,66 @@ function MovieDetail({
           setTicketTypes={(arr) => {
             setState((prev) => ({ ...prev, ticketTypes: arr }));
           }}
+          setDateSelected={(date: number) => {
+            setState((prev) => ({ ...prev, dateSelected: date }));
+          }}
         />
       </div>
 
       {/* chọn loại vé */}
       <div id="select_ticket_type" className="mt-16">
         {state.timesSelected.showtime_id !== -1 &&
-        state.ticketTypes.length !== 0 ? (
-          <>
-            <div className="flex justify-center text-4xl font-bold mb-16">
-              CHỌN LOẠI VÉ
-            </div>
-            <div className="flex gap-6 justify-center">
-              {state.ticketTypes.map((t, i) => (
-                <div key={i} className="h-[150px] w-[300px]">
-                  <PriceCard
-                    data={t}
-                    setTicketSelected={(name, inc) => {
-                      setState((prev) => {
-                        const oldValue = prev.ticketSelected?.[name] ?? 0;
-                        let newValue;
-                        if (inc) {
-                          newValue = oldValue + 1;
-                        } else {
-                          if (oldValue === 0) {
-                            newValue = 0;
+          state.ticketTypes.length !== 0 && (
+            <>
+              <div className="flex justify-center text-4xl font-bold mb-16">
+                CHỌN LOẠI VÉ
+              </div>
+              <div className="flex gap-6 justify-center">
+                {state.ticketTypes.map((t, i) => (
+                  <div key={i} className="h-[150px] w-[300px]">
+                    <PriceCard
+                      data={t}
+                      setTicketSelected={(name, inc) => {
+                        setState((prev) => {
+                          const oldValue = prev.ticketSelected?.[name] ?? 0;
+                          let newValue;
+                          if (inc) {
+                            newValue = oldValue + 1;
                           } else {
-                            newValue = oldValue - 1;
+                            if (oldValue === 0) {
+                              newValue = 0;
+                            } else {
+                              newValue = oldValue - 1;
+                            }
                           }
-                        }
 
-                        return {
-                          ...prev,
-                          ticketSelected: {
-                            ...prev.ticketSelected,
-                            [name]: newValue,
-                          },
-                        };
-                      });
-                    }}
-                    ticketSelected={state.ticketSelected}
-                  />
-                </div>
-              ))}
-            </div>
-            {/* hiện phòng */}
-            <div id="select_seat" className="py-4">
-              <Room
-                data={state.room_asile}
-                seats={state.seats}
-                selectSeat={(seat_id) => {
-                  handleSelectSeat(seat_id);
-                }}
-                seatSelected={state.seatSelected}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="pb-5">
-            {state.timesSelected.showtime_id === -1 ? "" : <Spinner />}
-          </div>
-        )}
+                          return {
+                            ...prev,
+                            ticketSelected: {
+                              ...prev.ticketSelected,
+                              [name]: newValue,
+                            },
+                          };
+                        });
+                      }}
+                      ticketSelected={state.ticketSelected}
+                    />
+                  </div>
+                ))}
+              </div>
+              {/* hiện phòng */}
+              <div id="select_seat" className="py-4">
+                <Room
+                  data={state.room_asile}
+                  seats={state.seats}
+                  selectSeat={(seat_id, label, rowSeat, colSeat) => {
+                    handleSelectSeat(seat_id, label, rowSeat, colSeat);
+                  }}
+                  seatSelected={state.seatSelected}
+                />
+              </div>
+            </>
+          )}
       </div>
 
       {/* thanh tổng kết */}
@@ -435,7 +468,12 @@ function MovieDetail({
             {state.timesSelected.room_name !== "" &&
               state.timesSelected.time !== "" &&
               state.timesSelected.room_name + " | " + state.timesSelected.time}
+            {state.seatSelected.length !== 0 &&
+              state.seatSelected.map((m) => (
+                <span key={m.seat_id}> | {m.label}</span>
+              ))}
           </div>
+          <div></div>
         </div>
         <div className="flex gap-3">
           <div className="text-black bg-(--color-yellow) rounded-sm px-2 py-4">

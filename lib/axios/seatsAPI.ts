@@ -2,11 +2,12 @@ import axiosInstance from "./config";
 
 export async function getSeatsWithRoomShowtimeAPI(
   room: number,
-  showtime: number
+  showtime: number,
+  day: number
 ) {
   try {
     const response = await axiosInstance.get(
-      `/api/seats/room/showtime?room=${room}&showtime=${showtime}`
+      `/api/seats/room/showtime?room=${room}&showtime=${showtime}&day=${day}`
     );
 
     return response.data.data;
