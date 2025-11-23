@@ -12,7 +12,7 @@ export async function createPayOSPayment(data: {
     cancelUrl: string;
 }) {
     try {
-        const res = await axiosInstance.post("/api/create-payment", data);
+        const res = await axiosInstance.post("/api/payos/create-payment", data);
 
         return res.data; // { ok: true, checkoutUrl } hoặc { ok:false, error }
     } catch (err: any) {
