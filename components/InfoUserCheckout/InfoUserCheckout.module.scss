@@ -1,0 +1,46 @@
+.input_group {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 16px;
+}
+
+.input_group label {
+  padding-bottom: 8px;
+}
+
+.input_group label span {
+  color: red;
+}
+
+.input_group input {
+  background-color: #fff;
+  outline: none;
+  color: black;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.agree_group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  width: fit-content;
+  cursor: pointer;
+}
+
+.agree_group span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px whitesmoke solid;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.text_err {
+  color: #fb2c36;
+  font-size: 12px;
+  padding-top: 2px;
+}
