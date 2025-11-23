@@ -8,6 +8,7 @@ export const db = mysql.createPool({
     database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
+    dateStrings: true,
     queueLimit: 0,
     timezone: 'Z',
     ssl: {

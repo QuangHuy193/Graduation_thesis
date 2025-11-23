@@ -9,8 +9,16 @@ import { EMAILREGEX, PHONEREGEX } from "@/lib/constant";
 
 function InfoUserCheckout({
   changeStep,
+  onSaveUser,
 }: {
   changeStep: (step: number) => void;
+  onSaveUser?: (formData: {
+    name: string;
+    phone: string;
+    email: string;
+    checkAge: boolean;
+    checkPolicy: boolean;
+  }) => void;
 }) {
   const [state, setState] = useState({
     formData: {
@@ -131,6 +139,10 @@ function InfoUserCheckout({
 
   const handleNext = () => {
     if (validateForm()) {
+      // Gọi callback để lưu thông tin lên parent trước khi chuyển bước
+      if (onSaveUser) {
+        onSaveUser(state.formData);
+      }
       changeStep(2);
     }
   };

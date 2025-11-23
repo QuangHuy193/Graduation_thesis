@@ -26,8 +26,8 @@ export async function GET() {
 
         const data = (rows as any[]).map((r) => ({
             showtime_id: Number(r.showtime_id),
-            start_date: r.start_date ? new Date(r.start_date).toISOString() : null,
-            end_date: r.end_date ? new Date(r.end_date).toISOString() : null,
+            start_date: r.start_date ? formatLocalDate(r.start_date) : null,
+            end_date: r.end_date ? formatLocalDate(r.end_date) : null,
             status: r.status === null ? null : Number(r.status),
             movie_id: r.movie_id === null ? null : Number(r.movie_id),
             room_id: r.room_id === null ? null : Number(r.room_id),
@@ -35,7 +35,22 @@ export async function GET() {
             movie_title: r.movie_title || null,
             room_name: r.room_name || null,
         }));
-
+        function formatLocalDate(date: any) {
+            if (typeof date === "string") return date; // MySQL driver có thể trả string
+            return (
+                date.getFullYear() +
+                "-" +
+                String(date.getMonth() + 1).padStart(2, "0") +
+                "-" +
+                String(date.getDate()).padStart(2, "0") +
+                " " +
+                String(date.getHours()).padStart(2, "0") +
+                ":" +
+                String(date.getMinutes()).padStart(2, "0") +
+                ":" +
+                String(date.getSeconds()).padStart(2, "0")
+            );
+        }
         return successResponse({ data, total: data.length }, "success", 200);
     } catch (err) {
         console.error("GET /api/admin/showtimes error:", err);

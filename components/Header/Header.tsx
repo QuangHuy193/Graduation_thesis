@@ -22,14 +22,7 @@ function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
   // const [user, setUser] = useState<{ name?: string } | null>(null);
   const { user, setUser } = useAuth();
-  // interface JwtPayload {
-  //   user_id: string;
-  //   name: string;
-  //   email: string;
-  //   role: string;
-  //   iat?: number;
-  //   exp?: number;
-  // }
+
 
   // ✅ Lấy danh sách rạp
   useEffect(() => {
@@ -40,26 +33,7 @@ function Header() {
     getCinemas();
   }, []);
 
-  // ✅ Kiểm tra user login (token + user info)
-  // useEffect(() => {
-  //   try {
-  //     const token =
-  //       localStorage.getItem("token") || sessionStorage.getItem("token");
-  //     if (token) {
-  //       const decoded = jwtDecode<JwtPayload>(token);
-  //       if (decoded && decoded.name) {
-  //         setUser({ name: decoded.name });
-  //       } else {
-  //         setUser(null);
-  //       }
-  //     } else {
-  //       setUser(null);
-  //     }
-  //   } catch (err) {
-  //     console.error("Error decoding JWT:", err);
-  //     setUser(null);
-  //   }
-  // }, []);
+
 
   // ✅ Logout handler (xóa token)
   const handleLogout = () => {
@@ -78,8 +52,7 @@ function Header() {
 
     // redirect tới trang chính
     router.push("/");
-    // nếu header là server component (dựa cookie httpOnly), bạn có thể gọi router.refresh()
-    // router.refresh();
+
   };
 
   return (
