@@ -181,11 +181,16 @@ export function getDateFromOffset(offset: number) {
   const month = today.getMonth() + 1; // tháng (0-based)
   const year = today.getFullYear();
 
+  const dateOnly = `${year}-${month.toString().padStart(2, "0")}-${date
+    .toString()
+    .padStart(2, "0")}`;
+
   return {
     dayName, // tên thứ
     date, // ngày
     month, // tháng
     year, // năm
+    jsDate: dateOnly,
     full: `${dayName}, ${date}/${month}/${year}`, // chuỗi đầy đủ
   };
 }

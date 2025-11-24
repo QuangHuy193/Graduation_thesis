@@ -24,6 +24,7 @@ function InfoUserCheckout({
   const [state, setState] = useState({
     formData: {
       showtime_id: -1,
+      showtime_date: new Date(),
       total_price: 0,
       name: "",
       phone: "",
@@ -49,6 +50,7 @@ function InfoUserCheckout({
           ...prev.formData,
           showtime_id: dataParse.showtime_id,
           total_price: dataParse.total_price,
+          showtime_date: dataParse.date.jsDate,
         },
       }));
     }
@@ -157,7 +159,8 @@ function InfoUserCheckout({
   };
 
   const handleNext = async () => {
-    const { total_price, showtime_id, name, email, phone } = state.formData;
+    const { total_price, showtime_id, showtime_date, name, email, phone } =
+      state.formData;
     if (validateForm()) {
       // Gọi callback để lưu thông tin lên parent trước khi chuyển bước
       if (onSaveUser) {
@@ -167,6 +170,7 @@ function InfoUserCheckout({
         const isInsert = await createBookingNoAuth({
           total_price,
           showtime_id,
+          showtime_date,
           name,
           email,
           phone,

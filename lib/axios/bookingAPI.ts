@@ -3,6 +3,7 @@ import axiosInstance from "./config";
 export async function createBookingNoAuth(data: {
   total_price: number;
   showtime_id: number;
+  showtime_date: Date;
   name: string;
   phone: string;
   email: string;
