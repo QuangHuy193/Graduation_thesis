@@ -14,7 +14,7 @@ function ChangePass() {
           <div className="py-1 my-2">
             <form>
               <input
-                className="form_input placeholder:text-gray-500 "
+                className="form_input placeholder:text-gray-500 text-black"
                 placeholder="Email"
               />
             </form>

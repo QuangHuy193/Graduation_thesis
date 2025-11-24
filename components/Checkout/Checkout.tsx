@@ -14,7 +14,7 @@ type UserInfo = {
 };
 
 function Checkout() {
-  //* const { user, setUser } = useAuth();
+  //! const { user, setUser } = useAuth();
   const [state, setState] = useState({
     step: 1,
   });
@@ -30,7 +30,8 @@ function Checkout() {
   };
 
   useEffect(() => {
-    //* kiểm tra đăng nhập có thì qua thẳng step 2
+    //! kiểm tra đăng nhập có thì qua thẳng step 2
+    // tạo booking
     // console.log(user);
     // if (user) {
     //   console.log(user);

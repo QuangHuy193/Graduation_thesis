@@ -16,3 +16,21 @@ export async function createBookingNoAuth(data: {
     throw error.response?.data || error;
   }
 }
+
+export async function createBookingAuth(data: {
+  total_price: number;
+  showtime_id: number;
+  showtime_date: Date;
+  user_id: number;
+}) {
+  try {
+    const { user_id, ...payload } = data;
+    const response = await axiosInstance.post(`/api/booking/user/${user_id}`, {
+      ...payload,
+    });
+    return response;
+  } catch (error: any) {
+    console.error("Error fetching cinemas:", error);
+    throw error.response?.data || error;
+  }
+}

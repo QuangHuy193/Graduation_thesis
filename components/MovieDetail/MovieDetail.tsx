@@ -235,6 +235,7 @@ function MovieDetail({
               text: "Đã hết thời gian giữ vé!",
               confirmButtonText: "ĐỒNG Ý",
               buttonsStyling: false,
+              allowOutsideClick: false,
               customClass: {
                 popup: "popup_alert",
                 confirmButton: "btn_alert",

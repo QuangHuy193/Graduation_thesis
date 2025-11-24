@@ -1,17 +1,59 @@
 import { useEffect, useState } from "react";
 import styles from "./InfoBooking.module.scss";
 import Spinner from "../Spinner/Spinner";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 function InfoBooking() {
+  const router = useRouter();
   const [bookingData, setBookingData] = useState(null);
+  const [state, setState] = useState({
+    clock: { minute: 0, second: 3 },
+  });
 
   useEffect(() => {
     const data = sessionStorage.getItem("bookingData");
-
     if (data) {
       setBookingData(JSON.parse(data));
     }
+
+    const timer = setInterval(() => {
+      // bật đếm giờ
+      setState((prev) => {
+        let { minute, second } = prev.clock;
+        if (minute === 0 && second === 0) {
+          clearInterval(timer);
+          Swal.fire({
+            title: "LƯU Ý!",
+            text: "Đã hết thời gian giữ vé, vui lòng thao tác lại!",
+            confirmButtonText: "ĐỒNG Ý",
+            buttonsStyling: false,
+            allowOutsideClick: false,
+            customClass: {
+              popup: "popup_alert",
+              confirmButton: "btn_alert",
+            },
+          }).then((result: any) => {
+            if (result.isConfirmed) {
+              router.back();
+            }
+          });
+          return prev;
+        }
+
+        if (second > 0) {
+          second -= 1;
+        } else {
+          second = 59;
+          minute -= 1;
+        }
+
+        return { ...prev, clock: { minute, second } };
+      });
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
+
   if (bookingData === null) {
     return <Spinner />;
   }
@@ -23,9 +65,13 @@ function InfoBooking() {
         <div className="text-xl font-bold uppercase">
           {bookingData?.movie_name} (T{bookingData?.age_require})
         </div>
-        <div>
-          <span className={`${styles.sub_title}`}>THỜI GIAN GIỮ VÉ:</span>
-          <span>5:00</span>
+        <div className="flex gap-2 items-center">
+          <span>THỜI GIAN GIỮ VÉ:</span>
+          <span
+            className={`text-black font-bold bg-(--color-yellow) rounded-sm px-4 py-1`}
+          >
+            {state.clock.minute}:{state.clock.second}
+          </span>
         </div>
       </div>
 
