@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import PaymentGateway from "../PaymentGateway/PaymentGateway";
 import styles from "./Checkout.module.scss";
 import InfoUserCheckout from "../InfoUserCheckout/InfoUserCheckout";
+import { useAuth } from "../Header/AuthContext";
+import InfoBooking from "../InfoBooking/InfoBooking";
 
 type UserInfo = {
   name: string;
@@ -12,6 +14,7 @@ type UserInfo = {
 };
 
 function Checkout() {
+  //* const { user, setUser } = useAuth();
   const [state, setState] = useState({
     step: 1,
   });
@@ -27,7 +30,12 @@ function Checkout() {
   };
 
   useEffect(() => {
-    // kiểm tra đăng nhập có thì qua thẳng step 2
+    //* kiểm tra đăng nhập có thì qua thẳng step 2
+    // console.log(user);
+    // if (user) {
+    //   console.log(user);
+    //   setState((prev) => ({ ...prev, step: 2 }));
+    // }
   }, []);
   return (
     <div>
@@ -43,16 +51,18 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+            }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              state.step === 3 && "text-(--color-yellow)"
+            }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>
@@ -72,17 +82,21 @@ function Checkout() {
               }}
             />
           )}
-          {state.step === 2 && <PaymentGateway
-            buyer={userInfo ?? undefined}
-            onPay={(method: any, payload: any) => {
-              hanndlePayment(method, payload);
-            }}
-            amount={booking.amount}
-            description={booking.description}
-            items={booking.items}
-          />}
+          {state.step === 2 && (
+            <PaymentGateway
+              buyer={userInfo ?? undefined}
+              onPay={(method: any, payload: any) => {
+                hanndlePayment(method, payload);
+              }}
+              amount={booking.amount}
+              description={booking.description}
+              items={booking.items}
+            />
+          )}
         </div>
-        <div className="flex-1">Thông tin booking</div>
+        <div className="flex-1 pb-5">
+          <InfoBooking />
+        </div>
       </div>
     </div>
   );

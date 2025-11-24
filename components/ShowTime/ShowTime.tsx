@@ -23,6 +23,7 @@ function ShowTime({
     showtime_id: number;
     room_id: number;
     cinema_name: string;
+    cinema_address: string;
     room_name: string;
     time: string;
   }) => void;
@@ -74,6 +75,7 @@ function ShowTime({
       showtime_id: -1,
       room_id: -1,
       cinema_name: "",
+      cinema_address: "",
       room_name: "",
       time: "",
     });

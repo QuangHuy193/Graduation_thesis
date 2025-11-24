@@ -11,6 +11,7 @@ function ShowTimeCard({
     showtime_id: string;
     room_id: string;
     cinema_name: string;
+    cinema_address: string;
     room_name: string;
     time: string;
   }) => void;
@@ -43,6 +44,12 @@ function ShowTimeCard({
                   handleSelectTimes({
                     showtime_id: s.showtime_id,
                     cinema_name: data.cinema_name + " (" + data.province + ") ",
+                    cinema_address:
+                      data.specific_address +
+                      ", " +
+                      data.ward +
+                      ", " +
+                      data.province,
                     room_id: s.room.room_id,
                     room_name: s.room.room_name,
                     time: t,

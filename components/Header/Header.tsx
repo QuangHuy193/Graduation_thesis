@@ -8,7 +8,6 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { jwtDecode } from "jwt-decode";
 import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
@@ -23,7 +22,6 @@ function Header() {
   // const [user, setUser] = useState<{ name?: string } | null>(null);
   const { user, setUser } = useAuth();
 
-
   // ✅ Lấy danh sách rạp
   useEffect(() => {
     const getCinemas = async () => {
@@ -32,8 +30,6 @@ function Header() {
     };
     getCinemas();
   }, []);
-
-
 
   // ✅ Logout handler (xóa token)
   const handleLogout = () => {
@@ -52,7 +48,6 @@ function Header() {
 
     // redirect tới trang chính
     router.push("/");
-
   };
 
   return (

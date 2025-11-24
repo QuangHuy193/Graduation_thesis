@@ -1,11 +1,12 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./InfoUserCheckout.module.scss";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Button from "../Button/Button";
 import Swal from "sweetalert2";
 import { EMAILREGEX, PHONEREGEX } from "@/lib/constant";
+import { createBookingNoAuth } from "@/lib/axios/bookingAPI";
 
 function InfoUserCheckout({
   changeStep,
@@ -22,6 +23,8 @@ function InfoUserCheckout({
 }) {
   const [state, setState] = useState({
     formData: {
+      showtime_id: -1,
+      total_price: 0,
       name: "",
       phone: "",
       email: "",
@@ -34,6 +37,22 @@ function InfoUserCheckout({
       email: "",
     },
   });
+
+  useEffect(() => {
+    const data = sessionStorage.getItem("bookingData");
+
+    if (data) {
+      const dataParse = JSON.parse(data);
+      setState((prev) => ({
+        ...prev,
+        formData: {
+          ...prev.formData,
+          showtime_id: dataParse.showtime_id,
+          total_price: dataParse.total_price,
+        },
+      }));
+    }
+  }, []);
 
   const validateForm = () => {
     const { name, phone, email, checkAge, checkPolicy } = state.formData;
@@ -76,7 +95,7 @@ function InfoUserCheckout({
           phone: "Số điện thoại không hợp lệ",
         },
       }));
-      console.log("sdt k");
+
       return false;
     } else {
       setState((prev) => ({
@@ -137,11 +156,24 @@ function InfoUserCheckout({
     return true;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    const { total_price, showtime_id, name, email, phone } = state.formData;
     if (validateForm()) {
       // Gọi callback để lưu thông tin lên parent trước khi chuyển bước
       if (onSaveUser) {
         onSaveUser(state.formData);
+      }
+      try {
+        const isInsert = await createBookingNoAuth({
+          total_price,
+          showtime_id,
+          name,
+          email,
+          phone,
+        });
+        if (isInsert.success) console.log("Tạo booking thành công");
+      } catch (error) {
+        console.log(error);
       }
       changeStep(2);
     }

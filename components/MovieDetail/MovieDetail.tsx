@@ -13,6 +13,7 @@ import {
 import styles from "./MovieDetail.module.scss";
 import {
   formatDateWithDay,
+  getDateFromOffset,
   isSingleGap,
   scrollToPosition,
 } from "@/lib/function";
@@ -35,20 +36,30 @@ function MovieDetail({
   movie_id: number;
 }) {
   const [state, setState] = useState({
+    // nút cem trailer
     watchTrailer: false,
+    // giờ chọn
     timesSelected: {
       showtime_id: -1,
       room_id: -1,
       cinema_name: "",
+      cinema_address: "",
       room_name: "",
       time: "",
     },
+    // vé chọn
     ticketSelected: {},
+    // ds khoảng trống phòng
     room_asile: {},
+    // ds ghế của showtime
     seats: [],
+    // ghế chọn
     seatSelected: [],
+    // ds loại vé
     ticketTypes: [],
+    // đồng hồ đếm giờ
     clock: { minute: 5, second: 0 },
+    // ngày chọn
     dateSelected: 0,
   });
 
@@ -238,6 +249,7 @@ function MovieDetail({
                     showtime_id: -1,
                     room_id: -1,
                     cinema_name: "",
+                    cinema_address: "",
                     room_name: "",
                     time: "",
                   },
@@ -275,6 +287,29 @@ function MovieDetail({
     );
   }
 
+  const handleBooking = () => {
+    const date = getDateFromOffset(state.dateSelected);
+    const total = Object.keys(state.ticketSelected).reduce((sum, key) => {
+      const quantity = state.ticketSelected[key];
+      const ticket = state.ticketTypes.find((t) => t.name === key);
+      return ticket ? sum + quantity * ticket.price_final : sum;
+    }, 0);
+    const bookingData = {
+      showtime_id: state.timesSelected.showtime_id,
+      total_price: total,
+      movie_name: data[0].name,
+      age_require: data[0].age_require,
+      cinema_name: state.timesSelected.cinema_name,
+      cinema_address: state.timesSelected.cinema_address,
+      time: state.timesSelected.time,
+      date: date,
+      room_name: state.timesSelected.room_name,
+      ticket: state.ticketSelected,
+      seats: state.seatSelected,
+      food_drink: "",
+    };
+    sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
+  };
   return (
     <div>
       {/* chi tiết phim */}
@@ -499,7 +534,7 @@ function MovieDetail({
                 VNĐ
               </span>
             </div>
-            <div className="relative">
+            <div className="relative" onClick={() => handleBooking()}>
               <Button
                 text="ĐẶT VÉ"
                 text_color="black"

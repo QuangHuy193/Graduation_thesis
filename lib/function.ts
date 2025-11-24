@@ -45,7 +45,7 @@ export function scrollToPosition(
   }
 }
 
-export function successResponse<T>(data: T, message?: string, status = 200) {
+export function successResponse<T>(data?: T, message?: string, status = 200) {
   return NextResponse.json<ApiResponse<T>>(
     { success: true, message, data },
     { status }
@@ -151,4 +151,41 @@ export function isSingleGap(
   }
 
   return false;
+}
+export function getCurrentDateTime() {
+  const now = new Date();
+  const pad = (n: number) => (n < 10 ? `0${n}` : n);
+
+  return (
+    now.getFullYear() +
+    "-" +
+    pad(now.getMonth() + 1) +
+    "-" +
+    pad(now.getDate()) +
+    " " +
+    pad(now.getHours()) +
+    ":" +
+    pad(now.getMinutes()) +
+    ":" +
+    pad(now.getSeconds())
+  );
+}
+
+export function getDateFromOffset(offset: number) {
+  const today = new Date();
+  today.setDate(today.getDate() + offset);
+
+  const dayName = weekdays[today.getDay()];
+
+  const date = today.getDate(); // ngày
+  const month = today.getMonth() + 1; // tháng (0-based)
+  const year = today.getFullYear();
+
+  return {
+    dayName, // tên thứ
+    date, // ngày
+    month, // tháng
+    year, // năm
+    full: `${dayName}, ${date}/${month}/${year}`, // chuỗi đầy đủ
+  };
 }
