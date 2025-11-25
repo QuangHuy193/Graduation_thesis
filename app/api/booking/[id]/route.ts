@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import QRCode from "qrcode";
 import { errorResponse, successResponse } from "@/lib/function";
+import { start } from "nprogress";
 
 export async function PUT(
   req: Request,
@@ -58,13 +59,30 @@ export async function PUT(
         // lấy ticket_id vừa tạo
         const ticketId = insertResult.insertId;
 
+        // lấy label ghế cho qr
+        const [seatRow] = await db.query(
+          `SELECT seat_row, seat_column FROM seats WHERE seat_id = ?`,
+          [seat_id]
+        );
+        console.log(seatRow);
+        //lấy giờ phòng cho qr
+        const [bookingInfo] = await db.query(
+          `SELECT ms.start_time, r.name
+          FROM booking b
+          JOIN showtime s ON b.showtime_id = s.showtime_id
+          JOIN rooms r ON r.room_id = s.room_id
+          JOIN movie_screenings ms ON ms.movie_screen_id = s.movie_screen_id
+          WHERE s.showtime_id = ?`,
+          [id]
+        );
+
         // 2) Tạo nội dung QR (có thể chứa ticketId, bookingId, expire, và 1 hash nếu muốn)
-        // Bạn có thể thêm nhiều thông tin hơn (vd: seat, movie_id, showtime) tuỳ nhu cầu
+        // Tạo payload QR (chỉ chứa ticketId nếu muốn bảo mật)
         const qrPayload = JSON.stringify({
-          ticketId,
-          bookingId: id,
-          seatId: seat_id,
-          issuedAt: new Date().toISOString(),
+          ticketId, // bắt buộc để server xác thực
+          seat: seatRow.seat_row + seatRow.seat_column,
+          startTime: bookingInfo.start_time,
+          room: bookingInfo.room_name,
         });
 
         // 3) Generate QR code dưới dạng data URL (PNG)

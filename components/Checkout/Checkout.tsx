@@ -3,10 +3,15 @@ import PaymentGateway from "../PaymentGateway/PaymentGateway";
 import styles from "./Checkout.module.scss";
 import InfoUserCheckout from "../InfoUserCheckout/InfoUserCheckout";
 import { useSession } from "next-auth/react";
-import { createBookingNoAuth, createBookingAuth, updateBookingToPaid } from "@/lib/axios/bookingAPI";
+import {
+  createBookingNoAuth,
+  createBookingAuth,
+  updateBookingToPaid,
+} from "@/lib/axios/bookingAPI";
 import { useSearchParams } from "next/navigation";
 import InfoBooking from "../InfoBooking/InfoBooking";
 import { toMySQLDate } from "@/lib/function";
+import InfoTicket from "../InfoTicket/InfoTicket";
 
 type UserInfo = {
   name: string;
@@ -47,7 +52,7 @@ function Checkout() {
       console.log("Thanh toán thành công" + paymentStatus);
 
       if (bookingID) {
-        updateBookingToPaid(bookingID);    // ⬅ Gọi API /booking/[id]
+        updateBookingToPaid(bookingID); // ⬅ Gọi API /booking/[id]
         setState((prev) => ({ ...prev, step: 3 }));
       }
     }
@@ -57,8 +62,8 @@ function Checkout() {
       setAuth(true);
       // chỉ nâng step khi step hiện tại < 2
       setState((prev) => {
-        if (!prev || typeof prev.step !== "number") return { ...prev, step: 2 };
-        if (prev.step < 2) return { ...prev, step: 2 };
+        if (!prev || typeof prev.step !== "number") return { ...prev, step: 3 };
+        if (prev.step < 2) return { ...prev, step: 3 };
         return prev; // nếu đã >=2 thì không giảm lại
       });
     } else if (status === "unauthenticated") {
@@ -147,16 +152,18 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+            }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              state.step === 3 && "text-(--color-yellow)"
+            }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>
@@ -164,40 +171,39 @@ function Checkout() {
         </div>
         <div className="flex-1"></div>
       </div>
-      <div className="flex gap-4">
-        <div className="flex-1">
-          {state.step === 1 && (
-            <InfoUserCheckout
-              changeStep={(step: number) => {
-                setState((prev) => ({ ...prev, step: step }));
-              }}
-              onSaveUser={(formData: UserInfo) => {
-                setUserInfo(formData);
-              }}
-            />
-          )}
-          {state.step === 2 && (
-            <PaymentGateway
-              buyer={userInfo ?? undefined}
-              onPay={async (method: any, payload: any) => {
-                const bookingID = await handleCreateBooking();
-                sessionStorage.setItem("booking_id", String(bookingID));
-                return bookingID;
-              }}
-              amount={bookingData.total_price}
-              description={booking.description}
-            />
-          )}
-          {state.step === 3 && (
-            <div>Thanh toán thành công</div>
-          )
-
-          }
+      {state.step !== 3 && (
+        <div className="flex gap-4">
+          <div className="flex-1">
+            {state.step === 1 && (
+              <InfoUserCheckout
+                changeStep={(step: number) => {
+                  setState((prev) => ({ ...prev, step: step }));
+                }}
+                onSaveUser={(formData: UserInfo) => {
+                  setUserInfo(formData);
+                }}
+              />
+            )}
+            {state.step === 2 && (
+              <PaymentGateway
+                buyer={userInfo ?? undefined}
+                onPay={async (method: any, payload: any) => {
+                  const bookingID = await handleCreateBooking();
+                  sessionStorage.setItem("booking_id", String(bookingID));
+                  return bookingID;
+                }}
+                amount={bookingData.total_price}
+                description={booking.description}
+              />
+            )}
+            {state.step === 3 && <div>Thanh toán thành công</div>}
+          </div>
+          <div className="flex-1 pb-5">
+            <InfoBooking />
+          </div>
         </div>
-        <div className="flex-1 pb-5">
-          <InfoBooking />
-        </div>
-      </div>
+      )}
+      {state.step === 3 && <InfoTicket bookingId={36} />}
     </div>
   );
 }
@@ -206,4 +212,3 @@ export default Checkout;
 function setError(arg0: string) {
   throw new Error("Function not implemented.");
 }
-
