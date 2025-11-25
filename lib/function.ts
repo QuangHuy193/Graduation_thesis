@@ -196,3 +196,64 @@ export function getDateFromOffset(offset: number) {
     full: `${dayName}, ${date}/${month}/${year}`, // chuỗi đầy đủ
   };
 }
+
+export function toMySQLDate(dateValue: any): string | null {
+  if (!dateValue && dateValue !== 0) return null;
+
+  // 1) Nếu là string (ISO hoặc "YYYY-MM-DDTHH:..")
+  if (typeof dateValue === "string") {
+    // Nếu có 'T' (ISO), lấy phần trước T, ngược lại assume string đã là YYYY-MM-DD
+    if (dateValue.includes("T")) return dateValue.split("T")[0];
+    // Nếu dạng dd/mm/yyyy (ví dụ "25/11/2025"), try convert
+    if (dateValue.includes("/")) {
+      const parts = dateValue.split("/");
+      if (parts.length === 3) {
+        // parts: ["25","11","2025"]
+        return `${parts[2].padStart(4, "0")}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+      }
+    }
+    // assume already YYYY-MM-DD
+    return dateValue;
+  }
+
+  // 2) Nếu là Date object
+  if (dateValue instanceof Date && !Number.isNaN(dateValue.getTime())) {
+    return dateValue.toISOString().split("T")[0];
+  }
+
+  // 3) Nếu là number timestamp (ms)
+  if (typeof dateValue === "number") {
+    const d = new Date(dateValue);
+    if (!Number.isNaN(d.getTime())) return d.toISOString().split("T")[0];
+  }
+
+  // 4) Nếu là object custom (như của bạn)
+  if (typeof dateValue === "object") {
+    // ưu tiên trường jsDate nếu có
+    if (typeof dateValue.jsDate === "string") {
+      return toMySQLDate(dateValue.jsDate);
+    }
+    // nếu có year/month/date
+    if (
+      typeof dateValue.year === "number" &&
+      typeof dateValue.month === "number" &&
+      typeof dateValue.date === "number"
+    ) {
+      const y = String(dateValue.year).padStart(4, "0");
+      const m = String(dateValue.month).padStart(2, "0");
+      const dd = String(dateValue.date).padStart(2, "0");
+      return `${y}-${m}-${dd}`;
+    }
+  }
+
+  // fallback
+  console.warn("toMySQLDate: unsupported date format:", dateValue);
+  return null;
+}
+
+export function parseDateFromYMD(ymd: string): Date {
+  // ymd expected "YYYY-MM-DD"
+  const [y, m, d] = ymd.split("-").map((s) => Number(s));
+  // monthIndex = month - 1
+  return new Date(y, m - 1, d);
+}

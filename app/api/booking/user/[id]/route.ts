@@ -14,8 +14,15 @@ export async function POST(
     const { id } = await params;
     const { total_price, showtime_id, showtime_date } = body;
 
-    if (!total_price || !showtime_id || !showtime_date) {
-      return errorResponse("Thiếu dữ liệu đầu vào", 400);
+    // if (!total_price || !showtime_id || !showtime_date) {
+    //   return errorResponse("Thiếu dữ liệu đầu vào", 400);
+    // }
+    if (!total_price) {
+      return errorResponse("Thiếu total_price đầu vào", 400);
+    } else if (!showtime_id) {
+      return errorResponse("Thiếu showtime đầu vào", 400);
+    } else if (!showtime_date) {
+      return errorResponse("Thiếu showtime_date đầu vào", 400);
     }
 
     const booking_time = getCurrentDateTime();

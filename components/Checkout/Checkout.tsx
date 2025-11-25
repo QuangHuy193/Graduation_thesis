@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { createBookingNoAuth, createBookingAuth, updateBookingToPaid } from "@/lib/axios/bookingAPI";
 import { useSearchParams } from "next/navigation";
 import InfoBooking from "../InfoBooking/InfoBooking";
+import { toMySQLDate } from "@/lib/function";
 
 type UserInfo = {
   name: string;
@@ -32,6 +33,7 @@ function Checkout() {
     description: "Thanh toán hóa đơn CineGo",
     // items: [{ name: "Vé 2D", quantity: 2, price: 60000 }],
   };
+
   const searchParams = useSearchParams();
   const paymentStatus = searchParams.get("status");
 
@@ -42,7 +44,7 @@ function Checkout() {
     if (paymentStatus === "PAID") {
       const bookingIDRaw = sessionStorage.getItem("booking_id");
       const bookingID = Number(bookingIDRaw);
-      console.log("Thanh toán thành công");
+      console.log("Thanh toán thành công" + paymentStatus);
 
       if (bookingID) {
         updateBookingToPaid(bookingID);    // ⬅ Gọi API /booking/[id]
@@ -52,8 +54,15 @@ function Checkout() {
   }, [paymentStatus]);
   useEffect(() => {
     if (status === "authenticated" && user) {
-      setState((prev) => ({ ...prev, step: 2 }));
       setAuth(true);
+      // chỉ nâng step khi step hiện tại < 2
+      setState((prev) => {
+        if (!prev || typeof prev.step !== "number") return { ...prev, step: 2 };
+        if (prev.step < 2) return { ...prev, step: 2 };
+        return prev; // nếu đã >=2 thì không giảm lại
+      });
+    } else if (status === "unauthenticated") {
+      setAuth(false);
     }
   }, [status, user]);
   //Lấy lại booking data từ session
@@ -73,7 +82,12 @@ function Checkout() {
     }
 
     // Chuẩn hóa ngày để phù hợp MySQL DATE
-    const normalizedDate = bookingData.date?.split("T")?.[0] || bookingData.date;
+    const normalizedDate = toMySQLDate(bookingData.date);
+    if (!normalizedDate) {
+      console.error("Không thể chuẩn hoá bookingData.date:", bookingData.date);
+      setError("Dữ liệu ngày không hợp lệ"); // nếu bạn có state error
+      return;
+    }
 
     let payload;
 
@@ -166,13 +180,12 @@ function Checkout() {
             <PaymentGateway
               buyer={userInfo ?? undefined}
               onPay={async (method: any, payload: any) => {
-
                 const bookingID = await handleCreateBooking();
-                sessionStorage.setItem("booking_id", bookingID);
+                sessionStorage.setItem("booking_id", String(bookingID));
+                return bookingID;
               }}
               amount={bookingData.total_price}
               description={booking.description}
-            // items={bookingData.}
             />
           )}
           {state.step === 3 && (
@@ -190,3 +203,7 @@ function Checkout() {
 }
 
 export default Checkout;
+function setError(arg0: string) {
+  throw new Error("Function not implemented.");
+}
+

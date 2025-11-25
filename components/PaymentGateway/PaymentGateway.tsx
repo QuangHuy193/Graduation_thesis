@@ -104,6 +104,7 @@ export default function PaymentGateway({
         if (selected === "domestic_card") {
             setLoadingPay(true);
             try {
+                await Promise.resolve(onPay(selected, { coupon, amount, items }));
                 const orderCode = generateOrderCode();
                 const result = await createPayOSPayment({
                     orderCode,
@@ -117,7 +118,7 @@ export default function PaymentGateway({
                 });
 
                 if (result.ok && result.checkoutUrl) {
-                    window.location.href = result.checkoutUrl; // redirect sang payOS
+                    window.location.href = result.checkoutUrl;
                     return;
                 }
 
@@ -131,7 +132,14 @@ export default function PaymentGateway({
         }
 
         // Các phương thức khác: theo callback onPay (legacy)
-        onPay(selected, { coupon, amount, items });
+        try {
+            setLoadingPay(true);
+            await Promise.resolve(onPay(selected, { coupon, amount, items }));
+        } catch (err: any) {
+            setPayError(err?.message ?? "Lỗi khi xử lý thanh toán");
+        } finally {
+            setLoadingPay(false);
+        }
     }, [selected, coupon, amount, description, items, onPay]);
 
     return (

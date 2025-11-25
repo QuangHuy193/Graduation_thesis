@@ -130,7 +130,7 @@ async function callOrderService(orderServiceBase: string, body: any) {
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        console.log("DEBUG: /api/create-payment received body:", safeCopy(body));
+
         const { orderCode, amount } = body ?? {};
 
         if (!orderCode || !amount) {
