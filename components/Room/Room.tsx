@@ -19,9 +19,20 @@ function Room({
 
   return (
     <div>
-      <div className="flex justify-center text-4xl font-bold my-16 uppercase">
+      <div className="flex justify-center text-4xl font-bold my-12 uppercase">
         CHỌN GHẾ - {data.name}
       </div>
+      <div className="flex justify-center">
+        <div
+          className="mt-4 mb-6 px-5 py-3 rounded-xl bg-yellow-50 border
+                   border-yellow-300 text-yellow-700 text-sm max-w-xl text-center 
+                   shadow-sm"
+        >
+          Chú ý: Khi chọn nhiều ghế, cần tránh để lại khoảng trống ở giữa để đảm
+          bảo không vi phạm quy định chọn ghế.
+        </div>
+      </div>
+
       <div className="flex justify-center">
         <div className="pb-5">
           <div className="relative pb-5">
