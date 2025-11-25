@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import PaymentGateway from "../PaymentGateway/PaymentGateway";
 import styles from "./Checkout.module.scss";
 import InfoUserCheckout from "../InfoUserCheckout/InfoUserCheckout";
-// import { useAuth } from "../Header/AuthContext";
 import { useSession } from "next-auth/react";
+import { createBookingNoAuth, createBookingAuth, updateBookingToPaid } from "@/lib/axios/bookingAPI";
+import { useSearchParams } from "next/navigation";
 import InfoBooking from "../InfoBooking/InfoBooking";
 
 type UserInfo = {
@@ -16,32 +17,108 @@ type UserInfo = {
 
 function Checkout() {
   // const { user, setUser } = useAuth();
-  const { data: session } = useSession();
-  const user = session?.user;
-
+  const { data: session, status } = useSession();
+  const user = session?.user ?? null;
+  const [bookingData, setBookingData] = useState<any>(null);
   const [state, setState] = useState({
     step: 1,
   });
+  const [auth, setAuth] = useState(false);
+  //Dùng cho trường hợp ko đăng nhập (auth=false)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   //demo
   const booking = {
-    amount: 2000,
+    // amount: 2000,
     description: "Thanh toán hóa đơn CineGo",
-    items: [{ name: "Vé 2D", quantity: 2, price: 60000 }],
+    // items: [{ name: "Vé 2D", quantity: 2, price: 60000 }],
   };
-  const hanndlePayment = (method: any, payload: any) => {
-    console.log("onPay called in Checkout:", method, payload);
-  };
+  const searchParams = useSearchParams();
+  const paymentStatus = searchParams.get("status");
 
+  // const hanndlePayment = (method: any, payload: any) => {
+  //   console.log("onPay called in Checkout:", method, payload);
+  // };
   useEffect(() => {
-    // kiểm tra đăng nhập có thì qua thẳng step 2
-    // tạo booking
-    console.log(user);
-    if (user) {
-      console.log(user);
+    if (paymentStatus === "PAID") {
+      const bookingIDRaw = sessionStorage.getItem("booking_id");
+      const bookingID = Number(bookingIDRaw);
+      console.log("Thanh toán thành công");
+
+      if (bookingID) {
+        updateBookingToPaid(bookingID);    // ⬅ Gọi API /booking/[id]
+        setState((prev) => ({ ...prev, step: 3 }));
+      }
+    }
+  }, [paymentStatus]);
+  useEffect(() => {
+    if (status === "authenticated" && user) {
       setState((prev) => ({ ...prev, step: 2 }));
+      setAuth(true);
+    }
+  }, [status, user]);
+  //Lấy lại booking data từ session
+  useEffect(() => {
+    const data = sessionStorage.getItem("bookingData");
+    if (data) {
+      setBookingData(JSON.parse(data));
+    } else {
+      // fallback khi user mở tab mới / reload mất data
+      console.warn("Không tìm thấy bookingData");
     }
   }, []);
+  async function handleCreateBooking() {
+    if (!bookingData) {
+      console.error("Không tìm thấy bookingData");
+      return;
+    }
+
+    // Chuẩn hóa ngày để phù hợp MySQL DATE
+    const normalizedDate = bookingData.date?.split("T")?.[0] || bookingData.date;
+
+    let payload;
+
+    if (!auth) {
+      // ❗ Trường hợp chưa đăng nhập → lấy userInfo từ form
+      if (!userInfo) {
+        console.warn("Thiếu thông tin userInfo khi chưa đăng nhập");
+        return;
+      }
+
+      payload = {
+        total_price: bookingData.total_price,
+        showtime_id: bookingData.showtime_id,
+        showtime_date: normalizedDate,
+        name: userInfo.name,
+        phone: userInfo.phone,
+        email: userInfo.email,
+      };
+
+      const res = await createBookingNoAuth(payload);
+      console.log("Booking created (no-auth):", res.data.data.booking_id);
+
+      // TODO: redirect sang Payment
+      return res.data.data.booking_id;
+    }
+    if (!user?.user_id) {
+      console.error("Không có user_id");
+      return;
+    }
+    const userId = Number(user.user_id);
+    // ✔ Trường hợp user đã đăng nhập (auth = true)
+    payload = {
+      total_price: bookingData.total_price,
+      showtime_id: bookingData.showtime_id,
+      showtime_date: normalizedDate,
+      user_id: userId,
+    };
+
+    const res = await createBookingAuth(payload);
+
+    console.log("Booking created (auth):", res.data.data.booking_id);
+    return res.data.data.booking_id;
+    // TODO: redirect sang Payment
+  }
+
   return (
     <div>
       <div className="text-3xl font-bold pb-8">TRANG THANH TOÁN</div>
@@ -88,14 +165,21 @@ function Checkout() {
           {state.step === 2 && (
             <PaymentGateway
               buyer={userInfo ?? undefined}
-              onPay={(method: any, payload: any) => {
-                hanndlePayment(method, payload);
+              onPay={async (method: any, payload: any) => {
+
+                const bookingID = await handleCreateBooking();
+                sessionStorage.setItem("booking_id", bookingID);
               }}
-              amount={booking.amount}
+              amount={bookingData.total_price}
               description={booking.description}
-              items={booking.items}
+            // items={bookingData.}
             />
           )}
+          {state.step === 3 && (
+            <div>Thanh toán thành công</div>
+          )
+
+          }
         </div>
         <div className="flex-1 pb-5">
           <InfoBooking />

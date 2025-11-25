@@ -111,8 +111,8 @@ export default function PaymentGateway({
                     description,
                     items,
                     coupon: coupon || undefined,
-                    returnUrl: `${window.location.origin}/payment-success?order=${orderCode}`,
-                    cancelUrl: `${window.location.origin}/payment-cancel?order=${orderCode}`,
+                    returnUrl: `${window.location.origin}/checkout`,
+                    cancelUrl: `${window.location.origin}/checkout`,
                     buyer: buyer || undefined,
                 });
 
@@ -148,8 +148,8 @@ export default function PaymentGateway({
                                 aria-pressed={isSelected}
                                 aria-label={m.label}
                                 className={`w-full text-left border rounded-md p-4 flex items-center gap-4 transition-shadow focus:outline-none ${isSelected
-                                        ? "ring-2 ring-offset-2 ring-indigo-500 bg-white/5"
-                                        : "hover:shadow-md"
+                                    ? "ring-2 ring-offset-2 ring-indigo-500 bg-white/5"
+                                    : "hover:shadow-md"
                                     }`}
                                 type="button"
                             >

@@ -34,3 +34,16 @@ export async function createBookingAuth(data: {
     throw error.response?.data || error;
   }
 }
+export async function updateBookingToPaid(bookingID: number) {
+  try {
+    const payload = {
+      payment_method: "PAYOS"
+    };
+
+    const res = await axiosInstance.put(`/api/booking/${bookingID}`, payload);
+    return res.data;
+  } catch (error: any) {
+    console.error("Error:", error);
+    throw error.response?.data || error;
+  }
+}
