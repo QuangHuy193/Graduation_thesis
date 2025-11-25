@@ -105,7 +105,6 @@ export function isSingleGap(
   rowSeats: Array<{ seat_column: number; status: number; selected?: boolean }>,
   col: number
 ) {
-  console.log(rowSeats, col);
   // Chuẩn hóa seats: booked = true nếu từ DB có status=1 hoặc đang được chọn
   const seats = [...rowSeats]
     .sort((a, b) => a.seat_column - b.seat_column)
@@ -113,8 +112,12 @@ export function isSingleGap(
       col: s.seat_column,
       booked: s.status === 1 || s.selected === true,
     }));
-
   const get = (c: number) => seats.find((s) => s.col === c);
+  // chống ghế sát trái, sát phải
+  if (col === 1 && !get(0)?.booked) return true;
+  if (col === rowSeats.length - 2 && !get(rowSeats.length - 1)?.booked) {
+    return true;
+  }
 
   const left = get(col - 1);
   const right = get(col + 1);
@@ -123,33 +126,32 @@ export function isSingleGap(
 
   // RULE 1: CHỐNG LẺ 1 GHẾ
   if (left && !left.booked && left2?.booked) return true;
-
   if (right && !right.booked && right2?.booked) return true;
 
   // RULE 2: KHÔNG CHO CHỌN 2 GHẾ GIỮA KHI CHUỖI CÒN 4 GHẾ TRỐNG
-  let g1 = get(col - 1);
-  let g2 = get(col);
-  let g3 = get(col + 1);
-  let g4 = get(col + 2);
-  if (g4 === undefined) {
-    g1 = get(col - 2);
-    g2 = get(col - 1);
-    g3 = get(col);
-    g4 = get(col + 1);
-  }
+  // let g1 = get(col - 1);
+  // let g2 = get(col);
+  // let g3 = get(col + 1);
+  // let g4 = get(col + 2);
+  // if (g4 === undefined) {
+  //   g1 = get(col - 2);
+  //   g2 = get(col - 1);
+  //   g3 = get(col);
+  //   g4 = get(col + 1);
+  // }
 
-  // nếu đủ 4 ghế liên tiếp
-  if (g1 && g2 && g3 && g4) {
-    const allFourEmpty = !g1.booked && !g2.booked && !g3.booked && !g4.booked;
-
-    if (allFourEmpty) {
-      // vị trí giữa là col hoặc col+1
-      if (col === g2.col || col === g3.col) {
-        return true; // không cho chọn vì rơi vào 2 ghế giữa
-      }
-    }
-  }
-
+  // // nếu đủ 4 ghế liên tiếp
+  // if (g1 && g2 && g3 && g4) {
+  //   const allFourEmpty = !g1.booked && !g2.booked && !g3.booked && !g4.booked;
+  //   console.log(!g1.booked, !g2.booked, !g3.booked, !g4.booked);
+  //   if (allFourEmpty) {
+  //     // vị trí giữa là col hoặc col+1
+  //     if (col === g2.col || col === g3.col) {
+  //       console.log("4");
+  //       return true; // không cho chọn vì rơi vào 2 ghế giữa
+  //     }
+  //   }
+  // }
   return false;
 }
 export function getCurrentDateTime() {

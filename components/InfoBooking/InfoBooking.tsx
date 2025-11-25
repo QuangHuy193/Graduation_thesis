@@ -8,7 +8,7 @@ function InfoBooking() {
   const router = useRouter();
   const [bookingData, setBookingData] = useState(null);
   const [state, setState] = useState({
-    clock: { minute: 0, second: 3 },
+    clock: { minute: 5, second: 0 },
   });
 
   useEffect(() => {
