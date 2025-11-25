@@ -58,7 +58,7 @@ function MovieDetail({
     // ds loại vé
     ticketTypes: [],
     // đồng hồ đếm giờ
-    clock: { minute: 5, second: 0 },
+    clock: { minute: 50, second: 0 },
     // ngày chọn
     dateSelected: 0,
   });
@@ -434,9 +434,39 @@ function MovieDetail({
         {state.timesSelected.showtime_id !== -1 &&
           state.ticketTypes.length !== 0 && (
             <>
-              <div className="flex justify-center text-4xl font-bold mb-16">
+              <div className="flex justify-center text-4xl font-bold mb-12">
                 CHỌN LOẠI VÉ
               </div>
+
+              <div className="flex justify-center">
+                <div
+                  className="
+      mt-2 mb-10
+      px-5 py-3
+      bg-red-50
+      border border-red-300
+      rounded-xl
+      text-red-700
+      text-sm
+      shadow-sm
+      max-w-2xl
+      text-center
+      leading-relaxed
+      flex items-center gap-2
+      "
+                >
+                  <span>
+                    <span className="font-semibold text-red-800">
+                      Lưu ý quan trọng:
+                    </span>{" "}
+                    Đối với vé HS-SV, bạn <u>bắt buộc</u> phải mang theo CCCD
+                    hoặc thẻ HSSV có dán ảnh để xác minh trước khi vào rạp. Nhân
+                    viên rạp có thể từ chối không cho bạn vào xem nếu không thực
+                    hiện đúng quy định này.
+                  </span>
+                </div>
+              </div>
+
               <div className="flex gap-6 justify-center">
                 {state.ticketTypes.map((t, i) => (
                   <div key={i} className="h-[150px] w-[300px]">
@@ -445,6 +475,24 @@ function MovieDetail({
                       setTicketSelected={(name, inc) => {
                         setState((prev) => {
                           const oldValue = prev.ticketSelected?.[name] ?? 0;
+
+                          let totalTickets = 0;
+                          Object.values(prev.ticketSelected).map((v) => {
+                            totalTickets += v;
+                          });
+
+                          if (totalTickets === 8) {
+                            Swal.fire({
+                              text: "Vui lòng chọn tối đa 8 ghế",
+                              confirmButtonText: "ĐỒNG Ý",
+                              customClass: {
+                                popup: "popup_alert",
+                                confirmButton: `btn_alert`,
+                                cancelButton: `btn_alert`,
+                              },
+                            });
+                            return prev;
+                          }
                           let newValue;
                           if (inc) {
                             newValue = oldValue + 1;
