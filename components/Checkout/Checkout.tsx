@@ -14,14 +14,14 @@ type UserInfo = {
 };
 
 function Checkout() {
-  //! const { user, setUser } = useAuth();
+  const { user, setUser } = useAuth();
   const [state, setState] = useState({
     step: 1,
   });
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   //demo
   const booking = {
-    amount: 120000,
+    amount: 2000,
     description: "Thanh toán hóa đơn CineGo",
     items: [{ name: "Vé 2D", quantity: 2, price: 60000 }],
   };
@@ -30,13 +30,13 @@ function Checkout() {
   };
 
   useEffect(() => {
-    //! kiểm tra đăng nhập có thì qua thẳng step 2
+    // kiểm tra đăng nhập có thì qua thẳng step 2
     // tạo booking
-    // console.log(user);
-    // if (user) {
-    //   console.log(user);
-    //   setState((prev) => ({ ...prev, step: 2 }));
-    // }
+    console.log(user);
+    if (user) {
+      console.log(user);
+      setState((prev) => ({ ...prev, step: 2 }));
+    }
   }, []);
   return (
     <div>

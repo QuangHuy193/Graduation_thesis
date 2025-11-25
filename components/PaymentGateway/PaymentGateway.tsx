@@ -41,7 +41,9 @@ export default function PaymentGateway({
     onPay = () => { },
     onApplyCoupon = async () => ({ ok: true, discount: 0 }),
 }: PaymentGatewayProps) {
-    const [selected, setSelected] = useState<PaymentMethodId | null>(initialMethod);
+    const [selected, setSelected] = useState<PaymentMethodId | null>(
+        initialMethod
+    );
     const [coupon, setCoupon] = useState("");
     const [couponMsg, setCouponMsg] = useState("Bạn đang có mã giảm giá");
     const [loadingCoupon, setLoadingCoupon] = useState(false);
@@ -145,16 +147,24 @@ export default function PaymentGateway({
                                 onClick={() => setSelected(m.id)}
                                 aria-pressed={isSelected}
                                 aria-label={m.label}
-                                className={`w-full text-left border rounded-md p-4 flex items-center gap-4 transition-shadow focus:outline-none ${isSelected ? "ring-2 ring-offset-2 ring-indigo-500 bg-white/5" : "hover:shadow-md"
+                                className={`w-full text-left border rounded-md p-4 flex items-center gap-4 transition-shadow focus:outline-none ${isSelected
+                                        ? "ring-2 ring-offset-2 ring-indigo-500 bg-white/5"
+                                        : "hover:shadow-md"
                                     }`}
                                 type="button"
                             >
-                                <div className="text-2xl bg-white/10 rounded-md w-12 h-12 flex items-center justify-center">{m.icon}</div>
+                                <div className="text-2xl bg-white/10 rounded-md w-12 h-12 flex items-center justify-center">
+                                    {m.icon}
+                                </div>
                                 <div className="flex-1">
                                     <div className="font-semibold">{m.label}</div>
-                                    {m.subtitle && <div className="text-sm text-gray-300">{m.subtitle}</div>}
+                                    {m.subtitle && (
+                                        <div className="text-sm text-gray-300">{m.subtitle}</div>
+                                    )}
                                 </div>
-                                <div className="text-sm text-gray-300">{isSelected ? "Đã chọn" : "Chọn"}</div>
+                                <div className="text-sm text-gray-300">
+                                    {isSelected ? "Đã chọn" : "Chọn"}
+                                </div>
                             </button>
                         );
                     })}
@@ -163,9 +173,13 @@ export default function PaymentGateway({
                 {/* Coupon block */}
                 <div className="mt-6 p-4 bg-indigo-600 rounded-md">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/20 rounded flex items-center justify-center">🏷️</div>
+                        <div className="w-10 h-10 bg-white/20 rounded flex items-center justify-center">
+                            🏷️
+                        </div>
                         <div className="flex-1">
-                            <div className="font-semibold text-white">Chọn hoặc nhập mã giảm giá</div>
+                            <div className="font-semibold text-white">
+                                Chọn hoặc nhập mã giảm giá
+                            </div>
                             <div className="text-sm text-indigo-100">{couponMsg}</div>
                         </div>
                         <div className="flex gap-2">
@@ -188,11 +202,17 @@ export default function PaymentGateway({
                     </div>
                 </div>
 
-                {payError && <div className="mt-4 text-sm text-red-300">{payError}</div>}
+                {payError && (
+                    <div className="mt-4 text-sm text-red-300">{payError}</div>
+                )}
 
                 {/* Pay button */}
                 <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={handleReset} className="px-4 py-2 rounded-md bg-transparent border text-white" type="button">
+                    <button
+                        onClick={handleReset}
+                        className="px-4 py-2 rounded-md bg-transparent border text-white"
+                        type="button"
+                    >
                         Quay lại
                     </button>
                     <button
@@ -202,7 +222,9 @@ export default function PaymentGateway({
                         type="button"
                         aria-disabled={loadingPay}
                     >
-                        {loadingPay ? "Chuyển tới cổng thanh toán..." : `Thanh toán ${selected === "momo" ? "qua Momo" : ""}`}
+                        {loadingPay
+                            ? "Chuyển tới cổng thanh toán..."
+                            : `Thanh toán ${selected === "momo" ? "qua Momo" : ""}`}
                     </button>
                 </div>
             </div>
