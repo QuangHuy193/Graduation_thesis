@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import PaymentGateway from "../PaymentGateway/PaymentGateway";
 import styles from "./Checkout.module.scss";
 import InfoUserCheckout from "../InfoUserCheckout/InfoUserCheckout";
-import { useAuth } from "../Header/AuthContext";
+// import { useAuth } from "../Header/AuthContext";
+import { useSession } from "next-auth/react";
 import InfoBooking from "../InfoBooking/InfoBooking";
 
 type UserInfo = {
@@ -14,7 +15,10 @@ type UserInfo = {
 };
 
 function Checkout() {
-  const { user, setUser } = useAuth();
+  // const { user, setUser } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
+
   const [state, setState] = useState({
     step: 1,
   });
@@ -52,18 +56,16 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${
-              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+              }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${
-              state.step === 3 && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
+              }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>

@@ -18,8 +18,7 @@ import { useSession, signOut } from "next-auth/react";
 
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
-  // const [user, setUser] = useState<{ name?: string } | null>(null);
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const user = session?.user;
 
   // ✅ Lấy danh sách rạp
