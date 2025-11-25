@@ -14,13 +14,13 @@ import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
 import LoadingLink from "../Link/LinkLoading";
-import { useAuth } from "./AuthContext";
-import router from "next/router";
+import { useSession, signOut } from "next-auth/react";
 
 function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
   // const [user, setUser] = useState<{ name?: string } | null>(null);
-  const { user, setUser } = useAuth();
+  const { data: session, status } = useSession();
+  const user = session?.user;
 
   // ✅ Lấy danh sách rạp
   useEffect(() => {
@@ -31,23 +31,9 @@ function Header() {
     getCinemas();
   }, []);
 
-  // ✅ Logout handler (xóa token)
+  // ✅ Logout handler 
   const handleLogout = () => {
-    // xóa token ở client
-    try {
-      localStorage.removeItem("token");
-      sessionStorage.removeItem("token");
-      localStorage.removeItem("role");
-      sessionStorage.removeItem("role");
-    } catch (err) {
-      console.warn("Storage error:", err);
-    }
-
-    // cập nhật global auth state -> header sẽ re-render
-    setUser(null);
-
-    // redirect tới trang chính
-    router.push("/");
+    signOut({ callbackUrl: "/" });
   };
 
   return (

@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json(); // { userId: 123 }
         const userId = body?.user_id;
         // if (!userId) return NextResponse.json({ success: false, error: "Missing userId" }, { status: 400 });
-        if (!userId) return errorResponse("Missing userId", 400);
+        if (!userId) return errorResponse("Missing user_id", 400);
 
         const [rows] = await db.query("SELECT `status` FROM `users` WHERE `user_id` = ? LIMIT 1", [userId]);
         const result = Array.isArray(rows) && rows.length ? (rows[0] as any) : null;

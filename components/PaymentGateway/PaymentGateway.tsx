@@ -16,7 +16,6 @@ import { createPayOSPayment } from "@/lib/axios/paymentAPI";
 const PAYMENT_METHODS = [
     { id: "momo", label: "Thanh toán qua momo", subtitle: "", icon: "🟣" },
     { id: "domestic_card", label: "Thanh toán qua thẻ nội địa", subtitle: "", icon: "💳" },
-    { id: "intl_card", label: "Thanh toán qua thẻ quốc tế", subtitle: "", icon: "🌍" },
 ] as const;
 
 type PaymentMethodId = (typeof PAYMENT_METHODS)[number]["id"];

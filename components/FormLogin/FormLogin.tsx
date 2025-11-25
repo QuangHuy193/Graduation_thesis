@@ -17,7 +17,8 @@ import { checkUserStatus } from "@/lib/axios/checkUserStatusAPI";
 import { useRouter } from "next/navigation";
 import styles from "./FormLogin.module.scss";
 import LoadingLink from "../Link/LinkLoading";
-import { useAuth } from "../Header/AuthContext";
+// // import { useAuth } from "../Header/AuthContext";
+// import { useSession, signOut } from "next-auth/react";
 import Spinner from "../Spinner/Spinner";
 
 export default function FormLogin({
@@ -29,7 +30,6 @@ export default function FormLogin({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [needActivation, setNeedActivation] = useState(false);
-  const { setUser } = useAuth();
   const [msg, setMsg] = useState<{
     type: "error" | "success";
     text: string;
@@ -102,8 +102,6 @@ export default function FormLogin({
         redirect: false,
         identifier: idTrim,
         password,
-        // bạn có thể truyền thông tin remember để logic custom xử lý (không được NextAuth xử lý per-request dễ dàng)
-        remember: state.saveLogin ? "true" : "false",
       });
 
       // signIn trả về object khi redirect: false
@@ -127,7 +125,7 @@ export default function FormLogin({
 
       // user_id có thể ở session.user.user_id (theo callback bạn đã cấu hình)
       const userIdRaw = sessUser?.user_id ?? sessUser?.id ?? null;
-      const userId = userIdRaw !== null ? Number(userIdRaw) : NaN;
+      const userId = Number(userIdRaw);
       if (!userId || Number.isNaN(userId)) {
         // nếu không lấy được user_id từ session, vẫn có thể lấy từ loginData nếu bạn thay đổi authorize để return user_id
         setMsg({ type: "error", text: "Không xác định được user_id." });
@@ -153,14 +151,6 @@ export default function FormLogin({
         return;
       }
 
-      // CẬP NHẬT AuthContext để Header re-render ngay
-      // session.user có các field bạn expose (name, email, role, user_id)
-      setUser({
-        user_id: sessUser.user_id ?? sessUser.id,
-        name: sessUser.name,
-        email: sessUser.email,
-        role: sessUser.role,
-      });
 
       setMsg({
         type: "success",
