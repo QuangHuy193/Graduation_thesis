@@ -27,6 +27,9 @@ import { getRoomAsileWithIdAPI } from "@/lib/axios/roomAPI";
 import { getSeatsWithRoomShowtimeAPI } from "@/lib/axios/seatsAPI";
 import Swal from "sweetalert2";
 import Button from "../Button/Button";
+import Spinner from "../Spinner/Spinner";
+import { getFoodAPI } from "@/lib/axios/foodAPI";
+import FoodDrinkList from "../FoodDrinkList/FoodDrinkList";
 
 function MovieDetail({
   data,
@@ -36,7 +39,7 @@ function MovieDetail({
   movie_id: number;
 }) {
   const [state, setState] = useState({
-    // nút cem trailer
+    // nút xem trailer
     watchTrailer: false,
     // giờ chọn
     timesSelected: {
@@ -61,7 +64,26 @@ function MovieDetail({
     clock: { minute: 5, second: 0 },
     // ngày chọn
     dateSelected: 0,
+    // đang gọi api
+    isFetch: false,
+    // ds food đã có phân loại
+    foodList: {},
+    // ds food đã chọn
+    foodSelected: {},
   });
+
+  // gọi api lấy ds food
+  useEffect(() => {
+    const getFoods = async () => {
+      try {
+        const res = await getFoodAPI();
+        setState((prev) => ({ ...prev, foodList: res }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getFoods();
+  }, []);
 
   // hàm chọn ghế
   const handleSelectSeat = (
@@ -74,7 +96,7 @@ function MovieDetail({
 
     // tổng số vé đã chọn
     const totalTickets = Object.values(ticketSelected).reduce(
-      (acc, val) => acc + val,
+      (acc, val) => acc + val.quantity,
       0
     );
 
@@ -99,6 +121,21 @@ function MovieDetail({
     // kiểm tra nếu ghế đã chọn thì bỏ chọn
     const existing = seatSelected.find((s) => s.seat_id === seat_id);
     if (existing) {
+      // TODO kiểm tra trước khi bỏ chọn
+      // if (isSingleGap(rowSeat, colSeat)) {
+      //   Swal.fire({
+      //     title: "Lưu ý!",
+      //     text: "Việc chọn ghế của bạn không được để trống 1 ghế ở bên trái, giữa hoặc bên phải trên cùng một hàng ghế mà bạn vừa chọn!",
+      //     confirmButtonText: "ĐỒNG Ý",
+      //     buttonsStyling: false,
+      //     customClass: {
+      //       popup: "popup_alert",
+      //       confirmButton: `btn_alert`,
+      //       cancelButton: `btn_alert`,
+      //     },
+      //   });
+      //   return;
+      // }
       setState((prev) => ({
         ...prev,
         seatSelected: prev.seatSelected.filter((s) => s.seat_id !== seat_id),
@@ -288,16 +325,64 @@ function MovieDetail({
     );
   }
 
+  // hàm tăng giảm chọn bắp nước
+  const handleSelectedFood = (name: string, price: number, inc: boolean) => {
+    setState((prev) => {
+      const oldValue = prev.foodSelected?.[name]?.quantity ?? 0;
+
+      let newValue;
+      if (inc) {
+        newValue = oldValue + 1;
+      } else {
+        if (oldValue === 0) {
+          newValue = 0;
+        } else {
+          newValue = oldValue - 1;
+        }
+      }
+
+      return {
+        ...prev,
+        foodSelected: {
+          ...prev.foodSelected,
+          [name]: {
+            quantity: newValue,
+            price: price,
+          },
+        },
+      };
+    });
+  };
+
   const handleBooking = () => {
     const date = getDateFromOffset(state.dateSelected);
-    const total = Object.keys(state.ticketSelected).reduce((sum, key) => {
-      const quantity = state.ticketSelected[key];
-      const ticket = state.ticketTypes.find((t) => t.name === key);
-      return ticket ? sum + quantity * ticket.price_final : sum;
+    //tính tổng
+    const totalTicket = Object.keys(state.ticketSelected).reduce((sum, key) => {
+      const item = state.ticketSelected[key];
+      return sum + item.quantity * item.price;
     }, 0);
+    const totalFood = Object.keys(state.foodSelected).reduce((sum, key) => {
+      const item = state.foodSelected[key];
+      return sum + item.quantity * item.price;
+    }, 0);
+    // thêm id cho food
+    const selectedFoodsWithId = Object.keys(state.foodSelected).map((name) => {
+      const foodInfo = state.foodSelected[name]; // { quantity, price }
+      let foodInList = state.foodList.foods.find((f: any) => f.name === name);
+      if (!foodInList)
+        foodInList = state.foodList.combos.find((f: any) => f.name === name);
+      if (!foodInList)
+        foodInList = state.foodList.drinks.find((f: any) => f.name === name);
+      return {
+        [name]: {
+          ...foodInfo,
+          food_id: foodInList ? foodInList.food_id : null, // nếu không tìm thấy thì null
+        },
+      };
+    });
     const bookingData = {
       showtime_id: state.timesSelected.showtime_id,
-      total_price: total,
+      total_price: totalFood + totalTicket,
       movie_name: data[0].name,
       age_require: data[0].age_require,
       cinema_name: state.timesSelected.cinema_name,
@@ -307,7 +392,7 @@ function MovieDetail({
       room_name: state.timesSelected.room_name,
       ticket: state.ticketSelected,
       seats: state.seatSelected,
-      food_drink: "",
+      food_drink: selectedFoodsWithId,
     };
     sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
   };
@@ -426,111 +511,156 @@ function MovieDetail({
           setDateSelected={(date: number) => {
             setState((prev) => ({ ...prev, dateSelected: date }));
           }}
+          isFetch={(flag) => {
+            setState((prev) => ({ ...prev, isFetch: flag }));
+          }}
         />
       </div>
 
-      {/* chọn loại vé */}
+      {/* chọn loại vé, ghế, bắp nước */}
       <div id="select_ticket_type" className="mt-16">
-        {state.timesSelected.showtime_id !== -1 &&
-          state.ticketTypes.length !== 0 && (
-            <>
-              <div className="flex justify-center text-4xl font-bold mb-12">
-                CHỌN LOẠI VÉ
-              </div>
+        {!state.isFetch ? (
+          <div>
+            {state.timesSelected.showtime_id !== -1 &&
+              state.ticketTypes.length !== 0 && (
+                <>
+                  {/* hiện loại vé */}
+                  <div className="pb-4 pt-10">
+                    <div className="flex justify-center text-4xl font-bold mb-12">
+                      CHỌN LOẠI VÉ
+                    </div>
 
-              <div className="flex justify-center">
-                <div
-                  className="
-      mt-2 mb-10
-      px-5 py-3
-      bg-red-50
-      border border-red-300
-      rounded-xl
-      text-red-700
-      text-sm
-      shadow-sm
-      max-w-2xl
-      text-center
-      leading-relaxed
-      flex items-center gap-2
-      "
-                >
-                  <span>
-                    <span className="font-semibold text-red-800">
-                      Lưu ý quan trọng:
-                    </span>{" "}
-                    Đối với vé HS-SV, bạn <u>bắt buộc</u> phải mang theo CCCD
-                    hoặc thẻ HSSV có dán ảnh để xác minh trước khi vào rạp. Nhân
-                    viên rạp có thể từ chối không cho bạn vào xem nếu không thực
-                    hiện đúng quy định này.
-                  </span>
-                </div>
-              </div>
+                    <div className="flex justify-center">
+                      <div
+                        className="mt-2 mb-10 px-5 py-3 bg-red-50 border border-red-300 
+                    rounded-xl text-red-700 text-sm shadow-sm max-w-2xl text-center 
+                    leading-relaxed flex items-center gap-2"
+                      >
+                        <span>
+                          <span className="font-semibold text-red-800">
+                            Lưu ý quan trọng:
+                          </span>{" "}
+                          Đối với vé HS-SV, bạn <u>bắt buộc</u> phải mang theo
+                          CCCD hoặc thẻ HSSV có dán ảnh để xác minh trước khi
+                          vào rạp. Nhân viên rạp có thể từ chối không cho bạn
+                          vào xem nếu không thực hiện đúng quy định này.
+                        </span>
+                      </div>
+                    </div>
 
-              <div className="flex gap-6 justify-center">
-                {state.ticketTypes.map((t, i) => (
-                  <div key={i} className="h-[150px] w-[300px]">
-                    <PriceCard
-                      data={t}
-                      setTicketSelected={(name, inc) => {
-                        setState((prev) => {
-                          const oldValue = prev.ticketSelected?.[name] ?? 0;
+                    <div className="flex gap-6 justify-center">
+                      {state.ticketTypes.map((t, i) => (
+                        <div key={i}>
+                          <PriceCard
+                            data={t}
+                            setTicketSelected={(name, price, inc) => {
+                              setState((prev) => {
+                                const oldValue =
+                                  prev.ticketSelected?.[name]?.quantity ?? 0;
 
-                          let totalTickets = 0;
-                          Object.values(prev.ticketSelected).map((v) => {
-                            totalTickets += v;
-                          });
+                                let totalTickets = 0;
+                                Object.values(prev.ticketSelected).map((v) => {
+                                  totalTickets += v;
+                                });
 
-                          if (totalTickets === 8) {
-                            Swal.fire({
-                              text: "Vui lòng chọn tối đa 8 ghế",
-                              confirmButtonText: "ĐỒNG Ý",
-                              customClass: {
-                                popup: "popup_alert",
-                                confirmButton: `btn_alert`,
-                                cancelButton: `btn_alert`,
-                              },
-                            });
-                            return prev;
-                          }
-                          let newValue;
-                          if (inc) {
-                            newValue = oldValue + 1;
-                          } else {
-                            if (oldValue === 0) {
-                              newValue = 0;
-                            } else {
-                              newValue = oldValue - 1;
-                            }
-                          }
+                                if (totalTickets === 8) {
+                                  Swal.fire({
+                                    text: "Vui lòng chọn tối đa 8 ghế",
+                                    confirmButtonText: "ĐỒNG Ý",
+                                    customClass: {
+                                      popup: "popup_alert",
+                                      confirmButton: `btn_alert`,
+                                      cancelButton: `btn_alert`,
+                                    },
+                                  });
+                                  return prev;
+                                }
+                                let newValue;
+                                if (inc) {
+                                  newValue = oldValue + 1;
+                                } else {
+                                  if (oldValue === 0) {
+                                    newValue = 0;
+                                  } else {
+                                    newValue = oldValue - 1;
+                                  }
+                                }
 
-                          return {
-                            ...prev,
-                            ticketSelected: {
-                              ...prev.ticketSelected,
-                              [name]: newValue,
-                            },
-                          };
-                        });
+                                return {
+                                  ...prev,
+                                  ticketSelected: {
+                                    ...prev.ticketSelected,
+                                    [name]: {
+                                      quantity: newValue,
+                                      price: price,
+                                    },
+                                  },
+                                };
+                              });
+                            }}
+                            ticketSelected={state.ticketSelected}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* hiện phòng */}
+                  <div id="select_seat" className="pb-4 pt-10">
+                    <Room
+                      data={state.room_asile}
+                      seats={state.seats}
+                      selectSeat={(seat_id, label, rowSeat, colSeat) => {
+                        handleSelectSeat(seat_id, label, rowSeat, colSeat);
                       }}
-                      ticketSelected={state.ticketSelected}
+                      seatSelected={state.seatSelected}
                     />
                   </div>
-                ))}
-              </div>
-              {/* hiện phòng */}
-              <div id="select_seat" className="py-4">
-                <Room
-                  data={state.room_asile}
-                  seats={state.seats}
-                  selectSeat={(seat_id, label, rowSeat, colSeat) => {
-                    handleSelectSeat(seat_id, label, rowSeat, colSeat);
-                  }}
-                  seatSelected={state.seatSelected}
-                />
-              </div>
-            </>
-          )}
+
+                  {/* hiện bắp nước */}
+                  <div className="pb-4 pt-10">
+                    <div className="flex justify-center text-4xl font-bold mb-12">
+                      CHỌN BẮP NƯỚC
+                    </div>
+                    <div>
+                      <FoodDrinkList
+                        title="Combo"
+                        data={state.foodList.combos}
+                        setFoodSelected={(name, price, inc) => {
+                          handleSelectedFood(name, price, inc);
+                        }}
+                        foodSelected={state.foodSelected}
+                      />
+                    </div>
+                    <div>
+                      <FoodDrinkList
+                        title="Bắp"
+                        data={state.foodList.foods}
+                        setFoodSelected={(name, price, inc) => {
+                          handleSelectedFood(name, price, inc);
+                        }}
+                        foodSelected={state.foodSelected}
+                      />
+                    </div>
+                    <div>
+                      <FoodDrinkList
+                        title="Nước ngọt"
+                        data={state.foodList.drinks}
+                        setFoodSelected={(name, price, inc) => {
+                          handleSelectedFood(name, price, inc);
+                        }}
+                        foodSelected={state.foodSelected}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+          </div>
+        ) : (
+          <div className="pb-5">
+            <Spinner text="Đang tải dữ liệu..." />
+          </div>
+        )}
       </div>
 
       {/* thanh tổng kết */}
@@ -544,7 +674,7 @@ function MovieDetail({
             {/* hiện vé */}
             {Object.keys(state.ticketSelected).map((key) => (
               <span key={key}>
-                | {state.ticketSelected[key]} vé {key}{" "}
+                | {state.ticketSelected[key]?.quantity} vé {key}{" "}
               </span>
             ))}
           </div>
@@ -557,7 +687,14 @@ function MovieDetail({
                 <span key={m.seat_id}> | {m.label}</span>
               ))}
           </div>
-          <div></div>
+          <div>
+            {Object.keys(state.foodSelected).map((key, i, arr) => (
+              <span key={i}>
+                {state.foodSelected[key]?.quantity} {key}{" "}
+                {i < arr.length - 1 && ", "}
+              </span>
+            ))}
+          </div>
         </div>
         <div className="flex gap-3">
           <div className="text-black bg-(--color-yellow) rounded-sm px-2 py-4">
@@ -571,15 +708,20 @@ function MovieDetail({
             <div className="flex justify-between">
               <span>Tạm tính:</span>
               <span className="font-bold">
-                {Object.keys(state.ticketSelected)
-                  .reduce((sum, key) => {
-                    const quantity = state.ticketSelected[key];
-                    const ticket = state.ticketTypes.find(
-                      (t) => t.name === key
-                    );
-                    return ticket ? sum + quantity * ticket.price_final : sum;
-                  }, 0)
-                  .toLocaleString("vi-VN")}{" "}
+                {
+                  // tổng tiền vé
+                  (
+                    Object.keys(state.ticketSelected).reduce((sum, key) => {
+                      const item = state.ticketSelected[key];
+                      return sum + item.quantity * item.price;
+                    }, 0) +
+                    // tổng tiền combo / food
+                    Object.keys(state.foodSelected).reduce((sum, key) => {
+                      const item = state.foodSelected[key];
+                      return sum + item.quantity * item.price;
+                    }, 0)
+                  ).toLocaleString("vi-VN")
+                }{" "}
                 VNĐ
               </span>
             </div>
@@ -591,10 +733,7 @@ function MovieDetail({
                 p_l_r="80px"
                 link="/checkout"
               />
-              {Object.values(state.ticketSelected).reduce(
-                (s, v) => s + Number(v),
-                0
-              ) !== state.seatSelected.length && (
+              {state.seatSelected.length === 0 && (
                 <div className="bg-black/30 absolute top-0 left-0 h-full w-full z-10"></div>
               )}
             </div>

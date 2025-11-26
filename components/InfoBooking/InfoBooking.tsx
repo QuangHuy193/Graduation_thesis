@@ -15,6 +15,7 @@ function InfoBooking() {
     const data = sessionStorage.getItem("bookingData");
     if (data) {
       setBookingData(JSON.parse(data));
+      console.log(JSON.parse(data));
     }
 
     const timer = setInterval(() => {
@@ -102,7 +103,7 @@ function InfoBooking() {
             <div>
               <div className={`${styles.sub_title}`}>Số vé</div>
               <div className={`${styles.content}`}>
-                {bookingData?.ticket[key]}
+                {bookingData.ticket[key]?.quantity}
               </div>
             </div>
             <div>
@@ -127,7 +128,17 @@ function InfoBooking() {
 
       <div className={`${styles.sub_container}`}>
         <div className={`${styles.sub_title}`}>Bắp nước</div>
-        <div className={`${styles.content}`}></div>
+        <div className={`${styles.content}`}>
+          {bookingData?.food_drink.map((f, i) => (
+            <span key={i}>
+              {Object.keys(f).map((key, i, arr) => (
+                <span key={i}>
+                  {f[key]?.quantity} {key} {i < arr.length - 1 && ", "}
+                </span>
+              ))}
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className={`${styles.sub_container} border-b border-gray-100`}></div>

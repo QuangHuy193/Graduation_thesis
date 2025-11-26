@@ -17,6 +17,7 @@ function ShowTime({
   timeSelected,
   setTicketTypes,
   setDateSelected,
+  isFetch,
 }: {
   movie_id: number;
   setTimesSelect: (obj: {
@@ -29,6 +30,7 @@ function ShowTime({
   }) => void;
   timeSelected: object;
   setDateSelected: (date: number) => void;
+  isFetch: (flag: boolean) => void;
 }) {
   const days = Array.from({ length: 5 }, (_, i) => {
     const d = new Date();
@@ -135,12 +137,15 @@ function ShowTime({
   useEffect(() => {
     // gọi api lấy ds loại vé và giá theo showtime và ngày
     const getTicketType = async (showtime_id: number, day: number) => {
+      isFetch(true);
       try {
         const res = await getTicketTypeByShowtimeDateAPI(showtime_id, day);
 
         setTicketTypes(res);
       } catch (error) {
         console.log(error);
+      } finally {
+        isFetch(false);
       }
     };
 

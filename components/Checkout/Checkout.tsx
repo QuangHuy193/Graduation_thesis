@@ -62,8 +62,8 @@ function Checkout() {
       setAuth(true);
       // chỉ nâng step khi step hiện tại < 2
       setState((prev) => {
-        if (!prev || typeof prev.step !== "number") return { ...prev, step: 3 };
-        if (prev.step < 2) return { ...prev, step: 3 };
+        if (!prev || typeof prev.step !== "number") return { ...prev, step: 2 };
+        if (prev.step < 2) return { ...prev, step: 2 };
         return prev; // nếu đã >=2 thì không giảm lại
       });
     } else if (status === "unauthenticated") {
