@@ -15,6 +15,7 @@ import {
   formatDateWithDay,
   getDateFromOffset,
   isSingleGap,
+  isSingleGapRemove,
   scrollToPosition,
 } from "@/lib/function";
 import LoadingPage from "../LoadingPage/LoadingPage";
@@ -61,7 +62,7 @@ function MovieDetail({
     // ds loại vé
     ticketTypes: [],
     // đồng hồ đếm giờ
-    clock: { minute: 5, second: 0 },
+    clock: { minute: 50, second: 0 },
     // ngày chọn
     dateSelected: 0,
     // đang gọi api
@@ -122,20 +123,20 @@ function MovieDetail({
     const existing = seatSelected.find((s) => s.seat_id === seat_id);
     if (existing) {
       // TODO kiểm tra trước khi bỏ chọn
-      // if (isSingleGap(rowSeat, colSeat)) {
-      //   Swal.fire({
-      //     title: "Lưu ý!",
-      //     text: "Việc chọn ghế của bạn không được để trống 1 ghế ở bên trái, giữa hoặc bên phải trên cùng một hàng ghế mà bạn vừa chọn!",
-      //     confirmButtonText: "ĐỒNG Ý",
-      //     buttonsStyling: false,
-      //     customClass: {
-      //       popup: "popup_alert",
-      //       confirmButton: `btn_alert`,
-      //       cancelButton: `btn_alert`,
-      //     },
-      //   });
-      //   return;
-      // }
+      if (isSingleGapRemove(rowSeat, colSeat)) {
+        Swal.fire({
+          title: "Lưu ý!",
+          text: "Việc chọn ghế của bạn không được để trống 1 ghế ở bên trái, giữa hoặc bên phải trên cùng một hàng ghế mà bạn vừa chọn!",
+          confirmButtonText: "ĐỒNG Ý",
+          buttonsStyling: false,
+          customClass: {
+            popup: "popup_alert",
+            confirmButton: `btn_alert`,
+            cancelButton: `btn_alert`,
+          },
+        });
+        return;
+      }
       setState((prev) => ({
         ...prev,
         seatSelected: prev.seatSelected.filter((s) => s.seat_id !== seat_id),
@@ -559,11 +560,12 @@ function MovieDetail({
                                   prev.ticketSelected?.[name]?.quantity ?? 0;
 
                                 let totalTickets = 0;
-                                Object.values(prev.ticketSelected).map((v) => {
-                                  totalTickets += v;
+                                Object.keys(prev.ticketSelected).map((k) => {
+                                  totalTickets +=
+                                    prev.ticketSelected?.[k]?.quantity;
                                 });
 
-                                if (totalTickets === 8) {
+                                if (totalTickets === 8 && inc) {
                                   Swal.fire({
                                     text: "Vui lòng chọn tối đa 8 ghế",
                                     confirmButtonText: "ĐỒNG Ý",
@@ -658,7 +660,7 @@ function MovieDetail({
           </div>
         ) : (
           <div className="pb-5">
-            <Spinner text="Đang tải dữ liệu..." />
+            <Spinner />
           </div>
         )}
       </div>

@@ -101,6 +101,7 @@ export function numberToLetter(n: number) {
   return String.fromCharCode(65 + n);
 }
 
+// kiểm tra lúc đặt ghế
 export function isSingleGap(
   rowSeats: Array<{ seat_column: number; status: number; selected?: boolean }>,
   col: number
@@ -134,6 +135,75 @@ export function isSingleGap(
   if (right && !right.booked && right2?.booked) return true;
 
   return false;
+}
+
+// kiểm tra lúc bỏ ghế
+export function isSingleGapRemove(
+  rowSeats: Array<{ seat_column: number; status: number; selected?: boolean }>,
+  col: number
+): boolean {
+  // 1. Chuẩn hóa và sắp xếp theo cột
+  const seatsSorted = [...rowSeats].sort(
+    (a, b) => a.seat_column - b.seat_column
+  );
+
+  // Bản đồ col -> index trong mảng đã sắp xếp
+  const idxByCol = new Map<number, number>();
+  seatsSorted.forEach((s, i) => idxByCol.set(s.seat_column, i));
+
+  // Nếu col không tồn tại trong dãy ghế => không có gì để kiểm tra
+  if (!idxByCol.has(col)) return false;
+
+  const idxToRemove = idxByCol.get(col)!;
+
+  // 2. Nếu ghế đã được DB đặt (status === 1) => đây không phải là "bỏ chọn của user"
+  // caller nên xử lý riêng (không thể bỏ chọn ghế đã DB đặt). Ở đây trả false (không phát sinh single-gap bằng thao tác bỏ chọn),
+  // vì hành động bỏ chọn về mặt nghiệp vụ không hợp lệ (blocked) — caller xử lý permission.
+  const seatOrig = seatsSorted[idxToRemove];
+  if (seatOrig.status === 1) {
+    // Không phải lỗi "tạo gap" do remove; nhưng thực tế bỏ chọn là không hợp lệ vì DB đã đặt.
+    return false;
+  }
+
+  // 3. Mô phỏng trạng thái sau khi BỎ chọn ghế `col`:
+  // booked = true nếu status === 1 (DB đặt) hoặc selected === true (user đang chọn),
+  // nhưng với ghế col, ta giả lập selected = false (đã bỏ chọn).
+  const seats = seatsSorted.map((s, i) => ({
+    col: s.seat_column,
+    booked: s.status === 1 || (s.selected === true && i !== idxToRemove),
+  }));
+
+  const n = seats.length;
+
+  // 4. Tìm tất cả các single-gap sau khi mô phỏng
+  // single-gap: vị trí i có booked === false, và hai bên i-1 & i+1 tồn tại và đều booked === true
+  const singleGaps: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const cur = seats[i];
+    if (cur.booked) continue;
+    const left = i - 1 >= 0 ? seats[i - 1] : undefined;
+    const right = i + 1 < n ? seats[i + 1] : undefined;
+
+    if (left && right && left.booked && right.booked) {
+      singleGaps.push(i);
+    }
+  }
+
+  if (singleGaps.length === 0) {
+    // Không có single-gap => bỏ chọn hợp lệ
+    return false;
+  }
+
+  // 5. Nếu có single-gap, kiểm tra vị trí: nếu tất cả đều ở mép (edge: i === 0 hoặc i === n-1)
+  // thì cho phép (tức trả false). Nếu có ít nhất 1 gap ở giữa (0 < i < n-1) => không hợp lệ.
+  const allAtEdges = singleGaps.every((i) => i === 0 || i === n - 1);
+  if (allAtEdges) {
+    // Tạo gap nhưng chỉ ở mép => chấp nhận (ưu tiên gap sát bên trái/phải)
+    return false;
+  }
+
+  // 6. Nếu tới đây có ít nhất 1 gap ở giữa => không hợp lệ
+  return true;
 }
 
 export function getCurrentDateTime() {
@@ -191,7 +261,10 @@ export function toMySQLDate(dateValue: any): string | null {
       const parts = dateValue.split("/");
       if (parts.length === 3) {
         // parts: ["25","11","2025"]
-        return `${parts[2].padStart(4, "0")}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+        return `${parts[2].padStart(4, "0")}-${parts[1].padStart(
+          2,
+          "0"
+        )}-${parts[0].padStart(2, "0")}`;
       }
     }
     // assume already YYYY-MM-DD
