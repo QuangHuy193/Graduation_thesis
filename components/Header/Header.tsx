@@ -5,11 +5,12 @@ import {
   faLocationDot,
   faMagnifyingGlass,
   faTicket,
-  faUser,
+  faCircleUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./Header.module.scss";
 import Tippy from "@tippyjs/react";
+import UserMenu from "../UserMenu/UserMenu";
 import { useEffect, useState } from "react";
 import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
@@ -75,30 +76,8 @@ function Header() {
 
           {/* ✅ User section */}
           <div className="flex gap-1.5 items-center">
-            <FontAwesomeIcon icon={faUser} />
-            {user ? (
-              <div className="relative group flex items-center gap-2">
-                <span className="font-medium text-(--color-yellow) cursor-pointer select-none">
-                  {user.name}
-                </span>
-                <div
-                  className="absolute left-0 top-full mt-1 bg-gray-800 rounded shadow-md 
-                   opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 
-                   transition-all duration-300 min-w-[100px] z-50"
-                >
-                  <button onClick={handleLogout} className={styles.logoutBtn}>
-                    Đăng xuất
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <LoadingLink
-                href={"/login"}
-                className="cursor-pointer hover:text-(--color-yellow)"
-              >
-                Đăng nhập
-              </LoadingLink>
-            )}
+            <FontAwesomeIcon icon={faCircleUser} size="lg" />
+            <UserMenu user={user} handleLogout={handleLogout} ></UserMenu>
           </div>
         </div>
       </div>

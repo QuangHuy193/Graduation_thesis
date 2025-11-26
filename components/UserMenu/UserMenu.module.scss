@@ -1,0 +1,73 @@
+.InfoBtn {
+    display: block;
+    width: 100%;
+    text-align: left;
+
+    padding: 0.55rem 1rem;
+    font-size: 14px;
+
+    background: transparent;
+    color: #f3f4f6; // gray-100
+    border: none;
+    cursor: pointer;
+
+    border-radius: 6px;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.12s ease;
+
+    // khoảng cách giữa các nút khi stack
+    &:not(:last-child) {
+        margin-bottom: 4px;
+    }
+
+    // hover đẹp
+    &:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+    }
+
+    // active hơi nhấn xuống nhẹ
+    &:active {
+        transform: scale(0.98);
+    }
+}
+
+.logoutBtn {
+    color: #fecaca; // red-200
+    display: block;
+    width: 100%;
+    text-align: left;
+
+    padding: 0.55rem 1rem;
+    font-size: 14px;
+
+    background: transparent;
+    color: #f3f4f6; // gray-100
+    border: none;
+    cursor: pointer;
+
+    border-radius: 6px;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.12s ease;
+
+    // khoảng cách giữa các nút khi stack
+    &:not(:last-child) {
+        margin-bottom: 4px;
+    }
+
+    // active hơi nhấn xuống nhẹ
+    &:active {
+        transform: scale(0.98);
+    }
+
+    &:hover {
+        background-color: #ef4444; // red-500
+        color: white;
+    }
+}
