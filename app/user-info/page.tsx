@@ -1,10 +1,52 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ProfileCard from "@/components/ProfileCard/ProfileCard";
 import ProfileForm from "@/components/ProfileForm/ProfileForm";
 import PasswordForm from "@/components/PasswordForm/PasswordForm";
+import { getUserInfo } from "@/lib/axios/userAPI";
+import { useSession } from "next-auth/react";
+import Swal from "sweetalert2";
+
 export default function verifyOtp() {
+    const { data: session, status } = useSession();
+    const [userData, setUserData] = useState<any | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [userID, setUserID] = useState<number | string>();
+    useEffect(() => {
+        // chỉ gọi khi session đã load và tồn tại user.id
+        if (status === "authenticated") {
+            // session.user.id phải tồn tại — xem phần callback trên
+            const id = (session as any).user?.user_id;
+            if (!id) {
+                setError("User id not found in session. Make sure you include id in session callback.");
+                return;
+            }
+            setUserID(id);
+            setLoading(true);
+            getUserInfo(id)
+                .then((res) => {
+                    setUserData(res);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    setError(String(err?.message || err));
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [session, status]);
+    if (loading) return <div>Loading...</div>;
+    if (!userData) return <div>No user data</div>;
+    const initial = {
+        name: userData.name,
+        birthday: userData.birthday,
+        phone: userData.phone_number,
+        email: userData.email,
+    };
+    function handleSave() {
+        return Swal.fire("Cập nhật thành công");
+    }
     function handleEdit() {
         alert("Edit");
     }
@@ -35,7 +77,9 @@ export default function verifyOtp() {
 
                     {/* Cột phải: form dãn hết */}
                     <div className="flex-1 min-w-0">
-                        <ProfileForm />
+                        {userID !== undefined && (
+                            <ProfileForm id={userID} initialData={initial} onSave={handleSave} />
+                        )}
                         <div className="mt-4">
                             <PasswordForm />
                         </div>

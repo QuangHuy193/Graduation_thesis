@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import styles from "./PasswordForm.module.scss";
-
-export default function PasswordForm({ onSave = async (data: any) => { } }) {
+import { changePassword } from "@/lib/axios/userAPI";
+export default function PasswordForm({ id, onSave = async (data: any) => { } }) {
     const [form, setForm] = useState({
         oldPassword: "",
         newPassword: "",

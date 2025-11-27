@@ -2,23 +2,29 @@
 
 import React, { useState } from "react";
 import styles from "./ProfileForm.module.scss";
-
-/**
- * Props:
- *  - initialData: { fullName, dob, phone, email }
- *  - onSave: (data) => void
- */
-export default function ProfileForm({ initialData = {}, onSave = (form: {
-    fullName: any; dob: any; // yyyy-mm-dd
-    phone: any; email: any;
-}) => { } }) {
+import { updateUser } from "@/lib/axios/userAPI";
+interface ProfileFormProps {
+    id: number | string;
+    initialData?: {
+        name?: string;
+        birthday?: string;   // yyyy-mm-dd
+        phone?: string;
+        email?: string;
+    };
+    onSave?: (data: {
+        name: string;
+        birthday: string;
+        phone: string;
+        email: string;
+    }) => void;
+}
+export default function ProfileForm({ id, initialData = {}, onSave = () => { } }: ProfileFormProps) {
     const [form, setForm] = useState({
-        fullName: initialData.fullName ?? "",
-        dob: initialData.dob ?? "", // yyyy-mm-dd
+        name: initialData.name ?? "",
+        birthday: initialData.birthday ?? "", // yyyy-mm-dd
         phone: initialData.phone ?? "",
         email: initialData.email ?? "",
     });
-
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
 
@@ -28,32 +34,45 @@ export default function ProfileForm({ initialData = {}, onSave = (form: {
     }
 
     function validate() {
-        if (!form.fullName.trim()) return "Họ và tên không được để trống.";
+        if (!form.name.trim()) return "Họ và tên không được để trống.";
         if (!form.email.trim()) return "Email không được để trống.";
         // basic email check
         if (!/^\S+@\S+\.\S+$/.test(form.email)) return "Email không hợp lệ.";
         return "";
     }
 
-    async function handleSave(e: { preventDefault: () => void; }) {
+    async function handleSave(e: React.FormEvent) {
         e.preventDefault();
         setError("");
+
         const err = validate();
         if (err) {
             setError(err);
             return;
         }
+
         setSaving(true);
+        const userId = Number(id);
         try {
-            // giả lập lưu, gọi callback
-            await new Promise((res) => setTimeout(res, 600));
-            onSave(form);
-        } catch (err) {
-            setError("Lưu thất bại. Vui lòng thử lại.");
+            // 🔥 GỌI API UPDATE USER
+            const response = await updateUser(userId, {
+                name: form.name,
+                birthday: form.birthday,
+                phone: form.phone,
+                email: form.email,
+            });
+
+            // Nếu bạn muốn callback lên parent
+            onSave?.(response);
+
+        } catch (err: any) {
+            console.error(err);
+            setError("Cập nhật thất bại. Vui lòng thử lại.");
         } finally {
             setSaving(false);
         }
     }
+
 
     return (
         <form className={styles.form} onSubmit={handleSave} noValidate>
@@ -63,8 +82,8 @@ export default function ProfileForm({ initialData = {}, onSave = (form: {
                 <label className={styles.field}>
                     <div className={styles.label}>Họ và tên</div>
                     <input
-                        name="fullName"
-                        value={form.fullName}
+                        name="name"
+                        value={form.name}
                         onChange={handleChange}
                         className={styles.input}
                         placeholder="Nhập họ và tên"
@@ -77,23 +96,12 @@ export default function ProfileForm({ initialData = {}, onSave = (form: {
                     <div className={styles.inputWrap}>
                         <input
                             type="date"
-                            name="dob"
-                            value={form.dob}
+                            name="birthday"
+                            value={form.birthday}
                             onChange={handleChange}
                             className={`${styles.input} ${styles.inputDate}`}
                         />
-                        {/* optional calendar icon (pure SVG) */}
-                        {/* <span className={styles.iconCalendar} aria-hidden>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" >
-                                <path d="M7 11H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                <path d="M11 11H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                <path d="M7 15H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                <path d="M11 15H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.2" />
-                                <path d="M16 2V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                                <path d="M8 2V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                            </svg>
-                        </span> */}
+
                     </div>
                 </label>
 
