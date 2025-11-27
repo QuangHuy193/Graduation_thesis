@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import styles from "./PasswordForm.module.scss";
 import { changePassword } from "@/lib/axios/userAPI";
-export default function PasswordForm({ id, onSave = async (data: any) => { } }) {
+export default function PasswordForm({ id, onSave = () => { } }) {
     const [form, setForm] = useState({
         oldPassword: "",
         newPassword: "",
@@ -52,6 +52,7 @@ export default function PasswordForm({ id, onSave = async (data: any) => { } }) 
         setLoading(true);
         try {
             // call parent handler (you can call API here)
+            await changePassword(id, form.oldPassword, form.newPassword);
             await onSave({
                 oldPassword: form.oldPassword,
                 newPassword: form.newPassword,
@@ -87,6 +88,7 @@ export default function PasswordForm({ id, onSave = async (data: any) => { } }) 
                         onChange={handleChange}
                         className={`${styles.input} ${fieldErrors.oldPassword ? styles.inputError : ""}`}
                         placeholder=""
+                        tabIndex={1}
                         autoComplete="current-password"
                     />
                     <button
@@ -114,6 +116,7 @@ export default function PasswordForm({ id, onSave = async (data: any) => { } }) 
                         onChange={handleChange}
                         className={`${styles.input} ${fieldErrors.newPassword ? styles.inputError : ""}`}
                         placeholder=""
+                        tabIndex={2}
                         autoComplete="new-password"
                     />
                     <button
@@ -141,6 +144,7 @@ export default function PasswordForm({ id, onSave = async (data: any) => { } }) 
                         onChange={handleChange}
                         className={`${styles.input} ${fieldErrors.confirmPassword ? styles.inputError : ""}`}
                         placeholder=""
+                        tabIndex={3}
                         autoComplete="new-password"
                     />
                     <button

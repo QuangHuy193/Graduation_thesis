@@ -16,7 +16,7 @@ export const authOptions: NextAuthOptions = {
             async authorize(credentials) {
                 if (!credentials?.identifier || !credentials?.password) return null;
                 const user = await verifyCredentials(credentials.identifier, credentials.password);
-                if (!user) return null;
+                if (!user) throw new Error("Sai tài khoản hoặc mật khẩu");;
 
                 // NextAuth expects a User-like object
                 return {

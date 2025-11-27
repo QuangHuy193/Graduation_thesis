@@ -81,7 +81,7 @@ export default function verifyOtp() {
                             <ProfileForm id={userID} initialData={initial} onSave={handleSave} />
                         )}
                         <div className="mt-4">
-                            <PasswordForm />
+                            <PasswordForm id={userID} onSave={handleSave} />
                         </div>
                     </div>
                 </div>

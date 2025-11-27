@@ -26,7 +26,7 @@ export async function changePassword(
     newPassword: string
 ) {
     try {
-        const res = await axiosInstance.post(`/api/users/${id}/change-password`, {
+        const res = await axiosInstance.post(`/api/users/change-pass/${id}`, {
             oldPassword,
             newPassword,
         });
