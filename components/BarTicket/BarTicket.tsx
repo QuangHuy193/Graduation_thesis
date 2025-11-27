@@ -11,6 +11,7 @@ import {
   getDateInShowtimeByCinemaMovieAPI,
   getTimeInShowtimeByCinemaMovieDateAPI,
 } from "@/lib/axios/showTimeAPI";
+import { weekdays } from "@/lib/constant";
 
 function BarTicket() {
   const [state, setState] = useState({
@@ -160,6 +161,17 @@ function BarTicket() {
     state.valueSelected.cinema,
     state.valueSelected.movie,
   ]);
+
+  // set giá trị đặt vé nhanh cho movieDetail đọc
+  const handleSetQuickTicket = () => {
+    const quickTicket = {
+      movie_id: state.valueSelected.movie,
+      date: state.valueSelected.date,
+      times: state.valueSelected.times,
+    };
+    sessionStorage.setItem("quickticket", JSON.stringify(quickTicket));
+  };
+
   return (
     <div
       className="w-full bg-white rounded-sm flex 
@@ -267,7 +279,7 @@ function BarTicket() {
             options={
               state.dateList?.length > 0
                 ? state.dateList.map((c) => ({
-                    label: `Thứ ${c.weekday}, ${c.dateDisplay}`,
+                    label: `${weekdays[c.weekday]}, ${c.dateDisplay}`,
                     value: c.date,
                   }))
                 : []
@@ -312,7 +324,7 @@ function BarTicket() {
             }
           />
         </div>
-        <div className="relative">
+        <div className="relative" onClick={handleSetQuickTicket}>
           <Button
             text="ĐẶT NGAY"
             link={`/movie/${state.valueSelected.movie}`}

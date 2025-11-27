@@ -10,6 +10,7 @@ import ShowTimeCard from "../ShowTimeCard/ShowTimeCard";
 import Spinner from "../Spinner/Spinner";
 import { getShowtimeByDateAPI } from "@/lib/axios/showTimeAPI";
 import { getTicketTypeByShowtimeDateAPI } from "@/lib/axios/ticketTypeAPI";
+import { getDayOffset } from "@/lib/function";
 
 function ShowTime({
   movie_id,
@@ -47,10 +48,21 @@ function ShowTime({
     provinceSelected: "",
     dateSelected: 0,
   });
+
   const [toggle, setToggle] = useState({
     fetchData: false,
   });
 
+  useEffect(() => {
+    const dataSession = sessionStorage.getItem("quickticket");
+    if (dataSession) {
+      const data = JSON.parse(dataSession);
+      setSelected((prev) => ({
+        ...prev,
+        dateSelected: getDayOffset(data.date),
+      }));
+    }
+  }, []);
   useEffect(() => {
     const getCitys = async () => {
       try {
@@ -72,15 +84,15 @@ function ShowTime({
   }, [selected.dateSelected]);
 
   useEffect(() => {
-    // xóa giờ, loại vé đã chọn
-    setTimesSelect({
-      showtime_id: -1,
-      room_id: -1,
-      cinema_name: "",
-      cinema_address: "",
-      room_name: "",
-      time: "",
-    });
+    // xóa giờ, loại vé đã chọn gây lỗi khi đặt vé nhanh
+    // setTimesSelect({
+    //   showtime_id: -1,
+    //   room_id: -1,
+    //   cinema_name: "",
+    //   cinema_address: "",
+    //   room_name: "",
+    //   time: "",
+    // });
     // gọi api lấy showtime
     const getShowtime = async (day: number) => {
       setToggle((prev) => ({ ...prev, fetchData: true }));

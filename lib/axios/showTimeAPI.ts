@@ -42,3 +42,19 @@ export async function getTimeInShowtimeByCinemaMovieDateAPI(
     throw error.response?.data || error;
   }
 }
+
+export async function getShowtimeDetailAPI(
+  movie_id: number,
+  date: Date,
+  time_id: number
+) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/showtimes/detail?movie_id=${movie_id}&date=${date}&time=${time_id}`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching date:", error);
+    throw error.response?.data || error;
+  }
+}

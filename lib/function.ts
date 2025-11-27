@@ -312,3 +312,18 @@ export function parseDateFromYMD(ymd: string): Date {
   // monthIndex = month - 1
   return new Date(y, m - 1, d);
 }
+
+// nhận 1 date trả về 1 số
+export function getDayOffset(dateString: Date) {
+  const target = new Date(dateString);
+  const today = new Date();
+
+  // đưa cả hai về 00:00 để tính ngày cho chuẩn
+  target.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const diffMs = target.getTime() - today.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  return diffDays; // số ngày lệch: 0, 1, 2,...
+}

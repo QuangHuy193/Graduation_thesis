@@ -31,6 +31,7 @@ import Button from "../Button/Button";
 import Spinner from "../Spinner/Spinner";
 import { getFoodAPI } from "@/lib/axios/foodAPI";
 import FoodDrinkList from "../FoodDrinkList/FoodDrinkList";
+import { getShowtimeDetailAPI } from "@/lib/axios/showTimeAPI";
 
 function MovieDetail({
   data,
@@ -62,7 +63,7 @@ function MovieDetail({
     // ds loại vé
     ticketTypes: [],
     // đồng hồ đếm giờ
-    clock: { minute: 50, second: 0 },
+    clock: { minute: 5, second: 0 },
     // ngày chọn
     dateSelected: 0,
     // đang gọi api
@@ -72,6 +73,43 @@ function MovieDetail({
     // ds food đã chọn
     foodSelected: {},
   });
+
+  // lấy dữ liệu từ sestion trường hợp đặt vé nhanh
+  useEffect(() => {
+    const getDataQuickTicket = async (
+      movie_id: number,
+      date: Date,
+      time_id: number
+    ) => {
+      try {
+        const res = await getShowtimeDetailAPI(movie_id, date, time_id);
+        const data = res[0];
+        setState((prev) => ({
+          ...prev,
+          timesSelected: {
+            showtime_id: data.showtime_id,
+            room_id: data.room_id,
+            cinema_name: data.cinema_name,
+            cinema_address: data.cinema_address,
+            room_name: data.room_name,
+            time: data.time,
+          },
+        }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const quickTicketData = sessionStorage.getItem("quickticket");
+    if (quickTicketData) {
+      const data = JSON.parse(quickTicketData);
+      getDataQuickTicket(data.movie_id, data.date, data.times);
+    }
+    return () => {
+      // cleanup khi unmount
+      sessionStorage.removeItem("quickticket");
+    };
+  }, []);
 
   // gọi api lấy ds food
   useEffect(() => {
@@ -220,13 +258,9 @@ function MovieDetail({
       }
     };
 
-    const getSeats = async (room: number, showtime: number) => {
+    const getSeats = async (room: number, showtime: number, date: number) => {
       try {
-        const res = await getSeatsWithRoomShowtimeAPI(
-          room,
-          showtime,
-          state.dateSelected
-        );
+        const res = await getSeatsWithRoomShowtimeAPI(room, showtime, date);
         setState((prev) => ({ ...prev, seats: res }));
       } catch (error) {
         console.log(error);
@@ -238,7 +272,11 @@ function MovieDetail({
       state.timesSelected.showtime_id !== -1
     ) {
       getRoomAsile(state.timesSelected.room_id);
-      getSeats(state.timesSelected.room_id, state.timesSelected.showtime_id);
+      getSeats(
+        state.timesSelected.room_id,
+        state.timesSelected.showtime_id,
+        state.dateSelected
+      );
     }
   }, [state.timesSelected]);
 
@@ -254,7 +292,6 @@ function MovieDetail({
   // bật bộ đếm giờ
   const timerStarted = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
   useEffect(() => {
     if (state.seatSelected.length === 0) return;
 
@@ -317,14 +354,6 @@ function MovieDetail({
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
-
-  if (!data || data.length === 0) {
-    return (
-      <div>
-        <LoadingPage />
-      </div>
-    );
-  }
 
   // hàm tăng giảm chọn bắp nước
   const handleSelectedFood = (name: string, price: number, inc: boolean) => {
@@ -397,6 +426,14 @@ function MovieDetail({
     };
     sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
   };
+
+  if (!data || data.length === 0) {
+    return (
+      <div>
+        <LoadingPage />
+      </div>
+    );
+  }
   return (
     <div>
       {/* chi tiết phim */}
@@ -509,6 +546,7 @@ function MovieDetail({
           setTicketTypes={(arr) => {
             setState((prev) => ({ ...prev, ticketTypes: arr }));
           }}
+          // set date trong component cha
           setDateSelected={(date: number) => {
             setState((prev) => ({ ...prev, dateSelected: date }));
           }}
