@@ -5,27 +5,161 @@ import { useEffect, useState } from "react";
 import styles from "./BarTicket.module.scss";
 import Button from "../Button/Button";
 import { Select } from "antd";
+import Spinner from "../Spinner/Spinner";
+import { getMovieWithCinemaIdAPI } from "@/lib/axios/movieAPI";
+import {
+  getDateInShowtimeByCinemaMovieAPI,
+  getTimeInShowtimeByCinemaMovieDateAPI,
+} from "@/lib/axios/showTimeAPI";
 
 function BarTicket() {
-  const [cinemas, setCinemas] = useState([]);
-  const [movies, setsetMovies] = useState([]);
-  const [date, setDate] = useState([]);
-  const [times, setTimes] = useState([]);
-  const [valueSelected, setValueSelected] = useState({
-    cinema: "",
-    movie: "",
-    date: "",
-    times: "",
+  const [state, setState] = useState({
+    // danh sách rạp
+    cinemaList: [],
+    // danh sách phim theo rạp
+    movieList: [],
+    // danh sách ngày theo lịch chiếu phim
+    dateList: [],
+    //danh sách suất theo ngày
+    timeList: [],
+    // các trường chọn
+    valueSelected: {
+      cinema: null,
+      movie: null,
+      date: null,
+      times: null,
+    },
+    isFetch: false,
   });
 
   useEffect(() => {
     const getDataCinemas = async () => {
-      const res = await getCinemasWithCityAPI();
-      setCinemas(res);
+      try {
+        const res = await getCinemasWithCityAPI();
+        setState((prev) => ({ ...prev, cinemaList: res }));
+      } catch (error) {
+        console.log(error);
+      }
     };
 
     getDataCinemas();
   }, []);
+
+  // khi chọn rạp
+  useEffect(() => {
+    setState((prev) => ({
+      ...prev,
+      valueSelected: { ...prev.valueSelected, movie: null },
+    }));
+
+    const getDataMovie = async (id: number) => {
+      try {
+        setState((prev) => ({
+          ...prev,
+          isFetch: true,
+        }));
+        const res = await getMovieWithCinemaIdAPI(id);
+        setState((prev) => ({ ...prev, movieList: res }));
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setState((prev) => ({
+          ...prev,
+          isFetch: false,
+        }));
+      }
+    };
+
+    if (state.valueSelected.cinema != null) {
+      getDataMovie(state.valueSelected.cinema);
+    }
+  }, [state.valueSelected.cinema]);
+
+  // khi chọn phim
+  useEffect(() => {
+    setState((prev) => ({
+      ...prev,
+      valueSelected: { ...prev.valueSelected, date: null },
+    }));
+
+    const getDataDate = async (movie_id: number, cinema_id: number) => {
+      try {
+        setState((prev) => ({
+          ...prev,
+          isFetch: true,
+        }));
+        const res = await getDateInShowtimeByCinemaMovieAPI(
+          movie_id,
+          cinema_id
+        );
+        setState((prev) => ({ ...prev, dateList: res }));
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setState((prev) => ({
+          ...prev,
+          isFetch: false,
+        }));
+      }
+    };
+
+    if (
+      state.valueSelected.cinema != null &&
+      state.valueSelected.movie != null
+    ) {
+      getDataDate(state.valueSelected.movie, state.valueSelected.cinema);
+    }
+  }, [state.valueSelected.movie, state.valueSelected.cinema]);
+
+  // khi chọn ngày
+  useEffect(() => {
+    setState((prev) => ({
+      ...prev,
+      valueSelected: { ...prev.valueSelected, times: null },
+    }));
+
+    const getDataTime = async (
+      movie_id: number,
+      cinema_id: number,
+      date: Date
+    ) => {
+      try {
+        setState((prev) => ({
+          ...prev,
+          isFetch: true,
+        }));
+        const res = await getTimeInShowtimeByCinemaMovieDateAPI(
+          movie_id,
+          cinema_id,
+          date
+        );
+        setState((prev) => ({ ...prev, timeList: res }));
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setState((prev) => ({
+          ...prev,
+          isFetch: false,
+        }));
+      }
+    };
+
+    if (
+      state.valueSelected.cinema != null &&
+      state.valueSelected.movie != null &&
+      state.valueSelected.date != null
+    ) {
+      getDataTime(
+        state.valueSelected.movie,
+        state.valueSelected.cinema,
+        state.valueSelected.date
+      );
+    }
+  }, [
+    state.valueSelected.date,
+    state.valueSelected.cinema,
+    state.valueSelected.movie,
+  ]);
   return (
     <div
       className="w-full bg-white rounded-sm flex 
@@ -35,34 +169,49 @@ function BarTicket() {
         <div className="text-2xl text-gray-400 font-bold">ĐẶT VÉ NHANH</div>
       </div>
 
-      {/* rạp */}
       <div className="flex gap-2">
-        <Select
-          notFoundContent={"Đang tải danh sách rạp..."}
-          className={styles.select}
-          classNames={{
-            popup: {
-              root: "my-custom-dropdown",
-            },
-          }}
-          placeholder="Chọn rạp"
-          value={valueSelected.cinema || undefined}
-          onChange={(v) => setValueSelected((p) => ({ ...p, cinema: v }))}
-          options={
-            cinemas?.length > 0
-              ? cinemas.map((c: CinemaOnlyCity) => ({
-                  label: c.name,
-                  value: String(c.cinema_id),
-                }))
-              : []
-          }
-        />
+        {/* rạp */}
+        <div>
+          <Select
+            notFoundContent={<Spinner text="Đang tải danh sách rạp" />}
+            className={styles.select}
+            classNames={{
+              popup: {
+                root: "my-custom-dropdown",
+              },
+            }}
+            placeholder="Chọn rạp"
+            value={state.valueSelected.cinema ?? null}
+            onChange={(v) =>
+              setState((prev) => ({
+                ...prev,
+                valueSelected: { ...prev.valueSelected, cinema: v },
+              }))
+            }
+            options={
+              state.cinemaList?.length > 0
+                ? state.cinemaList.map((c: CinemaOnlyCity) => ({
+                    label: c.name,
+                    value: Number(c.cinema_id),
+                  }))
+                : []
+            }
+          />
+        </div>
 
         {/* phim */}
         <div>
           <Select
-            notFoundContent={"Đang tải danh sách phim..."}
-            disabled={valueSelected.cinema === ""}
+            notFoundContent={
+              state.isFetch ? (
+                <Spinner text="Đang tải danh sách phim" />
+              ) : state.movieList.length === 0 ? (
+                "Hiện không có phim chiếu ở rạp này."
+              ) : (
+                ""
+              )
+            }
+            disabled={state.valueSelected.cinema === null}
             className={styles.select}
             classNames={{
               popup: {
@@ -70,13 +219,18 @@ function BarTicket() {
               },
             }}
             placeholder="Chọn phim"
-            value={valueSelected.movie || undefined}
-            onChange={(v) => setValueSelected((p) => ({ ...p, movie: v }))}
+            value={state.valueSelected.movie ?? null}
+            onChange={(v) =>
+              setState((prev) => ({
+                ...prev,
+                valueSelected: { ...prev.valueSelected, movie: v },
+              }))
+            }
             options={
-              cinemas?.length > 0
-                ? cinemas.map((c: CinemaOnlyCity) => ({
-                    label: c.name,
-                    value: String(c.cinema_id),
+              state.movieList?.length > 0
+                ? state.movieList.map((m) => ({
+                    label: m.name,
+                    value: Number(m.movie_id),
                   }))
                 : []
             }
@@ -86,8 +240,16 @@ function BarTicket() {
         {/* ngày */}
         <div>
           <Select
-            notFoundContent={"Đang tải danh sách ngày chiếu..."}
-            disabled={valueSelected.movie === ""}
+            notFoundContent={
+              state.isFetch ? (
+                <Spinner text="Đang tải danh sách ngày chiếu" />
+              ) : state.dateList.length === 0 ? (
+                "Hiện chưa có lịch chiếu của phim này."
+              ) : (
+                ""
+              )
+            }
+            disabled={state.valueSelected.movie === null}
             className={styles.select}
             classNames={{
               popup: {
@@ -95,13 +257,18 @@ function BarTicket() {
               },
             }}
             placeholder="Chọn ngày"
-            value={valueSelected.date || undefined}
-            onChange={(v) => setValueSelected((p) => ({ ...p, date: v }))}
+            value={state.valueSelected.date ?? null}
+            onChange={(v) =>
+              setState((prev) => ({
+                ...prev,
+                valueSelected: { ...prev.valueSelected, date: v },
+              }))
+            }
             options={
-              cinemas?.length > 0
-                ? cinemas.map((c: CinemaOnlyCity) => ({
-                    label: c.name,
-                    value: String(c.cinema_id),
+              state.dateList?.length > 0
+                ? state.dateList.map((c) => ({
+                    label: `Thứ ${c.weekday}, ${c.dateDisplay}`,
+                    value: c.date,
                   }))
                 : []
             }
@@ -111,8 +278,16 @@ function BarTicket() {
         {/* suất */}
         <div>
           <Select
-            notFoundContent={"Đang tải danh sách suất chiếu..."}
-            disabled={valueSelected.date === ""}
+            notFoundContent={
+              state.isFetch ? (
+                <Spinner text="Đang tải danh sách suất chiếu" />
+              ) : state.timeList.length === 0 ? (
+                "Hiện chưa có suất chiếu cho ngày này."
+              ) : (
+                ""
+              )
+            }
+            disabled={state.valueSelected.date === null}
             className={styles.select}
             classNames={{
               popup: {
@@ -120,20 +295,31 @@ function BarTicket() {
               },
             }}
             placeholder="Chọn suất"
-            value={valueSelected.times || undefined}
-            onChange={(v) => setValueSelected((p) => ({ ...p, times: v }))}
+            value={state.valueSelected.times ?? null}
+            onChange={(v) =>
+              setState((prev) => ({
+                ...prev,
+                valueSelected: { ...prev.valueSelected, times: v },
+              }))
+            }
             options={
-              cinemas?.length > 0
-                ? cinemas.map((c: CinemaOnlyCity) => ({
-                    label: c.name,
-                    value: String(c.cinema_id),
+              state.timeList?.length > 0
+                ? state.timeList.map((c) => ({
+                    label: c.start_time,
+                    value: Number(c.movie_screen_id),
                   }))
                 : []
             }
           />
         </div>
-        <div>
-          <Button text="ĐẶT NGAY" />
+        <div className="relative">
+          <Button
+            text="ĐẶT NGAY"
+            link={`/movie/${state.valueSelected.movie}`}
+          />
+          {state.valueSelected.times === null && (
+            <div className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/20 rounded-sm"></div>
+          )}
         </div>
       </div>
     </div>

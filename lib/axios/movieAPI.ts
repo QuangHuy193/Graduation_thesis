@@ -31,3 +31,14 @@ export async function getMovieWithIdAPI(id: number) {
     throw error.response?.data || error;
   }
 }
+
+export async function getMovieWithCinemaIdAPI(id: number) {
+  try {
+    const response = await axiosInstance.get(`/api/movies/cinema/${id}`);
+
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching movies:", error);
+    throw error.response?.data || error;
+  }
+}

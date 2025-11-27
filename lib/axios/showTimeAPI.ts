@@ -11,3 +11,34 @@ export async function getShowtimeByDateAPI(day: number, id: number) {
     throw error.response?.data || error;
   }
 }
+
+export async function getDateInShowtimeByCinemaMovieAPI(
+  id: number,
+  cinema_id: number
+) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/showtimes/date/movie/${id}?cinema_id=${cinema_id}`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching date:", error);
+    throw error.response?.data || error;
+  }
+}
+
+export async function getTimeInShowtimeByCinemaMovieDateAPI(
+  movie_id: number,
+  cinema_id: number,
+  date: Date
+) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/showtimes/times?movie_id=${movie_id}&cinema_id=${cinema_id}&date=${date}`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching date:", error);
+    throw error.response?.data || error;
+  }
+}
