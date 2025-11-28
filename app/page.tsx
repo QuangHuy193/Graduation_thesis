@@ -7,13 +7,13 @@ import {
   getMovieShowingBanerAPI,
   getMovieUpcommingBanerAPI,
 } from "@/lib/axios/movieAPI";
+import { getPromotionsAPI } from "@/lib/axios/promotionAPI";
 import { useEffect, useState } from "react";
-
-const dataF2 = ["/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp", "/HSSV-2.webp"];
 
 export default function Home() {
   const [bannerMovieShowng, setBannerMovieShowng] = useState([]);
   const [bannerMovieUpcoming, setBannerMovieUpcoming] = useState([]);
+  const [promotionList, setPromotionList] = useState([]);
 
   useEffect(() => {
     const getMovieShowingBaner = async () => {
@@ -34,11 +34,25 @@ export default function Home() {
       }
     };
 
+    const getPromotionList = async () => {
+      try {
+        const res = await getPromotionsAPI();
+        setPromotionList(res);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
     getMovieShowingBaner();
     getMovieUpcomingBanner();
+    getPromotionList();
   }, []);
 
-  if (!bannerMovieShowng || bannerMovieShowng.length === 0) {
+  if (
+    bannerMovieShowng.length === 0 ||
+    bannerMovieUpcoming.length === 0 ||
+    promotionList.length === 0
+  ) {
     return (
       <div>
         <LoadingPage />
@@ -72,7 +86,7 @@ export default function Home() {
 
           <div className="pb-[50px]">
             <PromotionList
-              data={dataF2}
+              data={promotionList}
               title="KHUYẾN MÃI"
               link={"/promotions"}
             />

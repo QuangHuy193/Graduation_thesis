@@ -7,7 +7,7 @@ function PromotionItem({ image, link = "" }: { image: string; link: string }) {
     <div className="mb-5">
       <LoadingLink href={link}>
         <Image
-          src={image}
+          src={image.image}
           width={300}
           height={50}
           alt="Promotion"

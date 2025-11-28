@@ -31,7 +31,7 @@ function Header() {
     getCinemas();
   }, []);
 
-  // ✅ Logout handler 
+  // ✅ Logout handler
   const handleLogout = () => {
     signOut({ callbackUrl: "/" });
   };
@@ -56,7 +56,12 @@ function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button text="ĐẶT VÉ NGAY" icon={faTicket} p_l_r="12px" />
+            <Button
+              text="ĐẶT VÉ NGAY"
+              icon={faTicket}
+              p_l_r="12px"
+              link="/movie"
+            />
           </div>
         </div>
 
@@ -77,7 +82,7 @@ function Header() {
           {/* ✅ User section */}
           <div className="flex gap-1.5 items-center">
             <FontAwesomeIcon icon={faCircleUser} size="lg" />
-            <UserMenu user={user} handleLogout={handleLogout} ></UserMenu>
+            <UserMenu user={user} handleLogout={handleLogout}></UserMenu>
           </div>
         </div>
       </div>

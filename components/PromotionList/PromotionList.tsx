@@ -100,7 +100,12 @@ function PromotionList({
       </div>
 
       <div className="w-full flex justify-center pt-3 pb-5">
-        <Button text="XEM THÊM" p_l_r="80px" link={link} text_size="15px" />
+        <Button
+          text="TẤT CẢ ƯU ĐÃI"
+          p_l_r="80px"
+          link={link}
+          text_size="15px"
+        />
       </div>
     </div>
   );
