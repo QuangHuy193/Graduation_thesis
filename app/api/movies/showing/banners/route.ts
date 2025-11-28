@@ -25,7 +25,7 @@ export async function GET() {
       WHERE status = 1
       GROUP BY m.movie_id      
       ORDER BY m.release_date DESC
-      LIMIT 12`
+      LIMIT 8`
     );
 
     // đảm bảo rows là mảng

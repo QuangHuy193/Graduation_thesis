@@ -1,5 +1,25 @@
 import axiosInstance from "./config";
 
+export async function getMovieShowingAllAPI() {
+  try {
+    const response = await axiosInstance.get("/api/movies/showing/all");
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching movies:", error);
+    throw error.response?.data || error;
+  }
+}
+
+export async function getMovieUpcommingAllAPI() {
+  try {
+    const response = await axiosInstance.get("/api/movies/upcoming/all");
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching movies:", error);
+    throw error.response?.data || error;
+  }
+}
+
 export async function getMovieShowingBanerAPI() {
   try {
     const response = await axiosInstance.get("/api/movies/showing/banners");

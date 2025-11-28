@@ -25,7 +25,7 @@ export async function GET() {
       WHERE status = 0
       GROUP BY m.movie_id      
       ORDER BY m.release_date DESC
-      LIMIT 12`
+      LIMIT 8`
     );
     const rawRows = Array.isArray(rows) ? rows : [];
     // Chuyển từ chuỗi thành mảng
