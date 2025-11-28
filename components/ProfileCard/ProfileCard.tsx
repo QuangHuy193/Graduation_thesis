@@ -2,6 +2,7 @@
 
 import React from "react";
 import styles from "./ProfileCard.module.scss";
+import { useSession, signOut } from "next-auth/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faCircleUser,
@@ -25,6 +26,8 @@ export default function ProfileCard({
     onEditAvatar,
     onViewProfile,
     onLogout,
+    onShowCustomerInfo,
+    onShowMemberShipInfo,
 }) {
     const progress = Math.max(
         0,
@@ -81,14 +84,14 @@ export default function ProfileCard({
             <hr className={styles.sep} />
 
             <nav className={styles.menu}>
-                <button className={styles.menuItem}>
+                <button className={styles.menuItem} onClick={onShowCustomerInfo}>
                     <span className={styles.menuIcon}><FontAwesomeIcon icon={faUser} /></span>
                     Thông tin khách hàng
                 </button>
 
-                <button className={styles.menuItem}>
+                <button className={styles.menuItem} onClick={onShowMemberShipInfo}>
                     <span className={styles.menuIcon}><FontAwesomeIcon icon={faStar} /></span>
-                    Thành viên {user.tier}
+                    Thành viên CineGO
                 </button>
 
                 <button className={styles.menuItem}>
