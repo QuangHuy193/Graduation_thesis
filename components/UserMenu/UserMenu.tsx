@@ -26,7 +26,7 @@ export default function UserMenu({ user, handleLogout }) {
                             Thông tin cá nhân
                         </LoadingLink>
                         {/* <button className={styles.InfoBtn} onClick={() => (router.push("/user-info"))}>
-
+                        
                         </button> */}
                         <button onClick={handleLogout} className={styles.logoutBtn}>
                             <FontAwesomeIcon icon={faRightFromBracket} className={styles.icon} />{" "}

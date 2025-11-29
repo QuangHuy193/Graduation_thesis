@@ -13,6 +13,9 @@ export type ShowtimeRaw = {
   // optional joined objects
   movie_title?: string | null;
   room_name?: string | null;
+
+  screening_start?: string | null;
+  screening_end?: string | null;
 };
 
 type MovieLite = { movie_id: number; title?: string };
@@ -38,15 +41,22 @@ function toDateKey(dateStr: string) {
   }
 }
 
-function fmtTime(dateStr?: string | null) {
+function fmtDate(dateStr?: string | null) {
   if (!dateStr) return "-";
   try {
     const d = new Date(dateStr);
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    // Lấy ngày / tháng / năm
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+
+    return `${day}-${month}-${year}`;
   } catch {
     return dateStr;
   }
 }
+
 
 export default function Showtimestable({
   showtimes = [],
@@ -202,7 +212,7 @@ export default function Showtimestable({
                         >
                           <div className="font-medium">{s.movie_title ?? moviesMap[Number(s.movie_id)]?.title ?? `Phim #${s.movie_id}`}</div>
                           <div className="text-xs text-slate-500">
-                            {fmtTime(s.start_date)} - {fmtTime(s.end_date)}
+                            từ <strong>{s.screening_start}</strong> đến <strong>{s.screening_end}</strong>
                           </div>
                           <div className="text-xs mt-1">
                             <span className={`px-2 py-0.5 rounded text-xs ${s.status === 1 ? "bg-green-100" : "bg-slate-100"}`}>
