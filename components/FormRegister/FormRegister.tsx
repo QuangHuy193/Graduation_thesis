@@ -13,7 +13,7 @@ import Button from "../Button/Button";
 import { scrollToPosition } from "@/lib/function";
 import { sendOtp } from "@/lib/axios/sendotpAPI";
 import styles from "./FormRegister.module.scss";
-
+import Spinner from "../Spinner/Spinner";
 function validateEmailBasic(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -213,13 +213,18 @@ function FormRegister({ state, handleToggleVisibility }: FormAuthProps) {
             onClose={() => setMsg(null)}
           />
         )}
-
-        <Button
+        {loading ? (
+          <div className="py-10 flex justify-center">
+            <Spinner text="Đang xử lý..." />
+          </div>
+        ) : (<Button
           text={stage === "form" ? "Xác nhận & Gửi mã" : "Đã gửi"}
           wfull={true}
           type="submit"
           disabled={loading || stage === "done"}
-        />
+        />)
+        }
+
       </form>
     </div>
   );

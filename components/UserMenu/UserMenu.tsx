@@ -15,14 +15,19 @@ export default function UserMenu({ user, handleLogout }) {
                         {user.name}
                     </span>
                     <div
-                        className="absolute left-0 top-full mt-1 bg-gray-800 rounded shadow-md
+                        className="absolute right-0 top-full mt-1 bg-gray-800 rounded shadow-md
                         opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0
                         transition-all duration-300 min-w-[180px] z-50"
+                    ><LoadingLink
+                        href="/user-info"
+                        className={styles.InfoBtn}
                     >
-                        <button className={styles.InfoBtn} onClick={() => (router.push("/user-info"))}>
                             <FontAwesomeIcon icon={faUser} className={styles.icon} />{" "}
                             Thông tin cá nhân
-                        </button>
+                        </LoadingLink>
+                        {/* <button className={styles.InfoBtn} onClick={() => (router.push("/user-info"))}>
+
+                        </button> */}
                         <button onClick={handleLogout} className={styles.logoutBtn}>
                             <FontAwesomeIcon icon={faRightFromBracket} className={styles.icon} />{" "}
                             Đăng xuất

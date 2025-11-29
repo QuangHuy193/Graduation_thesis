@@ -17,8 +17,7 @@ import { checkUserStatus } from "@/lib/axios/checkUserStatusAPI";
 import { useRouter } from "next/navigation";
 import styles from "./FormLogin.module.scss";
 import LoadingLink from "../Link/LinkLoading";
-// // import { useAuth } from "../Header/AuthContext";
-// import { useSession, signOut } from "next-auth/react";
+
 import Spinner from "../Spinner/Spinner";
 
 export default function FormLogin({

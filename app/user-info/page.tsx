@@ -6,18 +6,22 @@ import ProfileForm from "@/components/ProfileForm/ProfileForm";
 import MembershipInfo from "@/components/MemberShipInfo/MemberShipInfo";
 import PasswordForm from "@/components/PasswordForm/PasswordForm";
 import { getUserInfo } from "@/lib/axios/userAPI";
+import { getBookingHistory } from "@/lib/axios/bookingAPI";
 import { useSession, signOut } from "next-auth/react";
-
+import Spinner from "@/components/Spinner/Spinner";
 import Swal from "sweetalert2";
+import BookingHistory from "@/components/BookingHistory/BookingHistory";
 import { faL } from "@fortawesome/free-solid-svg-icons";
 
 export default function verifyOtp() {
     const { data: session, status } = useSession();
     const [userData, setUserData] = useState<any | null>(null);
+    const [bookingHis, setBookingHis] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showCustomerInfo, setShowCustomerInfo] = useState(true);
     const [showMemberShipInfo, setShowMemberShipInfo] = useState(false);
+    const [showHistoryBooking, setShowHitoryBooking] = useState(false);
     const [userID, setUserID] = useState<number | string>();
     useEffect(() => {
         // chỉ gọi khi session đã load và tồn tại user.id
@@ -39,10 +43,38 @@ export default function verifyOtp() {
                     setError(String(err?.message || err));
                 })
                 .finally(() => setLoading(false));
+            getBookingHistory(id)
+                .then((res) => {
+                    setBookingHis(res);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    setError(String(err?.message || err));
+                })
+                .finally(() => setLoading(false));
         }
     }, [session, status]);
-    if (loading) return <div>Loading...</div>;
-    if (!userData) return <div>No user data</div>;
+
+    if (status === "loading") {
+        return (
+            <div className="py-10 flex justify-center">
+                <Spinner text="Đang xử lý phiên đăng nhập..." />
+            </div>
+        );
+    }
+    if (error) {
+        return <div className="text-red-400 p-4">{error}</div>;
+    }
+    if (loading || !userData) {
+        return (
+            <div className="py-10 flex justify-center">
+                <Spinner text="Đang tải dữ liệu người dùng..." />
+            </div>
+        );
+    }
+
+
+
     const initial = {
         name: userData.name,
         birthday: userData.birthday,
@@ -69,53 +101,76 @@ export default function verifyOtp() {
     const handleShowCustomerInfo = () => {
         setShowCustomerInfo(true);
         setShowMemberShipInfo(false);
+        setShowHitoryBooking(false);
     };
     const handleShowMemberShipInfo = () => {
         setShowMemberShipInfo(true);
         setShowCustomerInfo(false);
+        setShowHitoryBooking(false);
     };
+    const handleShowBookingHistory = () => {
+        setShowHitoryBooking(true);
+        setShowCustomerInfo(false);
+        setShowMemberShipInfo(false);
+    }
     return (
         <div
             className="pl-32 pr-32 text-black pb-20
       bg-[linear-gradient(180deg,var(--color-blue-black)_0%,#2b3b5e_100%)]"
         >
+            {/* {loading ? (
+                <div className="py-10 flex justify-center">
+                    <Spinner text="Đang xử lý..." />
+                </div>
+            ) : ( */}
             <div className="h-(--width-header)"></div>
 
-            {/* container chính, rộng tối đa và căn giữa */}
             <div className="max-w-5xl mx-auto">
-                <div className="flex w-full gap-7">
-                    {/* Cột trái: card */}
-                    <div className="flex-shrink-0">
-                        <ProfileCard
-                            user={initialCard}
-                            onEditAvatar={handleEdit}
-                            onViewProfile={handleView}
-                            onLogout={logout}
-                            onShowCustomerInfo={handleShowCustomerInfo}
-                            onShowMemberShipInfo={handleShowMemberShipInfo}
-                        />
+                {loading ? (
+                    <div className="py-10 flex justify-center">
+                        <Spinner text="Đang xử lý..." />
                     </div>
+                ) : (
+                    <div className="flex w-full gap-7">
+                        {/* Cột trái: card */}
+                        <div className="flex-shrink-0">
+                            <ProfileCard
+                                user={initialCard}
+                                onEditAvatar={handleEdit}
+                                onViewProfile={handleView}
+                                onLogout={logout}
+                                onShowCustomerInfo={handleShowCustomerInfo}
+                                onShowMemberShipInfo={handleShowMemberShipInfo}
+                                onShowBookingHistory={handleShowBookingHistory}
+                            />
+                        </div>
 
-                    {/* Cột phải: form dãn hết */}
-                    <div className="flex-1 min-w-0">
-                        {showCustomerInfo &&
-                            <>
-                                ({userID !== undefined && (
-                                    <ProfileForm id={userID} initialData={initial} onSave={handleSave} />
-                                )}
-                                <div className="mt-4">
-                                    <PasswordForm id={userID} onSave={handleSave} />
-                                </div>)
-                            </>
-                        }
-                        {showMemberShipInfo &&
-                            <>
-                                <MembershipInfo />
-                            </>
-                        }
+                        {/* Cột phải: form dãn hết */}
+                        <div className="flex-1 min-w-0">
+                            {showCustomerInfo &&
+                                <>
+                                    {userID !== undefined && (
+                                        <ProfileForm id={userID} initialData={initial} onSave={handleSave} />
+                                    )}
+                                    <div className="mt-4">
+                                        <PasswordForm id={userID} onSave={handleSave} />
+                                    </div>
+                                </>
+                            }
+                            {showMemberShipInfo &&
+                                <>
+                                    <MembershipInfo />
+                                </>
+                            }
+                            {showHistoryBooking && <>
+                                <BookingHistory bookings={bookingHis} />
+                            </>}
+
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
+
         </div>
     );
 

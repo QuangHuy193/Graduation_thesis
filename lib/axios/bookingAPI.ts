@@ -47,3 +47,13 @@ export async function updateBookingToPaid(bookingID: number) {
     throw error.response?.data || error;
   }
 }
+
+export async function getBookingHistory(userId) {
+  try {
+    const res = await axiosInstance.get(`/api/booking/${userId}/history`);
+    return res.data.data;
+  } catch (err) {
+    console.error("Lỗi khi gọi API:", err);
+    throw err;
+  }
+}

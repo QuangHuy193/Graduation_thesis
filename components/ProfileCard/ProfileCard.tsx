@@ -28,6 +28,7 @@ export default function ProfileCard({
     onLogout,
     onShowCustomerInfo,
     onShowMemberShipInfo,
+    onShowBookingHistory,
 }) {
     const progress = Math.max(
         0,
@@ -94,7 +95,7 @@ export default function ProfileCard({
                     Thành viên CineGO
                 </button>
 
-                <button className={styles.menuItem}>
+                <button className={styles.menuItem} onClick={onShowBookingHistory}>
                     <span className={styles.menuIcon}><FontAwesomeIcon icon={faHistory} /></span>
                     Lịch sử mua hàng
                 </button>
