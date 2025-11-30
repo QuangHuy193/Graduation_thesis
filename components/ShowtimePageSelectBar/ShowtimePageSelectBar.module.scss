@@ -1,0 +1,48 @@
+.select_label {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-yellow);
+  padding-bottom: 6px;
+  font-size: 24px;
+}
+
+.item_filter {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid gray;
+}
+
+.select {
+  width: 100%;
+
+  // bên trong khung hiển thị (selector)
+  :global(.ant-select-selector) {
+    width: 100% !important;
+  }
+
+  // placeholder + item được chọn trong khung
+  :global(.ant-select-selection-placeholder),
+  :global(.ant-select-selection-item) {
+    color: black !important;
+    font-weight: 500 !important;
+  }
+
+  // item đang được chọn trong dropdown
+  :global(.ant-select-item-option-selected) {
+    background-color: var(--color-yellow) !important;
+    font-weight: 500 !important;
+  }
+}
+
+.dropdown {
+  // khung dropdown
+  :global(.ant-select-item) {
+    padding: 8px 12px;
+  }
+
+  // item đang được chọn
+  :global(.ant-select-item-option-selected) {
+    background: var(--color-yellow) !important;
+    font-weight: 600;
+  }
+}
