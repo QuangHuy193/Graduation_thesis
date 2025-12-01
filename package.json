@@ -34,7 +34,8 @@
     "sass": "^1.93.3",
     "sweetalert2": "^11.26.3",
     "swiper": "^12.0.3",
-    "tippy.js": "^6.3.7"
+    "tippy.js": "^6.3.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",

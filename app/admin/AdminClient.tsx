@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getAllMovies } from "@/lib/axios/admin/movieAPI";
+import { getAllMovies, callBulkApi } from "@/lib/axios/admin/movieAPI";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
@@ -12,16 +12,17 @@ import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMo
 import Swal from "sweetalert2";
 import { getAllBookings } from "@/lib/axios/admin/bookingAPI";
 import { getAllShowtimes } from "@/lib/axios/admin/showtimeAPI";
+import ExcelImportMovies from "@/components/ExcelImportMovies/ExcelImportMovies";
+import Spinner from "@/components/Spinner/Spinner";
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [movies, setMovies] = useState<MovieFullITF[]>([]);
     const [bookings, setBookings] = useState([]);
     const [showtimes, setShowtimes] = useState([]);
-
+    const [openImport, setOpenImport] = useState(false);
     // modal
     const [editOpen, setEditOpen] = useState(false);
     const [editingMovie, setEditingMovie] = useState<MovieFullITF | null>(null);
-
     // loading
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -68,6 +69,21 @@ export default function AdminDashboard() {
         }
     }
 
+    async function handleImport(movies) {
+        try {
+            setLoading(true);
+            const res = await callBulkApi(movies);
+
+            const data = await getAllMovies();
+            setMovies(data);
+            Swal.fire("Nhập excel thành công");
+        } catch (error) {
+            console.error("Import failed:", error);
+            alert("Có lỗi xảy ra khi import!");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     function handleEdit(movie: MovieFullITF) {
         console.log("Edit:", movie);
@@ -76,19 +92,14 @@ export default function AdminDashboard() {
     const handleDeleteFromChild = () => {
         // simplest: fetch lại danh sách
         fetchMovies();
-        // hoặc: setMovies(prev => prev.filter(m => m.movie_id !== id));
+
     };
-    // mở modal để thêm (movie = null)
+
     function handleOpenAdd() {
         setEditingMovie(null);
         setEditOpen(true);
     }
 
-    // mở modal để sửa
-    // function handleOpenEdit(movie: MovieFullITF) {
-    //     setEditingMovie(movie);
-    //     setEditOpen(true);
-    // }
     async function handleSave() {
         setSaving(true);
         try {
@@ -136,48 +147,73 @@ export default function AdminDashboard() {
             </aside>
 
             <main className="flex-1 p-8">
-                <header className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold">{activeTab === "dashboard" ? "Dashboard" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h1>
-                    <div className="flex items-center gap-3">
-                        {activeTab === "movies" && (
-                            <Button onClick={handleOpenAdd} className="px-4 py-2 bg-blue-600 text-white rounded">Thêm phim</Button>
-                        )}
-                        <div className="p-2 bg-white rounded shadow">Admin</div>
+                {loading ? (
+                    <div className="py-10 flex justify-center">
+                        <Spinner text="Đang xử lý..." />
                     </div>
-                </header>
+                ) : (<>
+                    <header className="flex items-center justify-between mb-6">
+                        <h1 className="text-2xl font-bold">{activeTab === "dashboard" ? "Dashboard" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h1>
+                        <div className="flex items-center gap-3">
+                            {activeTab === "movies" && (
+                                <div>
+                                    {/* === NÚT IMPORT Ở PARENT === */}
+                                    <Button
+                                        onClick={() => setOpenImport(true)}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded"
+                                    >
+                                        Import Excel
+                                    </Button>
 
-                {activeTab === "dashboard" && (
-                    <div className="grid grid-cols-3 gap-6">
-                        {/* <StatCard title="Phim" value={stats.totalMovies} />
+                                    {/* === POPUP === */}
+                                    <ExcelImportMovies
+                                        open={openImport}
+                                        onClose={() => setOpenImport(false)}
+                                        onImport={handleImport}
+                                    />
+                                </div>
+                            )}
+                            {activeTab === "movies" && (
+                                <Button onClick={handleOpenAdd} className="px-4 py-2 bg-blue-600 text-white rounded">Thêm phim</Button>
+                            )}
+                            <div className="p-2 bg-white rounded shadow">Admin</div>
+                        </div>
+                    </header>
+
+                    {activeTab === "dashboard" && (
+                        <div className="grid grid-cols-3 gap-6">
+                            {/* <StatCard title="Phim" value={stats.totalMovies} />
                         <StatCard title="Đặt vé" value={stats.totalBookings} />
                         <StatCard title="Doanh thu" value={`${Number(stats.revenue).toLocaleString()} VND`} /> */}
 
-                        <div className="col-span-3 mt-4 bg-white p-4 rounded shadow">
-                            <h3 className="font-semibold mb-2">Gần đây</h3>
-                            <p>Danh sách đặt vé mới nhất và thông tin nhanh.</p>
+                            <div className="col-span-3 mt-4 bg-white p-4 rounded shadow">
+                                <h3 className="font-semibold mb-2">Gần đây</h3>
+                                <p>Danh sách đặt vé mới nhất và thông tin nhanh.</p>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {activeTab === "movies" && (
-                    <div className="mt-4">
-                        <MovieTable movies={movies} onDelete={handleDeleteFromChild} onEdit={handleEdit} />
-                    </div>
-                )}
+                    {activeTab === "movies" && (
+                        <div className="mt-4">
+                            <MovieTable movies={movies} onDelete={handleDeleteFromChild} onEdit={handleEdit} />
+                        </div>
+                    )}
 
-                {activeTab === "bookings" && (
-                    <div className="mt-4">
-                        <BookingsTable bookings={bookings} />
-                    </div>
-                )}
+                    {activeTab === "bookings" && (
+                        <div className="mt-4">
+                            <BookingsTable bookings={bookings} />
+                        </div>
+                    )}
 
-                {activeTab === "showtimes" && (
-                    <div className="mt-4 ">
-                        <Showtimestable
-                            showtimes={showtimes}
-                            onSelect={(st) => console.log("chọn showtime", st)}
-                        />
-                    </div>
+                    {activeTab === "showtimes" && (
+                        <div className="mt-4 ">
+                            <Showtimestable
+                                showtimes={showtimes}
+                                onSelect={(st) => console.log("chọn showtime", st)}
+                            />
+                        </div>
+                    )}
+                </>
                 )}
             </main>
 
@@ -188,8 +224,11 @@ export default function AdminDashboard() {
                 onClose={() => { setEditOpen(false); setEditingMovie(null); }}
                 onSave={handleSave}
             />
+
         </div>
+
     );
+
 }
 
 

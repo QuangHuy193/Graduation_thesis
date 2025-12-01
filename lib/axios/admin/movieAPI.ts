@@ -64,3 +64,29 @@ export async function getMovieWithIdAPI(id: number) {
         throw e;
     }
 }
+
+
+// movies: MovieRow[] from your Excel component
+export async function callBulkApi(movies) {
+    // Map MovieRow -> RawPayload expected by backend
+    const payload = movies.map(m => ({
+        name: m.name,
+        release_date: m.release_date,   // YYYY-MM-DD
+        duration: m.duration,
+        age_require: m.age_require,
+        country: m.country,            // name or id
+        subtitle: m.subtitle,         // name or id
+        trailer_url: m.trailer_url,
+        genres: m.genres,
+        actors: m.actors,
+        description: m.description,
+        status: m.status,
+    }));
+
+    // non-atomic (default)
+    const res = await axiosInstance.post("/api/admin/movies/bulk?atomic=true", payload);
+    return res.data;
+
+    // atomic example:
+    // const res = await axios.post("/api/movies/bulk?atomic=true", payload);
+}

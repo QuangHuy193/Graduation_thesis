@@ -5,6 +5,7 @@ import { deleteMovie } from "@/lib/axios/admin/movieAPI";
 import Button from "../Button/Button";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import Spinner from "../Spinner/Spinner";
 type Props = {
     movies: MovieFullITF[];
     onEdit: (m: MovieFullITF) => void;
@@ -31,6 +32,7 @@ function shallowMovieComparable(m: MovieFullITF) {
 export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     const [localMovies, setLocalMovies] = useState<MovieFullITF[]>(movies || []);
     const [query, setQuery] = useState("");
+    const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(8);
     const [sortBy, setSortBy] = useState<"release_date" | "name" | "duration">("release_date");
@@ -119,6 +121,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
         }
 
         try {
+            setLoading(true);
             const res = await deleteMovie(id);
 
             if (res?.success) {
@@ -130,7 +133,9 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
         } catch (error: any) {
             console.error("Lỗi xóa movie:", error);
             await Swal.fire("Lỗi", error?.response?.data?.error || error?.message || "Có lỗi xảy ra", "error");
-        }
+        } finally { setLoading(false) };
+
+
     };
 
     // Filters + search + sort
@@ -185,10 +190,10 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
         }
     };
 
-    const truncate = (s: any, n = 120) => {
-        s = typeof s === "string" ? s : "";
-        return s.length > n ? s.slice(0, n).trimEnd() + "..." : s;
-    };
+    // const truncate = (s: any, n = 120) => {
+    //     s = typeof s === "string" ? s : "";
+    //     return s.length > n ? s.slice(0, n).trimEnd() + "..." : s;
+    // };
 
 
 
@@ -240,117 +245,122 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                     </button>
                 </div>
             </div>
+            {loading ? (
+                <div className="py-10 flex justify-center">
+                    <Spinner text="Đang xử lý..." />
+                </div>
+            ) : (<>
+                {/* Table */}
+                <div className="overflow-x-auto">
+                    <table className="w-full table-auto">
+                        <thead className="bg-slate-50">
+                            <tr>
+                                <th className="text-left px-4 py-3">Poster</th>
+                                <th className="text-left px-4 py-3">Tiêu đề</th>
+                                <th className="text-left px-4 py-3">Thể loại</th>
+                                <th className="text-left px-4 py-3">Thời lượng</th>
+                                <th className="text-left px-4 py-3">Quốc gia</th>
+                                <th className="text-left px-4 py-3">Ngày công chiếu</th>
+                                <th className="text-left px-4 py-3">Độ tuổi</th>
+                                <th className="text-left px-4 py-3">Trạng thái</th>
+                                <th className="text-right px-4 py-3">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {paginated.map((m) => (
+                                <tr key={m.movie_id} className="border-t group hover:bg-slate-50">
+                                    <td className="px-4 py-3">
+                                        <div className="w-16 h-24 bg-slate-100 rounded overflow-hidden flex items-center justify-center">
+                                            {m.image ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    src={m.image}
+                                                    alt={m.name}
+                                                    className="w-full h-full object-cover cursor-pointer"
+                                                    onClick={() => goToUploadWithId(m.movie_id)}
+                                                />
+                                            ) : (
+                                                <span className="text-xs cursor-pointer" onClick={() => goToUploadWithId(m.movie_id)}>No image</span>
+                                            )}
+                                        </div>
+                                    </td>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full table-auto">
-                    <thead className="bg-slate-50">
-                        <tr>
-                            <th className="text-left px-4 py-3">Poster</th>
-                            <th className="text-left px-4 py-3">Tiêu đề</th>
-                            <th className="text-left px-4 py-3">Thể loại</th>
-                            <th className="text-left px-4 py-3">Thời lượng</th>
-                            <th className="text-left px-4 py-3">Quốc gia</th>
-                            <th className="text-left px-4 py-3">Tóm tắt</th>
-                            <th className="text-left px-4 py-3">Ngày công chiếu</th>
-                            <th className="text-left px-4 py-3">Độ tuổi</th>
-                            <th className="text-left px-4 py-3">Trạng thái</th>
-                            <th className="text-right px-4 py-3">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginated.map((m) => (
-                            <tr key={m.movie_id} className="border-t group hover:bg-slate-50">
-                                <td className="px-4 py-3">
-                                    <div className="w-16 h-24 bg-slate-100 rounded overflow-hidden flex items-center justify-center">
-                                        {m.image ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={m.image}
-                                                alt={m.name}
-                                                className="w-full h-full object-cover cursor-pointer"
-                                                onClick={() => goToUploadWithId(m.movie_id)}
-                                            />
+                                    <td className="px-4 py-3 max-w-xs">
+                                        <div className="font-medium">{m.name}</div>
+                                        <div className="text-xs text-slate-500">Trailer: {m.trailer_url ? (
+                                            <button
+                                                onClick={() => setSelectedTrailer(m.trailer_url.trim())}
+                                                className="underline text-sm"
+                                            >
+                                                Xem
+                                            </button>
                                         ) : (
-                                            <span className="text-xs cursor-pointer" onClick={() => goToUploadWithId(m.movie_id)}>No image</span>
-                                        )}
-                                    </div>
-                                </td>
+                                            "-"
+                                        )}</div>
+                                    </td>
 
-                                <td className="px-4 py-3 max-w-xs">
-                                    <div className="font-medium">{m.name}</div>
-                                    <div className="text-xs text-slate-500">Trailer: {m.trailer_url ? (
-                                        <button
-                                            onClick={() => setSelectedTrailer(m.trailer_url.trim())}
-                                            className="underline text-sm"
-                                        >
-                                            Xem
-                                        </button>
-                                    ) : (
-                                        "-"
-                                    )}</div>
-                                </td>
-
-                                <td className="px-4 py-3">
-                                    <div className="flex flex-wrap gap-1">
-                                        {/* {m.genres?.map((g) => (
+                                    <td className="px-4 py-3">
+                                        <div className="flex flex-wrap gap-1">
+                                            {/* {m.genres?.map((g) => (
                                             <span key={g} className="text-xs px-2 py-1 border rounded-full">{g.trim()}</span>
                                         ))} */}
-                                        {(Array.isArray(m.genres) ? m.genres : (m.genres || "").split(",")).map((g) => (
-                                            <span key={g} className="text-xs px-2 py-1 border rounded-full">{g.trim()}</span>
-                                        ))}
+                                            {(Array.isArray(m.genres) ? m.genres : (m.genres || "").split(",")).map((g) => (
+                                                <span key={g} className="text-xs px-2 py-1 border rounded-full">{g.trim()}</span>
+                                            ))}
 
-                                    </div>
-                                </td>
+                                        </div>
+                                    </td>
 
-                                <td className="px-4 py-3">{m.duration} min</td>
-                                <td className="px-4 py-3">{m.country || "-"}</td>
+                                    <td className="px-4 py-3">{m.duration} min</td>
+                                    <td className="px-4 py-3">{m.country || "-"}</td>
 
-                                <td className="px-4 py-3 max-w-[36ch] text-sm text-slate-700">{truncate(m.description, 140)}</td>
 
-                                <td className="px-4 py-3">{fmtDate(m.release_date.toString())}</td>
-                                <td className="px-4 py-3">{m.age_require ?? "-"}</td>
 
-                                <td className="px-4 py-3">
-                                    {m.status === 1 ? (
-                                        <span className="inline-block text-xs px-2 py-1 rounded-full bg-green-100">
-                                            Đang chiếu
-                                        </span>
-                                    ) : m.status === 0 ? (
-                                        <span className="inline-block text-xs px-2 py-1 rounded-full bg-blue-100">
-                                            Sắp chiếu
-                                        </span>
-                                    ) : (
-                                        <span className="inline-block text-xs px-2 py-1 rounded-full bg-slate-100">
-                                            Ẩn
-                                        </span>
-                                    )}
-                                </td>
+                                    <td className="px-4 py-3">{fmtDate(m.release_date.toString())}</td>
+                                    <td className="px-4 py-3">{m.age_require ?? "-"}</td>
 
-                                <td className="px-4 py-3 text-right">
-                                    <div className="inline-flex gap-2">
-                                        <Button onClick={() => handleOpenEdit(m)} className="px-3 py-1 rounded border text-sm">Sửa</Button>
-                                        <Button
-                                            onClick={() => handleDel(m.movie_id)}
-                                            className="px-3 py-1 rounded border text-sm text-red-600"
-                                        >
-                                            Xóa
-                                        </Button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
+                                    <td className="px-4 py-3">
+                                        {m.status === 1 ? (
+                                            <span className="inline-block text-xs px-2 py-1 rounded-full bg-green-100">
+                                                Đang chiếu
+                                            </span>
+                                        ) : m.status === 0 ? (
+                                            <span className="inline-block text-xs px-2 py-1 rounded-full bg-blue-100">
+                                                Sắp chiếu
+                                            </span>
+                                        ) : (
+                                            <span className="inline-block text-xs px-2 py-1 rounded-full bg-slate-100">
+                                                Ẩn
+                                            </span>
+                                        )}
+                                    </td>
 
-                        {paginated.length === 0 && (
-                            <tr>
-                                <td colSpan={10} className="px-4 py-6 text-center text-slate-500">
-                                    Không có phim nào.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                                    <td className="px-4 py-3 text-right">
+                                        <div className="inline-flex gap-2">
+                                            <Button onClick={() => handleOpenEdit(m)} className="px-3 py-1 rounded border text-sm">Sửa</Button>
+                                            <Button
+                                                onClick={() => handleDel(m.movie_id)}
+                                                className="px-3 py-1 rounded border text-sm text-red-600"
+                                            >
+                                                Xóa
+                                            </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+
+                            {paginated.length === 0 && (
+                                <tr>
+                                    <td colSpan={10} className="px-4 py-6 text-center text-slate-500">
+                                        Không có phim nào.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </>)}
+
 
             {/* Footer / Pagination */}
             <div className="p-4 flex items-center justify-between">
