@@ -1,0 +1,20 @@
+.tab_item {
+  flex: 1;
+  display: flex;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  font-size: large;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.tab_item span {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background-color: var(--color-yellow);
+}

@@ -65,7 +65,12 @@ function Footer() {
           </div>
 
           <div className="mt-2.5">
-            <Button text="ĐẶT VÉ" p_l_r="50px" hover_bg_color="#5F4CA2" />
+            <Button
+              text="ĐẶT VÉ"
+              p_l_r="50px"
+              hover_bg_color="#5F4CA2"
+              link="/movie"
+            />
           </div>
         </div>
         <div>
