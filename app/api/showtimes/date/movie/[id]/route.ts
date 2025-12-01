@@ -1,7 +1,7 @@
+import { LIMITDAY } from "@/lib/constant";
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
 
-//lấy danh sách ngày chiếu theo phim (id) và rạp
 export async function GET(
   req: Request,
   { params }: { params: { id: number } }
@@ -30,22 +30,21 @@ export async function GET(
       const start = new Date(item.start_date);
       const end = new Date(item.end_date);
 
-      // duyệt từng ngày trong khoảng
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const clone = new Date(d);
         clone.setHours(0, 0, 0, 0);
 
-        // bỏ ngày quá khứ
         if (clone < today) continue;
+
+        // nếu đã đủ LIMITDAY thì dừng
+        if (result.length >= LIMITDAY) break;
 
         const dd = clone.getDate().toString().padStart(2, "0");
         const mm = (clone.getMonth() + 1).toString().padStart(2, "0");
-
         const dateStr = `${dd}/${mm}`;
 
         if (!seen.has(dateStr)) {
           seen.add(dateStr);
-
           result.push({
             date: clone,
             dateDisplay: dateStr,
@@ -53,6 +52,9 @@ export async function GET(
           });
         }
       }
+
+      // kiểm tra nếu đã đủ LIMITDAY thì không cần duyệt các showtime khác
+      if (result.length >= LIMITDAY) break;
     }
 
     return successResponse(result, "success", 201);

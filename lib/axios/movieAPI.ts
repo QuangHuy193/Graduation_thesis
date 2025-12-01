@@ -73,3 +73,15 @@ export async function getMovieListAPI() {
     throw error.response?.data || error;
   }
 }
+
+// lấy danh sách phim bao gồm lịch chiếu và rạp trong 5 ngày tính từ ngày hiện tại
+export async function getMovieAndShowtimeAndCinemaDetailAPI() {
+  try {
+    const response = await axiosInstance.get(`/api/movies/showtime/detail/all`);
+
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching movies:", error);
+    throw error.response?.data || error;
+  }
+}

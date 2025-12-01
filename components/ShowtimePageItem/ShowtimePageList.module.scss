@@ -1,0 +1,17 @@
+.info_Item {
+  display: flex;
+  gap: 8px;
+  font-size: large;
+  font-weight: 400;
+  margin: 4px 0;
+}
+
+.info_Item div {
+  color: var(--color-yellow);
+}
+
+.info_Item span {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}

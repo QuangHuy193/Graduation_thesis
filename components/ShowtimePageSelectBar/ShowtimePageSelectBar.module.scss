@@ -10,10 +10,12 @@
   padding: 10px;
   border-radius: 8px;
   border: 1px solid gray;
+  min-width: 0;
 }
 
 .select {
   width: 100%;
+  min-width: 0 !important;
 
   // bên trong khung hiển thị (selector)
   :global(.ant-select-selector) {
@@ -25,6 +27,13 @@
   :global(.ant-select-selection-item) {
     color: black !important;
     font-weight: 500 !important;
+  }
+
+  :global(.ant-select-selection-item) {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
   }
 
   // item đang được chọn trong dropdown

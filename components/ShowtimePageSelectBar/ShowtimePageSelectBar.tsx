@@ -9,21 +9,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./ShowtimePageSelectBar.module.scss";
 import { Select } from "antd";
 import { useEffect, useState } from "react";
-import { weekdays } from "@/lib/constant";
+import { LIMITDAY, weekdays } from "@/lib/constant";
 import { getMovieListAPI } from "@/lib/axios/movieAPI";
 import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
 
-function ShowtimePageSelectBar() {
+function ShowtimePageSelectBar({ valueSelected, setValueSelected }) {
   const [state, setState] = useState({
     isFetch: false,
     dateList: [],
     movieList: [],
     cinemaList: [],
-    valueSelected: {
-      date: null,
-      movie: null,
-      cinema: null,
-    },
   });
 
   useEffect(() => {
@@ -31,7 +26,7 @@ function ShowtimePageSelectBar() {
       let list = [];
       const today = new Date();
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < LIMITDAY; i++) {
         const d = new Date();
         d.setDate(today.getDate() + i);
 
@@ -51,11 +46,8 @@ function ShowtimePageSelectBar() {
           dateDisplay,
         });
       }
-      setState((prev) => ({
-        ...prev,
-        dateList: list,
-        valueSelected: { ...prev, date: list[0].value },
-      }));
+      setState((prev) => ({ ...prev, dateList: list }));
+      setValueSelected("date", list[0].value);
     };
 
     const getMovieList = async () => {
@@ -83,7 +75,8 @@ function ShowtimePageSelectBar() {
     getCinemaList();
   }, []);
   return (
-    <div className="flex flex-col gap-3 border-b border-b-gray-400 pb-5 sm:flex-row">
+    <div className="flex flex-col gap-3 border-b border-b-gray-400 pb-10 sm:flex-row">
+      {/* ngày */}
       <div className={`basis-3/12 ${styles.item_filter}`}>
         <div className={`${styles.select_label}`}>
           <div>1. Ngày</div>
@@ -94,13 +87,8 @@ function ShowtimePageSelectBar() {
         <div>
           <Select
             className={styles.select}
-            value={state.valueSelected.date}
-            onChange={(v) =>
-              setState((prev) => ({
-                ...prev,
-                valueSelected: { ...prev.valueSelected, date: v },
-              }))
-            }
+            value={valueSelected.date}
+            onChange={(v) => setValueSelected("date", v)}
             classNames={{
               popup: {
                 root: styles.dropdown,
@@ -117,6 +105,7 @@ function ShowtimePageSelectBar() {
           />
         </div>
       </div>
+      {/* phim */}
       <div className={`basis-6/12 ${styles.item_filter}`}>
         <div className={`${styles.select_label}`}>
           <div>2. Phim</div>
@@ -127,13 +116,8 @@ function ShowtimePageSelectBar() {
 
         <div>
           <Select
-            value={state.valueSelected.movie}
-            onChange={(v) =>
-              setState((prev) => ({
-                ...prev,
-                valueSelected: { ...prev.valueSelected, movie: v },
-              }))
-            }
+            value={valueSelected.movie}
+            onChange={(v) => setValueSelected("movie", v)}
             className={styles.select}
             placeholder="Chọn phim"
             classNames={{
@@ -152,6 +136,7 @@ function ShowtimePageSelectBar() {
           />
         </div>
       </div>
+      {/* rạp */}
       <div className={`basis-3/12 ${styles.item_filter}`}>
         <div className={`${styles.select_label}`}>
           <div>3. Rạp</div>
@@ -162,13 +147,8 @@ function ShowtimePageSelectBar() {
 
         <div>
           <Select
-            value={state.valueSelected.cinema}
-            onChange={(v) =>
-              setState((prev) => ({
-                ...prev,
-                valueSelected: { ...prev.valueSelected, cinema: v },
-              }))
-            }
+            value={valueSelected.cinema}
+            onChange={(v) => setValueSelected("cinema", v)}
             className={styles.select}
             placeholder="Chọn rạp"
             options={

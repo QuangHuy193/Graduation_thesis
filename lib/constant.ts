@@ -132,5 +132,7 @@ export const weekdays = [
   "Thứ 6",
   "Thứ 7",
 ];
+// giới hạn số ngày chiếu cần lấy
+export const LIMITDAY = 5;
 export const PHONEREGEX = /^(0[0-9]{9})$/;
 export const EMAILREGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -8,12 +8,25 @@ import {
   getMovieUpcommingBanerAPI,
 } from "@/lib/axios/movieAPI";
 import { getPromotionsAPI } from "@/lib/axios/promotionAPI";
+import { scrollToPosition } from "@/lib/function";
+import { faAngleUp } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const [bannerMovieShowng, setBannerMovieShowng] = useState([]);
   const [bannerMovieUpcoming, setBannerMovieUpcoming] = useState([]);
   const [promotionList, setPromotionList] = useState([]);
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShow(window.scrollY > 0);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const getMovieShowingBaner = async () => {
@@ -63,35 +76,47 @@ export default function Home() {
   return (
     <div>
       <div>
-        <div>
-          <BarTicket />
+        <BarTicket />
+      </div>
+
+      <div>
+        <div className="pb-[50px]">
+          <MovieList
+            data={bannerMovieShowng}
+            title="PHIM ĐANG CHIẾU"
+            link="/movie/showing"
+          />
         </div>
 
-        <div>
-          <div className="pb-[50px]">
-            <MovieList
-              data={bannerMovieShowng}
-              title="PHIM ĐANG CHIẾU"
-              link="/movie/showing"
-            />
-          </div>
-
-          <div className="pb-[50px]">
-            <MovieList
-              data={bannerMovieUpcoming}
-              title="PHIM SẮP CHIẾU"
-              link="/movie/upcoming"
-            />
-          </div>
-
-          <div className="pb-[50px]">
-            <PromotionList
-              data={promotionList}
-              title="KHUYẾN MÃI"
-              link={"/promotions"}
-            />
-          </div>
+        <div className="pb-[50px]">
+          <MovieList
+            data={bannerMovieUpcoming}
+            title="PHIM SẮP CHIẾU"
+            link="/movie/upcoming"
+          />
         </div>
+
+        <div className="pb-[50px]">
+          <PromotionList
+            data={promotionList}
+            title="KHUYẾN MÃI"
+            link={"/promotions"}
+          />
+        </div>
+
+        {show && (
+          <div
+            onClick={() => scrollToPosition()}
+            className="fixed right-7 bottom-10 w-10 h-10 flex items-center 
+        justify-center rounded-full bg-white cursor-pointer hover:bg-(--color-purple)
+        group"
+          >
+            <FontAwesomeIcon
+              className="text-black group-hover:text-white"
+              icon={faAngleUp}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

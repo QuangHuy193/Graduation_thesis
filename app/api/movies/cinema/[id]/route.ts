@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
-import { MovieFullITF } from "@/lib/interface/movieInterface";
 
 //lấy danh sách phim được chiếu ở rạp (id)
 export async function GET(

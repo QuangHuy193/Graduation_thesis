@@ -12,8 +12,18 @@
   }
 }
 
-:global(.my-custom-dropdown) {
-  width: auto !important;
-  min-width: auto !important;
-  max-width: max-content !important;
+.dropdown {
+  :global(.ant-select-dropdown) {
+    width: auto !important;
+    min-width: max-content !important; // tự giãn theo nội dung
+  }
+
+  // not found content
+  :global(.ant-select-item-empty) {
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #575555;
+    text-align: center;
+    line-height: 1.4;
+  }
 }

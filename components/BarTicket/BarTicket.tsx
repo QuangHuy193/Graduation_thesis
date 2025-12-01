@@ -165,8 +165,11 @@ function BarTicket() {
   // set giá trị đặt vé nhanh cho movieDetail đọc
   const handleSetQuickTicket = () => {
     const quickTicket = {
+      // number
       movie_id: state.valueSelected.movie,
+      // number
       date: state.valueSelected.date,
+      //
       times: state.valueSelected.times,
     };
     sessionStorage.setItem("quickticket", JSON.stringify(quickTicket));
@@ -185,11 +188,12 @@ function BarTicket() {
         {/* rạp */}
         <div>
           <Select
+            popupMatchSelectWidth={false}
             notFoundContent={<Spinner text="Đang tải danh sách rạp" />}
             className={styles.select}
             classNames={{
               popup: {
-                root: "my-custom-dropdown",
+                root: styles.dropdown,
               },
             }}
             placeholder="Chọn rạp"
@@ -214,6 +218,7 @@ function BarTicket() {
         {/* phim */}
         <div>
           <Select
+            popupMatchSelectWidth={false}
             notFoundContent={
               state.isFetch ? (
                 <Spinner text="Đang tải danh sách phim" />
@@ -227,7 +232,7 @@ function BarTicket() {
             className={styles.select}
             classNames={{
               popup: {
-                root: "my-custom-dropdown",
+                root: styles.dropdown,
               },
             }}
             placeholder="Chọn phim"
@@ -252,6 +257,7 @@ function BarTicket() {
         {/* ngày */}
         <div>
           <Select
+            popupMatchSelectWidth={false}
             notFoundContent={
               state.isFetch ? (
                 <Spinner text="Đang tải danh sách ngày chiếu" />
@@ -265,7 +271,7 @@ function BarTicket() {
             className={styles.select}
             classNames={{
               popup: {
-                root: "my-custom-dropdown",
+                root: styles.dropdown,
               },
             }}
             placeholder="Chọn ngày"
@@ -278,9 +284,9 @@ function BarTicket() {
             }
             options={
               state.dateList?.length > 0
-                ? state.dateList.map((c) => ({
-                    label: `${weekdays[c.weekday]}, ${c.dateDisplay}`,
-                    value: c.date,
+                ? state.dateList.map((d) => ({
+                    label: weekdays[d.weekday] + " " + d.dateDisplay,
+                    value: d.date,
                   }))
                 : []
             }
@@ -290,6 +296,7 @@ function BarTicket() {
         {/* suất */}
         <div>
           <Select
+            popupMatchSelectWidth={false}
             notFoundContent={
               state.isFetch ? (
                 <Spinner text="Đang tải danh sách suất chiếu" />
@@ -303,7 +310,7 @@ function BarTicket() {
             className={styles.select}
             classNames={{
               popup: {
-                root: "my-custom-dropdown",
+                root: styles.dropdown,
               },
             }}
             placeholder="Chọn suất"

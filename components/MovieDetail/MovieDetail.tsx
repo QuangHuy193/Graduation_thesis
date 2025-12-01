@@ -103,6 +103,7 @@ function MovieDetail({
     const quickTicketData = sessionStorage.getItem("quickticket");
     if (quickTicketData) {
       const data = JSON.parse(quickTicketData);
+      console.log(data);
       getDataQuickTicket(data.movie_id, data.date, data.times);
     }
     return () => {
