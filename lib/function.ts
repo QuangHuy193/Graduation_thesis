@@ -115,13 +115,13 @@ export function isSingleGap(
     }));
   const get = (c: number) => seats.find((s) => s.col === c);
 
-  // chống ghế sát trái, sát phải
-  if (col === 1 && !get(0)?.booked && !get(2)?.booked) return true;
-  if (
-    col === rowSeats.length - 2 &&
-    !get(rowSeats.length - 1)?.booked &&
-    !get(rowSeats.length - 3)?.booked
-  ) {
+  // chống ghế sát trái
+  if (col === 1 && !get(0)?.booked && !get(2)?.booked) {
+    return true;
+  }
+  // sát phải
+  const maxCol = seats[seats.length - 1].col;
+  if (col === maxCol - 1 && !get(maxCol)?.booked && !get(maxCol - 2)?.booked) {
     return true;
   }
 
@@ -129,10 +129,31 @@ export function isSingleGap(
   const right = get(col + 1);
   const left2 = get(col - 2);
   const right2 = get(col + 2);
+  const left3 = get(col - 3);
+  const right3 = get(col + 3);
 
-  // RULE 1: CHỐNG LẺ 1 GHẾ
-  if (left && !left.booked && left2?.booked) return true;
-  if (right && !right.booked && right2?.booked) return true;
+  // hàng còn đúng 3 ghế liên tiếp
+  if (left && right && !right.booked && !left.booked && !left2 && !right2) {
+    return true;
+  }
+
+  // lối đi bên phải
+  if (left && !left.booked && !left2 && left3) {
+    return true;
+  }
+
+  // lối đi nằm bên trái
+  if (right && !right.booked && !right2 && right3) {
+    return true;
+  }
+
+  if (left && !left.booked && left2?.booked) {
+    // RULE 1: CHỐNG LẺ 1 GHẾ
+    return true;
+  }
+  if (right && !right.booked && right2?.booked) {
+    return true;
+  }
 
   return false;
 }
