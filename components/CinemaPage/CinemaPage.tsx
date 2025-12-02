@@ -1,11 +1,45 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./CinemaPage.module.scss";
+import {
+  getMovieShowAndShowtimeByCinemaIdAPI,
+  getMovieShowAndUpcometimeByCinemaIdAPI,
+} from "@/lib/axios/movieAPI";
+import MovieListInCinema from "../MovieListInCinema/MovieListInCinema";
 
-function CinemaPage() {
+function CinemaPage({ cinema_id }: { cinema_id: number }) {
   const [state, setState] = useState({
     tab: 0,
+    movieList: [],
   });
+
+  useEffect(() => {
+    const getMovieShowing = async (id: number) => {
+      try {
+        const res = await getMovieShowAndShowtimeByCinemaIdAPI(id);
+        setState((prev) => ({ ...prev, movieList: res }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const getMovieUpcoming = async (id: number) => {
+      try {
+        const res = await getMovieShowAndUpcometimeByCinemaIdAPI(id);
+        setState((prev) => ({ ...prev, movieList: res }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    if (state.tab === 0) {
+      getMovieShowing(cinema_id);
+    }
+
+    if (state.tab === 1) {
+      getMovieUpcoming(cinema_id);
+    }
+  }, [cinema_id, state.tab]);
   return (
     <div>
       {/* tab */}
@@ -35,6 +69,23 @@ function CinemaPage() {
         >
           BẢNG GIÁ VÉ{state.tab === 2 && <span></span>}
         </div>
+      </div>
+
+      {/* content */}
+      <div>
+        {/* ds phim */}
+        {(state.tab === 0 || state.tab === 1) && (
+          <MovieListInCinema
+            data={state.movieList}
+            text={
+              state.tab === 0
+                ? "PHIM ĐANG CHIẾU"
+                : state.tab === 1
+                ? "PHIM SẮP CHIẾU"
+                : ""
+            }
+          />
+        )}
       </div>
     </div>
   );

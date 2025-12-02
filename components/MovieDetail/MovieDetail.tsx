@@ -63,7 +63,7 @@ function MovieDetail({
     // ds loại vé
     ticketTypes: [],
     // đồng hồ đếm giờ
-    clock: { minute: 50, second: 0 },
+    clock: { minute: 5, second: 0 },
     // ngày chọn
     dateSelected: 0,
     // đang gọi api

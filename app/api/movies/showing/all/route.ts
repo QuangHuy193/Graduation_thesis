@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
-import { RowDataPacket } from "mysql2"; // nếu dùng mysql2
+import { RowDataPacket } from "mysql2";
 
 export async function GET() {
   try {
@@ -37,7 +37,6 @@ export async function GET() {
       genres: row.genres ? String(row.genres).split(",") : [],
       actors: row.actors ? String(row.actors).split(",") : [],
       image: row.image ?? null,
-      // chuyển đổi kiểu nếu cần, ví dụ duration number, release_date -> string/Date...
     }));
 
     return successResponse<MovieFullITF[]>(

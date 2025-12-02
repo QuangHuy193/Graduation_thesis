@@ -85,3 +85,33 @@ export async function getMovieAndShowtimeAndCinemaDetailAPI() {
     throw error.response?.data || error;
   }
 }
+
+// lấy danh sách phim đang chiếu bao gồm lịch chiếu theo id rạp
+export async function getMovieShowAndShowtimeByCinemaIdAPI(cinema_id: number) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/movies/cinema/${cinema_id}/showing`
+    );
+
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching movies:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// lấy danh sách phim sắp chiếu bao gồm lịch chiếu theo id rạp
+export async function getMovieShowAndUpcometimeByCinemaIdAPI(
+  cinema_id: number
+) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/movies/cinema/${cinema_id}/upcoming`
+    );
+
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching movies:", error);
+    throw error.response?.data || error;
+  }
+}

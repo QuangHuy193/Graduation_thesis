@@ -1,0 +1,15 @@
+.info_Item {
+  display: flex;
+  gap: 2px;
+  font-weight: 500;
+}
+
+.info_Item div {
+  color: var(--color-yellow);
+}
+
+.info_Item span {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}

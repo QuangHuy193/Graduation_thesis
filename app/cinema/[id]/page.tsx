@@ -6,7 +6,7 @@ export default async function Cinema(props: {
   const { id } = await props.params;
   return (
     <div>
-      <CinemaPage />
+      <CinemaPage cinema_id={Number(id)} />
     </div>
   );
 }
