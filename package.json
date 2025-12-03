@@ -20,6 +20,7 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "dom-to-image-more": "^3.7.2",
+    "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "mysql2": "^3.15.3",

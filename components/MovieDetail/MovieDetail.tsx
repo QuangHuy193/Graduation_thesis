@@ -25,7 +25,11 @@ import ShowTime from "../ShowTime/ShowTime";
 import PriceCard from "../PriceCard/PriceCard";
 import Room from "../Room/Room";
 import { getRoomAsileWithIdAPI } from "@/lib/axios/roomAPI";
-import { getSeatsWithRoomShowtimeAPI } from "@/lib/axios/seatsAPI";
+import {
+  getSeatsWithRoomShowtimeAPI,
+  lockSeatAPI,
+  unlockSeatAPI,
+} from "@/lib/axios/seatsAPI";
 import Swal from "sweetalert2";
 import Button from "../Button/Button";
 import Spinner from "../Spinner/Spinner";
@@ -137,7 +141,7 @@ function MovieDetail({
   }, []);
 
   // hàm chọn ghế
-  const handleSelectSeat = (
+  const handleSelectSeat = async (
     seat_id: number,
     label: string,
     rowSeat: [],
@@ -182,6 +186,11 @@ function MovieDetail({
         });
         return;
       }
+      // mở ghế
+      const res = await unlockSeatAPI(seat_id, state.timesSelected.showtime_id);
+      if (res.success) {
+        console.log("Đã mở lại ghế");
+      }
       setState((prev) => ({
         ...prev,
         seatSelected: prev.seatSelected.filter((s) => s.seat_id !== seat_id),
@@ -206,6 +215,25 @@ function MovieDetail({
         });
         return;
       }
+      // khóa ghế
+      const res = await lockSeatAPI(seat_id, state.timesSelected.showtime_id);
+      if (res.success) {
+        console.log("Đã khóa ghế thành công");
+      } else {
+        Swal.fire({
+          title: "Lưu ý!",
+          text: "Ghế đang được giữ bởi người khác!!!",
+          confirmButtonText: "ĐỒNG Ý",
+          buttonsStyling: false,
+          customClass: {
+            popup: "popup_alert",
+            confirmButton: `btn_alert`,
+            cancelButton: `btn_alert`,
+          },
+        });
+        return;
+      }
+
       // tự động phân loại theo thứ tự loại vé
       let typeToUse = "";
       const countByType = seatSelected.reduce((acc, s) => {
@@ -296,6 +324,43 @@ function MovieDetail({
     setState((prev) => ({ ...prev, seatSelected: [] }));
   }, [state.ticketSelected]);
 
+  // Hàm async riêng để unlock ghế và show alert khi hết giờ
+  const handleTimerEnd = async () => {
+    await Promise.all(
+      state.seatSelected.map((seat) =>
+        unlockSeatAPI(seat.seat_id, state.timesSelected.showtime_id)
+      )
+    );
+
+    setState((prev) => ({
+      ...prev,
+      ticketSelected: {},
+      timesSelected: {
+        showtime_id: -1,
+        room_id: -1,
+        cinema_name: "",
+        cinema_address: "",
+        room_name: "",
+        time: "",
+      },
+      clock: { minute: 5, second: 0 },
+    }));
+
+    Swal.fire({
+      title: "LƯU Ý!",
+      text: "Đã hết thời gian giữ vé!",
+      confirmButtonText: "ĐỒNG Ý",
+      buttonsStyling: false,
+      allowOutsideClick: false,
+      customClass: {
+        popup: "popup_alert",
+        confirmButton: "btn_alert",
+      },
+    }).then((result: any) => {
+      if (result.isConfirmed) scrollToPosition(0);
+    });
+  };
+
   // bật bộ đếm giờ
   const timerStarted = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -311,35 +376,9 @@ function MovieDetail({
 
           if (minute === 0 && second === 0) {
             clearInterval(timerRef.current!);
-            timerStarted.current = false; // reset để lần sau chọn ghế có thể chạy timer lại
-            Swal.fire({
-              title: "LƯU Ý!",
-              text: "Đã hết thời gian giữ vé!",
-              confirmButtonText: "ĐỒNG Ý",
-              buttonsStyling: false,
-              allowOutsideClick: false,
-              customClass: {
-                popup: "popup_alert",
-                confirmButton: "btn_alert",
-              },
-            }).then((result: any) => {
-              if (result.isConfirmed) {
-                scrollToPosition(0);
-                setState((prev) => ({
-                  ...prev,
-                  ticketSelected: {},
-                  timesSelected: {
-                    showtime_id: -1,
-                    room_id: -1,
-                    cinema_name: "",
-                    cinema_address: "",
-                    room_name: "",
-                    time: "",
-                  },
-                  clock: { minute: 5, second: 0 },
-                }));
-              }
-            });
+            timerStarted.current = false;
+
+            handleTimerEnd();
             return prev;
           }
 
@@ -802,7 +841,6 @@ function MovieDetail({
                   </Tippy>
                 ))
               )}
-              {}
             </div>
           </div>
         </div>

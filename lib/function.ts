@@ -23,7 +23,7 @@ export function scrollToPosition(
         const absoluteY = rect.top + window.scrollY;
 
         window.scrollTo({
-          top: absoluteY - offset,
+          top: Math.max(0, absoluteY - offset),
           behavior,
         });
         return;
@@ -108,8 +108,8 @@ export function isSingleGap(
   col: number,
   aside: []
 ) {
-  console.log("Trước rowSeats", rowSeats);
-  console.log("Trước col", col);
+  // console.log("Trước rowSeats", rowSeats);
+  // console.log("Trước col", col);
 
   // Chuẩn hóa seats: booked = true nếu từ DB có status=1 hoặc đang được chọn
   let seats = [...rowSeats]
@@ -136,20 +136,20 @@ export function isSingleGap(
       });
     });
   }
-  console.log("Sau rowSeats", seats);
-  console.log("Sau col", col);
+  // console.log("Sau rowSeats", seats);
+  // console.log("Sau col", col);
   const get = (c: number) => seats.find((s) => s.col === c);
 
   // chống ghế sát trái
   const minCol = seats[0].col;
   if (col === minCol + 1 && !get(minCol)?.booked && !get(minCol + 2)?.booked) {
-    console.log("SÁT TRÁI");
+    // console.log("SÁT TRÁI");
     return true;
   }
   // sát phải
   const maxCol = seats[seats.length - 1].col;
   if (col === maxCol - 1 && !get(maxCol)?.booked && !get(maxCol - 2)?.booked) {
-    console.log("SÁT PHẢI");
+    // console.log("SÁT PHẢI");
     return true;
   }
 
@@ -162,7 +162,7 @@ export function isSingleGap(
 
   // hàng còn đúng 3 ghế liên tiếp
   if (left && right && !right.booked && !left.booked && !left2 && !right2) {
-    console.log("CÒN ĐÚNG 3 GHẾ LIÊN TIẾP");
+    // console.log("CÒN ĐÚNG 3 GHẾ LIÊN TIẾP");
     return true;
   }
 
