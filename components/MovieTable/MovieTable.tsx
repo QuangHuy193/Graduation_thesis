@@ -217,7 +217,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                             setPerPage(Number(e.target.value));
                             setPage(1);
                         }}
-                        className="border rounded px-2 py-2 text-sm"
+                        className="border rounded px-2 py-2 text-sm cursor-pointer"
                     >
                         <option value={8}>8 / trang</option>
                         <option value={12}>12 / trang</option>
@@ -230,7 +230,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="border rounded px-2 py-2 text-sm"
+                        className="border rounded px-2 py-2 text-sm cursor-pointer"
                     >
                         <option value="release_date">Ngày công chiếu</option>
                         <option value="name">Tiêu đề</option>
@@ -238,7 +238,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                     </select>
                     <button
                         onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-                        className="px-3 py-1 border rounded text-sm"
+                        className="px-3 py-1 border rounded text-sm cursor-pointer"
                         title="Đổi chiều sắp xếp"
                     >
                         {sortDir === "asc" ? "⤴️" : "⤵️"}

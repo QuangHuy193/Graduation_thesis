@@ -357,7 +357,7 @@ export default function ExcelImportMovies({ open, onClose, onImport, maxPreviewR
                                     setValidRows([]);
                                     setErrors([]);
                                 }}
-                                className="px-3 py-1 rounded border"
+                                className="px-3 py-1 rounded border cursor-pointer"
                             >
                                 Đóng
                             </button>
@@ -461,7 +461,7 @@ export default function ExcelImportMovies({ open, onClose, onImport, maxPreviewR
                                     // Re-open file selector
                                     fileInputRef.current?.click();
                                 }}
-                                className="px-3 py-1 rounded border"
+                                className="px-3 py-1 rounded border cursor-pointer"
                             >
                                 Chọn file khác
                             </button>
@@ -474,7 +474,7 @@ export default function ExcelImportMovies({ open, onClose, onImport, maxPreviewR
                                     setErrors([]);
                                     if (fileInputRef.current) fileInputRef.current.value = "";
                                 }}
-                                className="px-3 py-1 rounded border"
+                                className="px-3 py-1 rounded border cursor-pointer"
                             >
                                 Xóa
                             </button>
@@ -482,7 +482,7 @@ export default function ExcelImportMovies({ open, onClose, onImport, maxPreviewR
                             <button
                                 disabled={validRows.length === 0}
                                 onClick={handleConfirmImport}
-                                className={`px-4 py-2 rounded text-white ${validRows.length === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
+                                className={`px-4 py-2 cursor-pointer rounded text-white ${validRows.length === 0 ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"}`}
                             >
                                 Confirm Import ({validRows.length})
                             </button>

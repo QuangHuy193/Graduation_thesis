@@ -18,12 +18,14 @@ export async function GET() {
             r.name AS room_name,
             
 			ms.start_time,
-			ms.end_time
+			ms.end_time,
 		
+			c.name as cinema_name
         FROM showtime s
         LEFT JOIN movies m ON m.movie_id = s.movie_id
         LEFT JOIN rooms r ON r.room_id = s.room_id
         left join movie_screenings ms on ms.movie_screen_id=s.movie_screen_id
+        left join cinemas c on c.cinema_id=r.cinema_id
         `;
 
         const [rows] = await conn.query(sql);
@@ -41,6 +43,7 @@ export async function GET() {
 
             screening_start: r.start_time || null,
             screening_end: r.end_time || null,
+            cinema_name: r.cinema_name || null,
         }));
         function formatLocalDate(date: any) {
             if (typeof date === "string") return date; // MySQL driver có thể trả string
