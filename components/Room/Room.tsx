@@ -12,11 +12,11 @@ function Room({
     seat_id: number,
     label: string,
     rowSeat: [],
-    colSeat: number
+    colSeat: number,
+    aside: []
   ) => void;
 }) {
   if (!data || !Array.isArray(data.aside_gap)) return <Spinner />;
-
   return (
     <div>
       <div className="flex justify-center text-4xl font-bold my-12 uppercase">
@@ -48,6 +48,7 @@ function Room({
             </div>
           </div>
           {data.aside_gap.map((asg, i) => {
+            const aside = Array.isArray(asg?.aside) ? [...asg.aside] : [];
             let seatIndex = 1; // bắt đầu đếm ghế từ 1 cho mỗi dòng
             let rowSeats: Array<{
               seat_column: number;
@@ -73,15 +74,15 @@ function Room({
                   let seatLabel = "";
                   let isBooked = false;
                   let seat_id = -1;
-
+                  let col_real = -1;
                   if (!isAside) {
                     seatLabel = `${numberToLetter(i)}${seatIndex}`;
-
+                    col_real = seatIndex;
                     // tìm ghế trong data seats
                     const seat = seats.find(
                       (s) =>
                         s.seat_row === numberToLetter(i) &&
-                        Number(s.seat_column) === col // seat_column BE bắt đầu từ 0
+                        Number(s.seat_column) === seatIndex // seat_column BE bắt đầu từ 1
                     );
 
                     if (seat) {
@@ -94,7 +95,7 @@ function Room({
 
                     //TẠO MẢNG rowSeats
                     rowSeats.push({
-                      seat_column: Number(col),
+                      seat_column: col_real,
                       status: seat?.status ?? 0,
                       selected: seatSelected.some((s) => s.seat_id === seat_id),
                     });
@@ -117,7 +118,14 @@ function Room({
                           font-semibold`}
                       onClick={
                         !isBooked && !isAside
-                          ? () => selectSeat(seat_id, seatLabel, rowSeats, col)
+                          ? () =>
+                              selectSeat(
+                                seat_id,
+                                seatLabel,
+                                rowSeats,
+                                col_real,
+                                aside
+                              )
                           : undefined
                       }
                     >

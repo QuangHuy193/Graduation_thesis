@@ -102,26 +102,54 @@ export function numberToLetter(n: number) {
 }
 
 // kiểm tra lúc đặt ghế
+// col được đánh số từ 1 và bỏ qua khoảng trống
 export function isSingleGap(
   rowSeats: Array<{ seat_column: number; status: number; selected?: boolean }>,
-  col: number
+  col: number,
+  aside: []
 ) {
+  console.log("Trước rowSeats", rowSeats);
+  console.log("Trước col", col);
+
   // Chuẩn hóa seats: booked = true nếu từ DB có status=1 hoặc đang được chọn
-  const seats = [...rowSeats]
+  let seats = [...rowSeats]
     .sort((a, b) => a.seat_column - b.seat_column)
     .map((s) => ({
       col: s.seat_column,
       booked: s.status === 1 || s.selected === true,
     }));
+
+  // điều chỉnh vị trí col khi có khoảng trống
+  if (aside.length > 0) {
+    // Sort aside theo gap_index để cộng chính xác
+    const sortedAside = [...aside].sort((a, b) => a.gap_index - b.gap_index);
+
+    sortedAside.forEach((gap) => {
+      // tăng col dc chọn
+      if (col >= gap.gap_index) col += gap.gap_width;
+      // tăng col ds ghế
+      seats = seats.map((seat) => {
+        if (seat.col >= gap.gap_index) {
+          return { ...seat, col: seat.col + gap.gap_width };
+        }
+        return seat;
+      });
+    });
+  }
+  console.log("Sau rowSeats", seats);
+  console.log("Sau col", col);
   const get = (c: number) => seats.find((s) => s.col === c);
 
   // chống ghế sát trái
-  if (col === 1 && !get(0)?.booked && !get(2)?.booked) {
+  const minCol = seats[0].col;
+  if (col === minCol + 1 && !get(minCol)?.booked && !get(minCol + 2)?.booked) {
+    console.log("SÁT TRÁI");
     return true;
   }
   // sát phải
   const maxCol = seats[seats.length - 1].col;
   if (col === maxCol - 1 && !get(maxCol)?.booked && !get(maxCol - 2)?.booked) {
+    console.log("SÁT PHẢI");
     return true;
   }
 
@@ -134,21 +162,25 @@ export function isSingleGap(
 
   // hàng còn đúng 3 ghế liên tiếp
   if (left && right && !right.booked && !left.booked && !left2 && !right2) {
+    console.log("CÒN ĐÚNG 3 GHẾ LIÊN TIẾP");
     return true;
   }
 
   // lối đi bên phải
-  if (left && !left.booked && !left2 && left3) {
-    return true;
-  }
+  // if (left && !left.booked && !left2 && left3) {
+  //   console.log("LỐI ĐI BÊN PHẢI");
+  //   return true;
+  // }
 
   // lối đi nằm bên trái
-  if (right && !right.booked && !right2 && right3) {
-    return true;
-  }
+  // if (right && !right.booked && !right2 && right3) {
+  //   console.log("LỐI ĐI BÊN TRÁI");
+  //   return true;
+  // }
 
   if (left && !left.booked && left2?.booked) {
     // RULE 1: CHỐNG LẺ 1 GHẾ
+    console.log("CHỐNG LẺ 1");
     return true;
   }
   if (right && !right.booked && right2?.booked) {

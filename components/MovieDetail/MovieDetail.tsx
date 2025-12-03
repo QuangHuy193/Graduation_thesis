@@ -19,7 +19,7 @@ import {
   scrollToPosition,
 } from "@/lib/function";
 import LoadingPage from "../LoadingPage/LoadingPage";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import VideoTrailer from "../VideoTrailer/VideoTrailer";
 import ShowTime from "../ShowTime/ShowTime";
 import PriceCard from "../PriceCard/PriceCard";
@@ -32,6 +32,7 @@ import Spinner from "../Spinner/Spinner";
 import { getFoodAPI } from "@/lib/axios/foodAPI";
 import FoodDrinkList from "../FoodDrinkList/FoodDrinkList";
 import { getShowtimeDetailAPI } from "@/lib/axios/showTimeAPI";
+import Tippy from "@tippyjs/react";
 
 function MovieDetail({
   data,
@@ -74,7 +75,17 @@ function MovieDetail({
     foodSelected: {},
   });
 
-  // lấy dữ liệu từ sestion trường hợp đặt vé nhanh
+  // tính tổng số vé
+  const totalTickets = useMemo(
+    () =>
+      Object.values(state.ticketSelected).reduce(
+        (sum, item) => sum + (item?.quantity ?? 0),
+        0
+      ),
+    [state.ticketSelected]
+  );
+
+  // lấy dữ liệu từ session trường hợp đặt vé nhanh
   useEffect(() => {
     const getDataQuickTicket = async (
       movie_id: number,
@@ -130,15 +141,10 @@ function MovieDetail({
     seat_id: number,
     label: string,
     rowSeat: [],
-    colSeat: number
+    colSeat: number,
+    aside: []
   ) => {
     const { ticketSelected, seatSelected } = state;
-
-    // tổng số vé đã chọn
-    const totalTickets = Object.values(ticketSelected).reduce(
-      (acc, val) => acc + val.quantity,
-      0
-    );
 
     //chưa chọn ghế
     if (totalTickets === 0) {
@@ -161,7 +167,7 @@ function MovieDetail({
     // kiểm tra nếu ghế đã chọn thì bỏ chọn
     const existing = seatSelected.find((s) => s.seat_id === seat_id);
     if (existing) {
-      // TODO kiểm tra trước khi bỏ chọn
+      // kiểm tra trước khi bỏ chọn
       if (isSingleGapRemove(rowSeat, colSeat)) {
         Swal.fire({
           title: "Lưu ý!",
@@ -186,7 +192,7 @@ function MovieDetail({
     // nếu chưa đủ số ghế → chọn tiếp
     if (totalSeats < totalTickets) {
       // kiểm tra vị trí ghế
-      if (isSingleGap(rowSeat, colSeat)) {
+      if (isSingleGap(rowSeat, colSeat, aside)) {
         Swal.fire({
           title: "Lưu ý!",
           text: "Việc chọn ghế của bạn không được để trống 1 ghế ở bên trái, giữa hoặc bên phải trên cùng một hàng ghế mà bạn vừa chọn!",
@@ -651,8 +657,14 @@ function MovieDetail({
                     <Room
                       data={state.room_asile}
                       seats={state.seats}
-                      selectSeat={(seat_id, label, rowSeat, colSeat) => {
-                        handleSelectSeat(seat_id, label, rowSeat, colSeat);
+                      selectSeat={(seat_id, label, rowSeat, colSeat, aside) => {
+                        handleSelectSeat(
+                          seat_id,
+                          label,
+                          rowSeat,
+                          colSeat,
+                          aside
+                        );
                       }}
                       seatSelected={state.seatSelected}
                     />
@@ -774,9 +786,23 @@ function MovieDetail({
                 p_l_r="80px"
                 link="/checkout"
               />
-              {state.seatSelected.length === 0 && (
-                <div className="bg-black/30 absolute top-0 left-0 h-full w-full z-10"></div>
+
+              {totalTickets === 0 ? (
+                <Tippy placement="bottom" content="Bạn chưa chọn vé.">
+                  <div className="bg-black/30 absolute top-0 left-0 h-full w-full z-10"></div>
+                </Tippy>
+              ) : (
+                state.seatSelected.length !== totalTickets ||
+                (totalTickets === 0 && (
+                  <Tippy
+                    placement="bottom"
+                    content="Vui lòng chọn đủ số ghế để đặt vé."
+                  >
+                    <div className="bg-black/30 absolute top-0 left-0 h-full w-full z-10"></div>
+                  </Tippy>
+                ))
               )}
+              {}
             </div>
           </div>
         </div>
