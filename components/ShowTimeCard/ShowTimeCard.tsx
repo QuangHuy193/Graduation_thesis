@@ -6,6 +6,7 @@ import { useState } from "react";
 function ShowTimeCard({
   data,
   setTimesSelect,
+  unlockseats,
   timeSelected,
 }: {
   setTimesSelect: (obj: {
@@ -63,7 +64,8 @@ function ShowTimeCard({
                 {s.start_times.map((t, ind) => (
                   <div
                     key={ind}
-                    onClick={() =>
+                    onClick={() => {
+                      unlockseats(timeSelected.showtime_id);
                       handleSelectTimes({
                         showtime_id: s.showtime_id,
                         cinema_name:
@@ -77,8 +79,8 @@ function ShowTimeCard({
                         room_id: s.room.room_id,
                         room_name: s.room.room_name,
                         time: t,
-                      })
-                    }
+                      });
+                    }}
                   >
                     <Button
                       text={t}

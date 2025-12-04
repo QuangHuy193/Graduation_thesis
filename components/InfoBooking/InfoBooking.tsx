@@ -3,6 +3,7 @@ import styles from "./InfoBooking.module.scss";
 import Spinner from "../Spinner/Spinner";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
+import { lockSeatAPI } from "@/lib/axios/seatsAPI";
 
 function InfoBooking() {
   const router = useRouter();
@@ -11,11 +12,19 @@ function InfoBooking() {
     clock: { minute: 5, second: 0 },
   });
 
+  const lockSeat = async (seats, showtime_id) => {
+    for (const seat of seats) {
+      console.log("lock: ", seat.seat_id, showtime_id);
+      await lockSeatAPI(seat.seat_id, showtime_id);
+    }
+  };
+
   useEffect(() => {
     const data = sessionStorage.getItem("bookingData");
     if (data) {
-      setBookingData(JSON.parse(data));
-      console.log(JSON.parse(data));
+      const dataString = JSON.parse(data);
+      setBookingData(dataString);
+      lockSeat(dataString.seats, dataString.showtime_id);
     }
 
     const timer = setInterval(() => {

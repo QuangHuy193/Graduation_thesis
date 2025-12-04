@@ -14,6 +14,7 @@ import { getDayOffset } from "@/lib/function";
 
 function ShowTime({
   movie_id,
+  unlockseats,
   setTimesSelect,
   timeSelected,
   setTicketTypes,
@@ -236,6 +237,7 @@ function ShowTime({
                       data={d}
                       setTimesSelect={setTimesSelect}
                       timeSelected={timeSelected}
+                      unlockseats={unlockseats}
                     />
                   </div>
                 )

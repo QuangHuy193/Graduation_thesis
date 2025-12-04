@@ -44,3 +44,33 @@ export async function unlockSeatAPI(seat_id: number, showtime_id: number) {
     throw error.response?.data || error;
   }
 }
+
+// unlock nhiều ghế cùng lúc
+export async function unlocksSeatAPI(seats: number[], showtime_id: number) {
+  try {
+    const response = await axiosInstance.post(`/api/seats/unlocks/`, {
+      seats,
+      showtime_id,
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error unlocks seat:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// gia hạn thời gian lock thành 300s
+export async function refreshLockSeatAPI(seat_id: number, showtime_id: number) {
+  try {
+    const response = await axiosInstance.post(`/api/seats/lock/refresh`, {
+      seat_id,
+      showtime_id,
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error refresh lock seat:", error);
+    throw error.response?.data || error;
+  }
+}

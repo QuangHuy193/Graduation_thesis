@@ -29,6 +29,7 @@ import {
   getSeatsWithRoomShowtimeAPI,
   lockSeatAPI,
   unlockSeatAPI,
+  unlocksSeatAPI,
 } from "@/lib/axios/seatsAPI";
 import Swal from "sweetalert2";
 import Button from "../Button/Button";
@@ -139,6 +140,23 @@ function MovieDetail({
     };
     getFoods();
   }, []);
+
+  // unlock nhiều ghế bằng beacon
+  const handleUnload = () => {
+    if (!state.seatSelected || state.seatSelected.length === 0) return;
+
+    const payload = JSON.stringify({
+      seats: state.seatSelected.map((s) => s.seat_id),
+      showtime_id: state.timesSelected.showtime_id,
+    });
+
+    navigator.sendBeacon("/api/seats/unlocks", payload);
+  };
+
+  // unlock nhiều ghế
+  const handleUnlocks = async (seats, showtime) => {
+    await unlocksSeatAPI(seats, showtime);
+  };
 
   // hàm chọn ghế
   const handleSelectSeat = async (
@@ -272,6 +290,7 @@ function MovieDetail({
 
   // khi giờ chiếu thay đổi
   useEffect(() => {
+    // sau đó mới reset
     setState((prev) => ({ ...prev, seatSelected: [], ticketSelected: {} }));
     if (
       state.timesSelected.room_id === -1 ||
@@ -315,23 +334,32 @@ function MovieDetail({
     }
   }, [state.timesSelected]);
 
+  // khi date thay đổi
+  useEffect(() => {
+    handleUnlocks(
+      state.seatSelected.map((s) => s.seat_id),
+      state.timesSelected.showtime_id
+    );
+  }, [state.dateSelected]);
+
   // khi vé thay đổi
   useEffect(() => {
     if (!state.ticketSelected) {
       scrollToPosition(0, true, "select_seat", 100, 2000);
     }
-
+    handleUnlocks(
+      state.seatSelected.map((s) => s.seat_id),
+      state.timesSelected.showtime_id
+    );
     setState((prev) => ({ ...prev, seatSelected: [] }));
   }, [state.ticketSelected]);
 
   // Hàm async riêng để unlock ghế và show alert khi hết giờ
   const handleTimerEnd = async () => {
-    await Promise.all(
-      state.seatSelected.map((seat) =>
-        unlockSeatAPI(seat.seat_id, state.timesSelected.showtime_id)
-      )
+    unlocksSeatAPI(
+      state.seatSelected.map((s) => s.seat_id),
+      state.timesSelected.showtime_id
     );
-
     setState((prev) => ({
       ...prev,
       ticketSelected: {},
@@ -395,11 +423,24 @@ function MovieDetail({
     }
   }, [state.seatSelected]);
 
+  // khi unmount xóa timeout
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     };
   }, []);
+
+  // unlock khi reload
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      handleUnload();
+    };
+  }, [state.seatSelected, state.timesSelected]);
 
   // hàm tăng giảm chọn bắp nước
   const handleSelectedFood = (name: string, price: number, inc: boolean) => {
@@ -430,6 +471,7 @@ function MovieDetail({
     });
   };
 
+  // gửi thông tin vé đi khi bấm đặt vé
   const handleBooking = () => {
     const date = getDateFromOffset(state.dateSelected);
     //tính tổng
@@ -581,6 +623,12 @@ function MovieDetail({
       {/* hiện lịch chiếu */}
       <div>
         <ShowTime
+          unlockseats={(showtime_id) => {
+            handleUnlocks(
+              state.seatSelected.map((s) => s.seat_id),
+              showtime_id
+            );
+          }}
           movie_id={movie_id}
           setTimesSelect={(obj) =>
             setState((prev) => ({
