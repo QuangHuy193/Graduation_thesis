@@ -6,12 +6,14 @@ import { getAllMovies, callBulkApi } from "@/lib/axios/admin/movieAPI";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
-import Showtimestable, { ShowtimeRaw } from "@/components/ShowtimesTable/ShowtimesTable";
+import Showtimestable, { CinemaEntry, RoomEntry, ShowtimeRaw } from "@/components/ShowtimesTable/ShowtimesTable";
 import Button from "@/components/Button/Button";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
 import Swal from "sweetalert2";
 import { getAllBookings } from "@/lib/axios/admin/bookingAPI";
 import { getAllShowtimes, commitShowtimeMoves } from "@/lib/axios/admin/showtimeAPI";
+import { getAllRooms } from "@/lib/axios/admin/roomAPI";
+import { getAllCinemas } from "@/lib/axios/admin/cinemaAPI";
 import ExcelImportMovies from "@/components/ExcelImportMovies/ExcelImportMovies";
 import Spinner from "@/components/Spinner/Spinner";
 type PendingMove = {
@@ -25,8 +27,12 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [movies, setMovies] = useState<MovieFullITF[]>([]);
     const [bookings, setBookings] = useState([]);
+    const [rooms, setRooms] = useState([]);
+    const [cinemas, setCinemas] = useState([]);
     const [showtimes, setShowtimes] = useState<ShowtimeRaw[]>([]);
     const [openImport, setOpenImport] = useState(false);
+    const [cinemasMap, setCinemasMap] = React.useState<Record<number, CinemaEntry>>({});
+    const [roomsList, setRoomsList] = React.useState<RoomEntry[]>([]);
     // modal
     const [editOpen, setEditOpen] = useState(false);
     const [editingMovie, setEditingMovie] = useState<MovieFullITF | null>(null);
@@ -39,6 +45,8 @@ export default function AdminDashboard() {
         fetchMovies();
         fetchBookings();
         fetchShowtimes();
+        fetchCinemas();
+        fetchRooms();
     }, []);
 
     async function fetchMovies() {
@@ -49,6 +57,47 @@ export default function AdminDashboard() {
             console.error(e);
             // fallback: mock
             setMovies([]);
+        }
+    }
+    async function fetchCinemas() {
+        try {
+            const res = await getAllCinemas();
+            const payload = res?.data?.data ?? res?.data ?? res ?? [];
+            setCinemas(payload);
+
+            // build map immediately
+            const cMap: Record<number, CinemaEntry> = {};
+            for (const c of payload) {
+                const id = Number(c.cinema_id);
+                if (!Number.isFinite(id)) continue;
+                cMap[id] = { cinema_id: id, name: c.name ?? undefined };
+            }
+            setCinemasMap(cMap);
+        } catch (e) {
+            console.error(e);
+            setCinemas([]);
+            setCinemasMap({});
+        }
+    }
+
+    async function fetchRooms() {
+        try {
+            const res = await getAllRooms();
+            const payload = res?.data?.data ?? res?.data ?? res ?? [];
+            setRooms(payload);
+
+            const rList: RoomEntry[] = payload
+                .map((r: any) => ({
+                    room_id: Number(r.room_id),
+                    name: r.name ?? undefined,
+                    cinema_id: r.cinema_id == null ? null : Number(r.cinema_id),
+                }))
+                .filter((r) => Number.isFinite(r.room_id));
+            setRoomsList(rList);
+        } catch (e) {
+            console.error(e);
+            setRooms([]);
+            setRoomsList([]);
         }
     }
     async function fetchBookings() {
@@ -269,6 +318,8 @@ export default function AdminDashboard() {
                                 showtimes={showtimes}
                                 onSelect={(st) => console.log("chọn showtime", st)}
                                 onCommit={handleCommit}
+                                cinemasMap={cinemasMap}
+                                roomsList={roomsList}
                             />
                         </div>
                     )}

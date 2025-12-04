@@ -19,19 +19,17 @@ export type ShowtimeRaw = {
 
   // optional cinema name (from your SQL)
   cinema_name?: string | null;
-  // optional movie_screen_id etc are okay but not required here
 };
 type PendingMove = {
   showtime_id: number;
   from_room: number | null;
   to_room: number | null;
-  // optional: snapshot of updated showtime for UI
   updated?: ShowtimeRaw;
 };
 
 type MovieLite = { movie_id: number; title?: string };
-type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null };
-type CinemaEntry = { cinema_id: number; name?: string };
+export type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null };
+export type CinemaEntry = { cinema_id: number; name?: string };
 
 type Props = {
   showtimes?: ShowtimeRaw[];
@@ -79,6 +77,9 @@ function fmtDate(dateStr?: string | null) {
 export default function Showtimestable({
   showtimes = [],
   onSelect,
+  roomsMap = {},
+  roomsList,
+  cinemasMap,
   initialDate = null,
   onMove,
   onCommit,
@@ -111,36 +112,52 @@ export default function Showtimestable({
   }, [showtimesState]);
 
   // --------------------------
-  // canonicalRooms: build ONCE from props (showtimes) so rooms won't disappear
+  // canonicalRooms: precedence:
+  // 1. props.roomsList (if provided)
+  // 2. props.roomsMap (if provided)
+  // 3. derive from showtimes (fallback)
+  // Keep canonicalRooms stable using ref so rooms don't disappear after first render.
   // --------------------------
   const initialRoomsRef = React.useRef<RoomEntry[] | null>(null);
+
   if (initialRoomsRef.current === null) {
-    const byId = new Map<number, RoomEntry>();
-    // derive rooms from the original showtimes prop (not showtimesState)
-    for (const s of showtimes || []) {
-      const rid = Number(s.room_id ?? NaN);
-      if (!Number.isFinite(rid)) continue;
-      if (!byId.has(rid)) {
-        byId.set(rid, {
-          room_id: rid,
-          name: s.room_name ?? `Phòng ${rid}`,
-          cinema_id: (s as any).cinema_id ?? null,
-        });
+    if (Array.isArray(roomsList) && roomsList.length) {
+      initialRoomsRef.current = roomsList.map((r) => ({
+        room_id: Number(r.room_id),
+        name: r.name,
+        cinema_id: r.cinema_id ?? null,
+      }));
+    } else if (roomsMap && Object.keys(roomsMap).length) {
+      initialRoomsRef.current = Object.values(roomsMap).map((r: any) => ({
+        room_id: Number(r.room_id),
+        name: r.name,
+        cinema_id: r.cinema_id ?? null,
+      }));
+    } else {
+      // fallback: derive from initial showtimes prop
+      const byId = new Map<number, RoomEntry>();
+      for (const s of showtimes || []) {
+        const rid = Number(s.room_id ?? NaN);
+        if (!Number.isFinite(rid)) continue;
+        if (!byId.has(rid)) {
+          byId.set(rid, {
+            room_id: rid,
+            name: s.room_name ?? `Phòng ${rid}`,
+            cinema_id: (s as any).cinema_id ?? null,
+          });
+        }
       }
+      initialRoomsRef.current = Array.from(byId.values());
     }
-    initialRoomsRef.current = Array.from(byId.values());
   }
 
-  const canonicalRooms = useMemo(() => {
-    return initialRoomsRef.current ?? [];
-  }, []);
-  // --------------------------
+  const canonicalRooms = useMemo(() => initialRoomsRef.current ?? [], []);
 
   // map rooms by cinema_id
   const roomsByCinema = useMemo(() => {
     const out: Record<string, RoomEntry[]> = {};
     for (const r of canonicalRooms) {
-      const cid = (r.cinema_id ?? (r as any).cinema_id ?? "no-cinema");
+      const cid = r.cinema_id ?? (r as any).cinema_id ?? "no-cinema";
       const key = cid === null || cid === undefined ? "no-cinema" : String(cid);
       if (!out[key]) out[key] = [];
       out[key].push(r);
@@ -231,11 +248,12 @@ export default function Showtimestable({
     }
     return filteredOut;
   }, [activeDate, grouped, roomsByCinema, filterMovie]);
+
   const originalSnapshotRef = React.useRef<ShowtimeRaw[] | null>(null);
   useEffect(() => {
-    // capture first props snapshot (or update when showtimes prop changes if you prefer)
     if (originalSnapshotRef.current === null) originalSnapshotRef.current = showtimes || [];
   }, [showtimes]);
+
   // drag handlers
   const handleDragStart = (e: React.DragEvent, showtime: ShowtimeRaw) => {
     e.dataTransfer.setData("text/plain", String(showtime.showtime_id));
@@ -271,14 +289,14 @@ export default function Showtimestable({
     if (roomDef) updated.room_name = roomDef.name ?? updated.room_name;
 
     // update UI immediately
-    setShowtimesState(prev => {
+    setShowtimesState((prev) => {
       const copy = [...prev];
       copy[idx] = updated;
       return copy;
     });
 
     // add/replace pending move (deduplicate by showtime_id)
-    setPendingMap(prev => {
+    setPendingMap((prev) => {
       const copy = { ...prev };
       copy[sid] = {
         showtime_id: sid,
@@ -291,39 +309,31 @@ export default function Showtimestable({
 
     // DO NOT call onMove here (we wait for Commit)
   };
+
   const handleCommit = async () => {
     const moves = Object.values(pendingMap);
     if (!moves.length) return;
 
-    // snapshot must exist (you captured originalSnapshotRef earlier)
     setSaving(true);
     try {
-      // If parent provided onCommit (preferred - batch)
       if (typeof onCommit === "function") {
         await onCommit(moves);
       } else if (typeof onMove === "function") {
-        // fallback: call onMove for each move serially
-        // consider doing them sequentially to preserve order and simplify rollback
         for (const m of moves) {
           await onMove(m.showtime_id, m.to_room, m.updated);
         }
       } else {
-        // no parent handler — nothing to persist, just clear pending
         setPendingMap({});
         return;
       }
 
-      // success -> clear pending
       setPendingMap({});
     } catch (err) {
-      // rollback UI to original snapshot if available
       if (originalSnapshotRef.current) {
         setShowtimesState(originalSnapshotRef.current);
       }
       setPendingMap({});
-      // bubble up or show error — you can customize notification here
       console.error("Commit failed:", err);
-      // rethrow so parent can react if needed
       throw err;
     } finally {
       setSaving(false);
@@ -331,7 +341,6 @@ export default function Showtimestable({
   };
 
   const handleDiscard = () => {
-    // revert UI to original snapshot
     if (originalSnapshotRef.current) setShowtimesState(originalSnapshotRef.current);
     setPendingMap({});
   };
@@ -409,8 +418,7 @@ export default function Showtimestable({
               Object.entries(cinemasForActive).map(([cinemaKey, roomsObj]) => {
                 const cinemaId = cinemaKey === "no-cinema" ? null : Number(cinemaKey);
                 const cinemaName =
-                  (cinemaId !== null) ||
-                  // try to infer from one of the showtimes in this cinema
+                  (cinemaId !== null && cinemasMap?.[cinemaId]?.name) ??
                   (Object.values(roomsObj).flat()[0]?.cinema_name ?? (cinemaId === null ? "Rạp (không xác định)" : `Rạp ${cinemaId}`));
 
                 return (
