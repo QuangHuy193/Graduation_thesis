@@ -21,37 +21,56 @@ export async function getAllShowtimeDay() {
         throw err;
     }
 }
-export async function commitShowtimeMoves(moves) {
-    // Normalize: accept array or object map
-    const arr = Array.isArray(moves) ? moves : (moves && typeof moves === "object" ? Object.values(moves) : []);
+// "@/lib/axios/admin/showtimeAPI.ts"
 
+
+export type MovePayloadItem = {
+    showtime_day_id?: number | null;
+    showtime_id?: number | null;
+    _temp_client_id?: number | null;
+    show_date?: string | null;
+    to_room?: number | null;
+    to_movie_screen_id?: number | null;
+    movie_id?: number | null;
+    status?: string;
+    screening_start?: string | null;
+    screening_end?: string | null;
+    movie_screen_id?: number | null;
+};
+
+export type CommitShowtimeResult = {
+    ok: boolean;
+    message?: string;
+    results?: any[]; // server trả về các hàng đã update/insert
+    [k: string]: any;
+};
+
+/**
+ * Gửi batch moves tới API server.
+ * - accepts array of MovePayloadItem OR object map (will normalized to array)
+ * - throws error (axios error) nếu response.status không ok hoặc server trả lỗi
+ */
+export async function commitShowtimeMoves(moves: MovePayloadItem[] | Record<string, MovePayloadItem>) {
+    const arr = Array.isArray(moves) ? moves : Object.values(moves ?? {});
+    // nếu null/empty -> return early (giống logic cũ)
     if (!arr.length) {
-        return { ok: true, message: "No moves" };
+        return { ok: true, message: "No moves", results: [] } as CommitShowtimeResult;
     }
 
-    // build payload (chỉ include các trường backend cần)
-    const payload = {
-        moves: arr.map(m => ({
-            showtime_id: m.showtime_id ?? null,
-            to_room: m.to_room ?? null,
-            // nếu backend cần to_movie_screen_id / movie_id, thêm vào đây
-            ...(m.to_movie_screen_id !== undefined ? { to_movie_screen_id: m.to_movie_screen_id } : {}),
-            ...(m.movie_id !== undefined ? { movie_id: m.movie_id } : {}),
-            ...(m._temp_client_id !== undefined ? { _temp_client_id: m._temp_client_id } : {}),
-        }))
-    };
+    const payload = { moves: arr };
 
     try {
-        const res = await axiosInstance.post("/api/admin/showtime/move-batch", payload);
+        // nếu bạn có axios instance với baseURL / interceptors, import và dùng thay vì axios trực tiếp
+        const res = await axiosInstance.post<CommitShowtimeResult>("/api/admin/showtime/move-batch", payload);
+
+        // axios resolves non-2xx as throw; res.data expected to have { ok, results, ... }
         return res.data;
-    } catch (err) {
-        if (err?.response) {
-            console.error("API error:", err.response.data);
-            throw err.response.data;
-        }
+    } catch (err: any) {
+        // rethrow so caller can inspect err.response?.data like before
         throw err;
     }
 }
+
 
 
 // lib/api/showtimeDays.ts

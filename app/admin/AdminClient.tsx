@@ -29,8 +29,7 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [movies, setMovies] = useState<MovieFullITF[]>([]);
     const [bookings, setBookings] = useState([]);
-    const [rooms, setRooms] = useState([]);
-    const [cinemas, setCinemas] = useState([]);
+
     const [screenings, setScreenings] = useState([]);
     const [showtimes, setShowtimes] = useState<ShowtimeDay[]>([]);
     const [openImport, setOpenImport] = useState(false);
@@ -41,7 +40,7 @@ export default function AdminDashboard() {
     const [editingMovie, setEditingMovie] = useState<MovieFullITF | null>(null);
     // loading
     const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
+
 
 
     useEffect(() => {
@@ -81,7 +80,7 @@ export default function AdminDashboard() {
         try {
             const res = await getAllCinemas();
             const payload = res?.data?.data ?? res?.data ?? res ?? [];
-            setCinemas(payload);
+            setCinemasMap(payload);
 
             // build map immediately
             const cMap: Record<number, CinemaEntry> = {};
@@ -93,7 +92,6 @@ export default function AdminDashboard() {
             setCinemasMap(cMap);
         } catch (e) {
             console.error(e);
-            setCinemas([]);
             setCinemasMap({});
         }
     }
@@ -102,7 +100,7 @@ export default function AdminDashboard() {
         try {
             const res = await getAllRooms();
             const payload = res?.data?.data ?? res?.data ?? res ?? [];
-            setRooms(payload);
+            setRoomsList(payload);
 
             const rList: RoomEntry[] = payload
                 .map((r: any) => ({
@@ -114,7 +112,7 @@ export default function AdminDashboard() {
             setRoomsList(rList);
         } catch (e) {
             console.error(e);
-            setRooms([]);
+
             setRoomsList([]);
         }
     }
@@ -165,64 +163,76 @@ export default function AdminDashboard() {
         fetchMovies();
 
     };
-    // parent
+
     const handleCommit = async (moves: PendingSlotUpdate[]) => {
         if (!moves || moves.length === 0) return;
 
-        setSaving(true);
+        setLoading(true);
         try {
-            // Build payload.moves based on each pending change
+            // Build payload.moves based on each pending change (guarantee not empty)
             const payloadMoves: any[] = moves.map((m) => {
-                const u = m.updated;
+                const u = m.updated as any;
+
+                // common fields we will always try include if available
+                const common: any = {
+                    show_date: u.show_date ?? u.showDate ?? null,
+                    to_room: u.room_id ?? u.to_room ?? null,
+                    to_movie_screen_id: u.movie_screen_id ?? u.movieScreenId ?? null,
+                    movie_id: u.movie_id ?? u.movieId ?? null,
+                    status: u.status ?? "active",
+                };
 
                 // If this is an existing persisted showtime_day (positive id) -> update by showtime_day_id
-                if (u.id > 0) {
+                if (typeof u.id === "number" && u.id > 0) {
                     return {
                         showtime_day_id: u.id,
-                        to_room: u.room_id ?? null,
-                        to_movie_screen_id: u.movie_screen_id ?? null,
-                        movie_id: u.movie_id ?? null,
-                        status: (u as any).status ?? "active",
+                        ...common,
                     };
                 }
 
-                // Else: temp/new item (id negative). Prefer to upsert by showtime_id + show_date if we have showtime_id.
-                // NOTE: ideally u.showtime_id should be a valid "master" showtime id. If not available, we cannot upsert reliably.
+                // If we have a master showtime_id (master schedule id), include it
                 if (typeof u.showtime_id === "number" && u.showtime_id > 0) {
                     return {
                         showtime_id: u.showtime_id,
-                        show_date: u.show_date,
-                        to_room: u.room_id ?? null,
-                        to_movie_screen_id: u.movie_screen_id ?? null,
-                        movie_id: u.movie_id ?? null,
-                        status: (u as any).status ?? "active",
+                        ...common,
                     };
                 }
 
-                // No valid showtime_id: fallback — include show_date + movie_id + room/slot and mark that showtime_id is missing.
-                // Backend must support creation without showtime_id or you should create the master showtime before commit.
-                return {
-                    // We'll include showtime_id: null to indicate creation without master id (backend must accept this).
+                // Fallback for temp/new entry - include temp client id so server can map back
+                // Note: include as many useful props as possible (movie_screen times if available)
+                const fallback: any = {
                     showtime_id: null,
-                    show_date: u.show_date,
-                    to_room: u.room_id ?? null,
-                    to_movie_screen_id: u.movie_screen_id ?? null,
-                    movie_id: u.movie_id ?? null,
-                    status: (u as any).status ?? "active",
-                    _temp_client_id: u.id, // include client temp id so we can map response back if backend echoes this field
+                    _temp_client_id: u.id ?? null, // temp negative id from client
+                    ...common,
                 };
+
+                // include slot/time fields if exist in your data
+                if (u.start_time ?? u.screening_start) fallback.screening_start = u.start_time ?? u.screening_start;
+                if (u.end_time ?? u.screening_end) fallback.screening_end = u.end_time ?? u.screening_end;
+                if (u.movie_screen_id) fallback.movie_screen_id = u.movie_screen_id;
+
+                return fallback;
             });
 
-            // Call your wrapper (commitShowtimeMoves) — ensure it sends { moves } to /api/showtimes/move-batch
-            const res = await commitShowtimeMoves({ moves: payloadMoves });
+            // DEBUG: inspect exact payload we send (open console and network)
+            const payload = { moves: payloadMoves };
+            console.log(">> commit payloadMoves:", JSON.stringify(payload, null, 2));
 
-            // Normalize response: server may return { ok: true, results: [...] } or { ok: true, updated: [...] }
-            const data = res?.data ?? res ?? {};
+            // Directly call endpoint to avoid wrapper issues. Adjust URL if your API path is different.
+            const data = await commitShowtimeMoves(payloadMoves);
+            console.log("move-batch response:", data);
+
+            if (!data?.ok) {
+                // forward server error to catch block with same shape as axios error (simulate)
+                const err: any = new Error(data?.message ?? "move-batch failed");
+                err.response = { data };
+                throw err;
+            }
+
+            // Normalize response payload -> results array of updated rows
             const results = data.results ?? data.updated ?? data.rows ?? null;
 
             if (Array.isArray(results)) {
-                // Merge server rows into local showtimes
-                // server row field for primary key is assumed to be `id` (showtime_days.id)
                 setShowtimes((prev) => {
                     // convert prev to map by id for faster merge
                     const prevMap = new Map<number, ShowtimeDay>();
@@ -237,9 +247,9 @@ export default function AdminDashboard() {
                             // server echoed our temp id mapping: replace temp id entry
                             const tempId = Number(r._temp_client_id);
                             // remove old temp entry and insert new one with server id
-                            prevMap.forEach((v, k) => {
-                                if (v.id === tempId) prevMap.delete(k);
-                            });
+                            for (const [k, v] of prevMap.entries()) {
+                                if ((v as any).id === tempId) prevMap.delete(k);
+                            }
                             const serverId = Number(r.id);
                             if (Number.isFinite(serverId)) prevMap.set(serverId, r as any);
                         }
@@ -257,17 +267,18 @@ export default function AdminDashboard() {
                     return out;
                 });
             } else {
-                // fallback: refresh from server
+                // fallback: refresh from server if response not structured as expected
                 await fetchShowtimes();
             }
 
             Swal.fire({ icon: "success", title: "Commit thành công", timer: 1200, showConfirmButton: false });
-            return res;
+            await fetchShowtimes();
+            return data;
         } catch (err: any) {
             console.error("Commit failed:", err);
 
             const api = err.response?.data ?? err;
-            if (err.response?.status === 409) {
+            if (err.response?.status === 409 || api?.status === 409) {
                 const conflict = api?.conflict;
                 const msg = conflict
                     ? `Xung đột: phòng ${conflict.target_room} có suất chồng giờ (showtime ${conflict.conflicting_show?.id ?? conflict.conflicting_show?.showtime_id}).`
@@ -280,7 +291,7 @@ export default function AdminDashboard() {
             // rethrow để component con rollback nếu cần
             throw err;
         } finally {
-            setSaving(false);
+            setLoading(false);
         }
     };
 
@@ -298,7 +309,7 @@ export default function AdminDashboard() {
     }
 
     async function handleSave() {
-        setSaving(true);
+        setLoading(true);
         try {
             await fetchMovies();
         } catch (err) {
@@ -306,7 +317,7 @@ export default function AdminDashboard() {
             // alert("Lưu phim thất bại. Kiểm tra console để biết chi tiết.");
             Swal.fire("Lưu phim thất bại. Kiểm tra console để biết chi tiết.");
         } finally {
-            setSaving(false);
+            setLoading(false);
             setEditOpen(false);
             setEditingMovie(null);
         }
@@ -404,24 +415,16 @@ export default function AdminDashboard() {
                         <div className="mt-4 ">
                             <Showtimestable
                                 showtimes={showtimes}
-                                onSelect={(st) => console.log("chọn showtime", st)}
                                 onCommit={handleCommit}
                                 cinemasMap={cinemasMap}
                                 roomsList={roomsList}
                                 movieScreenings={screenings}
                                 externalMovies={movies}
-                                onAdd={async ({ movie_id, room_id, movie_screen_id, show_date }) => {
-                                    // include _temp_client_id if you want mapping
-                                    const result = await createShowtimeWithDay({
-                                        movie_id,
-                                        room_id,
-                                        movie_screen_id,
-                                        show_date,
-                                        _temp_client_id: undefined // parent will pass this in from component; see below
-                                    });
-                                    // API returns { ok: true, row: { ... , _temp_client_id } }
+                                onAdd={async (payload) => {
+                                    // payload should include _temp_client_id when con gọi; forward it
+                                    const result = await createShowtimeWithDay(payload);
                                     if (!result?.ok) throw new Error(result?.message ?? "create failed");
-                                    return result.row;
+                                    return result.row; // row nên chứa id (server id) và có thể _temp_client_id nếu server echo
                                 }}
                             />
                         </div>

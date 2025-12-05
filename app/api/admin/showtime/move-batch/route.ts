@@ -48,10 +48,7 @@ export async function POST(request: Request) {
     try {
         const body = await request.json().catch(() => null);
         if (!body || !Array.isArray(body.moves)) {
-            return NextResponse.json(
-                { ok: false, message: "Invalid payload; expected { moves: [...] }" },
-                { status: 400 }
-            );
+            return NextResponse.json({ ok: false, message: "Invalid payload; expected { moves: [...] }" }, { status: 400 });
         }
 
         const moves: MoveItemInput[] = body.moves;
@@ -60,6 +57,33 @@ export async function POST(request: Request) {
             return NextResponse.json({ ok: false, message: "No moves provided" }, { status: 400 });
         }
 
+        // ===== Pre-validation: ensure required fields exist BEFORE touching DB =====
+        const validationErrors: any[] = [];
+        for (let i = 0; i < moves.length; i++) {
+            const raw = moves[i] as any;
+            if ("showtime_day_id" in raw) {
+                if (typeof raw.showtime_day_id !== "number") {
+                    validationErrors.push({ index: i, reason: "showtime_day_id must be a number", input: raw });
+                }
+            } else if ("showtime_id" in raw) {
+                if (typeof raw.showtime_id !== "number" || typeof raw.show_date !== "string") {
+                    validationErrors.push({ index: i, reason: "showtime_id (number) and show_date (string) are required", input: raw });
+                } else if (!/^\d{4}-\d{2}-\d{2}$/.test(raw.show_date)) {
+                    validationErrors.push({ index: i, reason: "show_date must be YYYY-MM-DD", input: raw });
+                }
+            } else {
+                validationErrors.push({ index: i, reason: "invalid_move_shape", input: raw });
+            }
+        }
+
+        if (validationErrors.length) {
+            // don't touch DB at all
+            return NextResponse.json({ ok: false, message: "Validation failed", errors: validationErrors }, { status: 400 });
+        }
+
+        // Log incoming moves for debugging
+        console.log("move-batch payload validated, count:", moves.length);
+
         const conn = await db.getConnection();
         try {
             await conn.beginTransaction();
@@ -67,27 +91,18 @@ export async function POST(request: Request) {
             const results: any[] = [];
 
             for (const raw of moves) {
-                // validate shape
                 if ("showtime_day_id" in raw) {
                     const m = raw as Extract<MoveItemInput, { showtime_day_id: number }>;
-                    if (typeof m.showtime_day_id !== "number") {
-                        throw new Error("showtime_day_id must be a number");
-                    }
 
-                    // Lock the specific showtime_days row for update (if exists)
-                    const [rows] = await conn.query(
-                        `SELECT * FROM showtime_days WHERE id = ? FOR UPDATE`,
-                        [m.showtime_day_id]
-                    );
+                    // Lock and update
+                    const [rows] = await conn.query(`SELECT * FROM showtime_days WHERE id = ? FOR UPDATE`, [m.showtime_day_id]);
                     const existing = (rows as any[])[0] ?? null;
 
                     if (!existing) {
-                        // Not found => respond with not found for this move (but continue others)
                         results.push({ ok: false, reason: "not_found", input: m });
                         continue;
                     }
 
-                    // Build update fields
                     const updates: string[] = [];
                     const params: any[] = [];
 
@@ -110,42 +125,25 @@ export async function POST(request: Request) {
 
                     if (updates.length) {
                         params.push(m.showtime_day_id);
-                        await conn.query(
-                            `UPDATE showtime_days SET ${updates.join(", ")}, updated_at = NOW() WHERE id = ?`,
-                            params
-                        );
+                        await conn.query(`UPDATE showtime_days SET ${updates.join(", ")}, updated_at = NOW() WHERE id = ?`, params);
                     }
 
-                    const [freshRows] = await conn.query(`SELECT * FROM showtime_days WHERE id = ?`, [
-                        m.showtime_day_id,
-                    ]);
+                    const [freshRows] = await conn.query(`SELECT * FROM showtime_days WHERE id = ?`, [m.showtime_day_id]);
                     results.push({ ok: true, action: "updated", row: (freshRows as any[])[0] });
-                } else if ("showtime_id" in raw) {
+                } else {
+                    // showtime_id branch (validated already)
                     const m = raw as Extract<MoveItemInput, { showtime_id: number }>;
-                    if (typeof m.showtime_id !== "number" || typeof m.show_date !== "string") {
-                        throw new Error("showtime_id (number) and show_date (string) are required for create/upsert moves");
-                    }
 
-                    // We will attempt to insert a new showtime_days, but uniqueness constraint (showtime_id, show_date)
-                    // means we should either INSERT ... ON DUPLICATE KEY UPDATE (MySQL) or try to UPDATE if exists.
-
-                    // Use movie_id from payload if provided, otherwise try to infer from `showtime` table:
+                    // attempt to infer movie_id if not provided
                     let movieId = typeof m.movie_id !== "undefined" ? m.movie_id : null;
                     if (movieId === null) {
-                        // attempt to read from `showtime` table if exists
-                        const [srows] = await conn.query(`SELECT movie_id FROM showtime WHERE showtime_id = ? LIMIT 1`, [
-                            m.showtime_id,
-                        ]);
+                        const [srows] = await conn.query(`SELECT movie_id FROM showtime WHERE id = ? LIMIT 1`, [m.showtime_id]);
                         const s = (srows as any[])[0];
                         if (s) movieId = s.movie_id ?? null;
                     }
 
-                    // Upsert using MySQL ON DUPLICATE KEY UPDATE: this relies on UNIQUE KEY (showtime_id, show_date)
-                    // from your schema to decide duplicate.
-                    // Compose insert columns and values
-                    const insertCols: string[] = ["showtime_id", "show_date", "room_id", "movie_screen_id", "movie_id", "status", "created_at", "updated_at"];
+                    const insertCols = ["showtime_id", "show_date", "room_id", "movie_screen_id", "movie_id", "status", "created_at", "updated_at"];
                     const insertPlaceholders = insertCols.map(() => "?").join(", ");
-                    // Provide values in same order: created_at/updated_at set to NOW() for convenience
                     const insertValues = [
                         m.showtime_id,
                         m.show_date,
@@ -153,11 +151,10 @@ export async function POST(request: Request) {
                         typeof m.to_movie_screen_id !== "undefined" ? m.to_movie_screen_id : null,
                         movieId,
                         typeof m.status !== "undefined" ? m.status : "active",
-                        new Date(), // created_at
-                        new Date(), // updated_at
+                        new Date(),
+                        new Date(),
                     ];
 
-                    // Build duplicate update clause
                     const dupUpdates = [
                         "room_id = VALUES(room_id)",
                         "movie_screen_id = VALUES(movie_screen_id)",
@@ -166,13 +163,11 @@ export async function POST(request: Request) {
                         "updated_at = NOW()",
                     ].join(", ");
 
-                    // Run insert ... ON DUPLICATE KEY UPDATE
                     await conn.query(
                         `INSERT INTO showtime_days (${insertCols.join(", ")}) VALUES (${insertPlaceholders}) ON DUPLICATE KEY UPDATE ${dupUpdates}`,
                         insertValues
                     );
 
-                    // Now retrieve the row (either existing or newly created)
                     const [foundRows] = await conn.query(
                         `SELECT sd.* FROM showtime_days sd WHERE sd.showtime_id = ? AND sd.show_date = ? LIMIT 1`,
                         [m.showtime_id, m.show_date]
@@ -183,24 +178,26 @@ export async function POST(request: Request) {
                     } else {
                         results.push({ ok: true, action: "upserted", row });
                     }
-                } else {
-                    // unknown shape
-                    results.push({ ok: false, reason: "invalid_move_shape", input: raw });
                 }
-            } // end for moves
+            } // end for
 
             await conn.commit();
             return NextResponse.json({ ok: true, results }, { status: 200 });
         } catch (err) {
+            // try rollback and log rollback errors
             try {
                 await conn.rollback();
-            } catch { }
-            console.error("move-batch error:", err);
+            } catch (rbErr) {
+                console.error("rollback failed:", rbErr);
+            }
+            console.error("move-batch error (during transaction):", err);
             return NextResponse.json({ ok: false, message: "Internal server error", error: `${err}` }, { status: 500 });
         } finally {
             try {
                 conn.release();
-            } catch { }
+            } catch (relErr) {
+                console.error("connection release error:", relErr);
+            }
         }
     } catch (err) {
         console.error("move-batch outer error:", err);

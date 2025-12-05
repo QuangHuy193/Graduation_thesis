@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState, useEffect, useRef } from "react";
+import Swal from "sweetalert2";
 
 export type MovieScreenSlot = { movie_screen_id: number; start_time: string; end_time: string };
 export type ShowtimeDay = {
@@ -144,7 +145,19 @@ export default function ShowtimeTimetable({
     const d = dragData.current;
     console.log("drop attempt", { roomId, slotId, activeDate, dragData: d });
     if (!d) return;
-
+    const roomShow = grouped[activeDate ?? ""]?.[String(roomId)] ?? {};
+    const currentOccupant = roomShow[slotId] || null;
+    if (currentOccupant && d.type === "existing" && currentOccupant.id === d.id) {
+      // Thả vào chính slot hiện tại — không làm gì
+      dragData.current = null;
+      return;
+    }
+    if (currentOccupant && currentOccupant.id !== (d.type === "existing" ? d.id : undefined)) {
+      // Slot đã bị chiếm bởi show khác -> block drop
+      console.warn("Target slot already occupied by another show, blocking drop.");
+      dragData.current = null;
+      return;
+    }
     if (d.type === "existing") {
       const idx = state.findIndex(s => s.id === d.id);
       if (idx === -1) { dragData.current = null; return; }
@@ -228,6 +241,18 @@ export default function ShowtimeTimetable({
     dragData.current = null;
   };
 
+  // --- replacement applyServerResults + commit (handles {ok, action, row} shape) ---
+
+  // helper to normalize server result item -> plain row object
+  const normalizeServerItem = (item: any) => {
+    if (!item) return null;
+    // if wrapper { ok, action, row }
+    if (typeof item === "object" && "row" in item) return item.row;
+    // else assume it's already a row
+    return item;
+  };
+
+  // helper: merge server results into local state (synchronous merge using current `state`)
   const commit = async () => {
     const changes = Object.values(pending);
     if (!changes.length) return;
@@ -235,6 +260,8 @@ export default function ShowtimeTimetable({
     originalRef.current = state;
     setPending({});
   };
+
+
 
   const discard = () => { if (originalRef.current) setState(originalRef.current); setPending({}); };
 
