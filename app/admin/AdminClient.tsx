@@ -6,30 +6,33 @@ import { getAllMovies, callBulkApi } from "@/lib/axios/admin/movieAPI";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
-import Showtimestable, { CinemaEntry, RoomEntry, ShowtimeRaw } from "@/components/ShowtimesTable/ShowtimesTable";
+import Showtimestable, { CinemaEntry, RoomEntry, ShowtimeDay } from "@/components/ShowtimesTable/ShowtimesTable";
 import Button from "@/components/Button/Button";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
 import Swal from "sweetalert2";
 import { getAllBookings } from "@/lib/axios/admin/bookingAPI";
-import { getAllShowtimes, commitShowtimeMoves } from "@/lib/axios/admin/showtimeAPI";
+import { commitShowtimeMoves, getAllShowtimeDay, createShowtimeWithDay } from "@/lib/axios/admin/showtimeAPI";
 import { getAllRooms } from "@/lib/axios/admin/roomAPI";
 import { getAllCinemas } from "@/lib/axios/admin/cinemaAPI";
+import { getScreenings } from "@/lib/axios/admin/movie_screenAPI";
 import ExcelImportMovies from "@/components/ExcelImportMovies/ExcelImportMovies";
 import Spinner from "@/components/Spinner/Spinner";
-type PendingMove = {
-    showtime_id: number;
-    from_room: number | null;
-    to_room: number | null;
-    // optional: snapshot of updated showtime for UI
-    updated?: ShowtimeRaw;
+
+type PendingSlotUpdate = {
+    showtime_day_id: number;
+    from_slot: number | null;
+    to_slot: number;
+    updated: ShowtimeDay;
 };
+
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [movies, setMovies] = useState<MovieFullITF[]>([]);
     const [bookings, setBookings] = useState([]);
     const [rooms, setRooms] = useState([]);
     const [cinemas, setCinemas] = useState([]);
-    const [showtimes, setShowtimes] = useState<ShowtimeRaw[]>([]);
+    const [screenings, setScreenings] = useState([]);
+    const [showtimes, setShowtimes] = useState<ShowtimeDay[]>([]);
     const [openImport, setOpenImport] = useState(false);
     const [cinemasMap, setCinemasMap] = React.useState<Record<number, CinemaEntry>>({});
     const [roomsList, setRoomsList] = React.useState<RoomEntry[]>([]);
@@ -47,7 +50,12 @@ export default function AdminDashboard() {
         fetchShowtimes();
         fetchCinemas();
         fetchRooms();
+        fetchScreenings();
     }, []);
+    useEffect(() => {
+        console.log("DEBUG showtimes:", showtimes);
+        console.log("DEBUG movieScreenings:", screenings);
+    }, [showtimes, screenings]);
 
     async function fetchMovies() {
         try {
@@ -57,6 +65,16 @@ export default function AdminDashboard() {
             console.error(e);
             // fallback: mock
             setMovies([]);
+        }
+    }
+    async function fetchScreenings() {
+        try {
+            const data = await getScreenings();
+            setScreenings(data);
+        } catch (e) {
+            console.error(e);
+            // fallback: mock
+            setScreenings([]);
         }
     }
     async function fetchCinemas() {
@@ -114,7 +132,7 @@ export default function AdminDashboard() {
 
     async function fetchShowtimes() {
         try {
-            const payload = await getAllShowtimes();
+            const payload = await getAllShowtimeDay();
             setShowtimes(payload);
         } catch (e) {
             console.error("fetchShowtimes error:", e);
@@ -148,55 +166,125 @@ export default function AdminDashboard() {
 
     };
     // parent
-    const handleCommit = async (moves: PendingMove[]) => {
+    const handleCommit = async (moves: PendingSlotUpdate[]) => {
         if (!moves || moves.length === 0) return;
 
         setSaving(true);
         try {
-            // commitShowtimeMoves là wrapper axios.post('/api/showtimes/move-batch', { moves: [...] })
-            const res = await commitShowtimeMoves(moves);
+            // Build payload.moves based on each pending change
+            const payloadMoves: any[] = moves.map((m) => {
+                const u = m.updated;
 
-            // nếu API trả về ok & updated rows, merge vào showtimes hiện tại
-            const updatedRows = res?.data?.updated ?? res?.updated ?? null;
+                // If this is an existing persisted showtime_day (positive id) -> update by showtime_day_id
+                if (u.id > 0) {
+                    return {
+                        showtime_day_id: u.id,
+                        to_room: u.room_id ?? null,
+                        to_movie_screen_id: u.movie_screen_id ?? null,
+                        movie_id: u.movie_id ?? null,
+                        status: (u as any).status ?? "active",
+                    };
+                }
 
-            if (Array.isArray(updatedRows)) {
-                setShowtimes(prev =>
-                    prev.map(s => {
-                        const u = updatedRows.find((r: any) => Number(r.showtime_id) === Number((s as any).showtime_id));
-                        return u ? { ...s, ...u } : s;
-                    })
-                );
+                // Else: temp/new item (id negative). Prefer to upsert by showtime_id + show_date if we have showtime_id.
+                // NOTE: ideally u.showtime_id should be a valid "master" showtime id. If not available, we cannot upsert reliably.
+                if (typeof u.showtime_id === "number" && u.showtime_id > 0) {
+                    return {
+                        showtime_id: u.showtime_id,
+                        show_date: u.show_date,
+                        to_room: u.room_id ?? null,
+                        to_movie_screen_id: u.movie_screen_id ?? null,
+                        movie_id: u.movie_id ?? null,
+                        status: (u as any).status ?? "active",
+                    };
+                }
+
+                // No valid showtime_id: fallback — include show_date + movie_id + room/slot and mark that showtime_id is missing.
+                // Backend must support creation without showtime_id or you should create the master showtime before commit.
+                return {
+                    // We'll include showtime_id: null to indicate creation without master id (backend must accept this).
+                    showtime_id: null,
+                    show_date: u.show_date,
+                    to_room: u.room_id ?? null,
+                    to_movie_screen_id: u.movie_screen_id ?? null,
+                    movie_id: u.movie_id ?? null,
+                    status: (u as any).status ?? "active",
+                    _temp_client_id: u.id, // include client temp id so we can map response back if backend echoes this field
+                };
+            });
+
+            // Call your wrapper (commitShowtimeMoves) — ensure it sends { moves } to /api/showtimes/move-batch
+            const res = await commitShowtimeMoves({ moves: payloadMoves });
+
+            // Normalize response: server may return { ok: true, results: [...] } or { ok: true, updated: [...] }
+            const data = res?.data ?? res ?? {};
+            const results = data.results ?? data.updated ?? data.rows ?? null;
+
+            if (Array.isArray(results)) {
+                // Merge server rows into local showtimes
+                // server row field for primary key is assumed to be `id` (showtime_days.id)
+                setShowtimes((prev) => {
+                    // convert prev to map by id for faster merge
+                    const prevMap = new Map<number, ShowtimeDay>();
+                    for (const p of prev) prevMap.set(Number((p as any).id), p);
+
+                    // For any server row:
+                    for (const r of results) {
+                        const rid = Number(r.id ?? r.showtime_day_id ?? r.row_id ?? NaN);
+                        if (Number.isFinite(rid)) {
+                            prevMap.set(rid, { ...(prevMap.get(rid) ?? ({} as any)), ...(r as any) });
+                        } else if (r._temp_client_id) {
+                            // server echoed our temp id mapping: replace temp id entry
+                            const tempId = Number(r._temp_client_id);
+                            // remove old temp entry and insert new one with server id
+                            prevMap.forEach((v, k) => {
+                                if (v.id === tempId) prevMap.delete(k);
+                            });
+                            const serverId = Number(r.id);
+                            if (Number.isFinite(serverId)) prevMap.set(serverId, r as any);
+                        }
+                    }
+
+                    // return array from map (preserve sort by date/room/slot)
+                    const out = Array.from(prevMap.values());
+                    out.sort((a, b) => {
+                        if (a.show_date < b.show_date) return -1;
+                        if (a.show_date > b.show_date) return 1;
+                        if (a.room_id < b.room_id) return -1;
+                        if (a.room_id > b.room_id) return 1;
+                        return (a.movie_screen_id ?? -1) - (b.movie_screen_id ?? -1);
+                    });
+                    return out;
+                });
             } else {
-                // fallback: nếu API ko gửi updated rows, ta refetch để đồng bộ
+                // fallback: refresh from server
                 await fetchShowtimes();
             }
 
-            // thông báo thành công
             Swal.fire({ icon: "success", title: "Commit thành công", timer: 1200, showConfirmButton: false });
-
-            // trả về kết quả cho caller nếu cần
             return res;
         } catch (err: any) {
             console.error("Commit failed:", err);
 
-            // nếu server trả lỗi 409 conflict, hiển thị thông tin chi tiết nếu có
             const api = err.response?.data ?? err;
             if (err.response?.status === 409) {
                 const conflict = api?.conflict;
                 const msg = conflict
-                    ? `Xung đột: phòng ${conflict.target_room} có suất chồng giờ (showtime ${conflict.conflicting_show?.showtime_id}).`
+                    ? `Xung đột: phòng ${conflict.target_room} có suất chồng giờ (showtime ${conflict.conflicting_show?.id ?? conflict.conflicting_show?.showtime_id}).`
                     : "Xung đột khi lưu — có suất chồng giờ.";
                 Swal.fire({ icon: "error", title: "Commit thất bại", text: msg });
             } else {
                 Swal.fire({ icon: "error", title: "Lỗi", text: api?.message ?? "Không thể lưu thay đổi." });
             }
 
-            // rethrow để component con có thể rollback UI nếu nó cần
+            // rethrow để component con rollback nếu cần
             throw err;
         } finally {
             setSaving(false);
         }
     };
+
+
     const TAB_TITLES = {
         dashboard: "Tổng quan",
         movies: "Phim",
@@ -320,6 +408,21 @@ export default function AdminDashboard() {
                                 onCommit={handleCommit}
                                 cinemasMap={cinemasMap}
                                 roomsList={roomsList}
+                                movieScreenings={screenings}
+                                externalMovies={movies}
+                                onAdd={async ({ movie_id, room_id, movie_screen_id, show_date }) => {
+                                    // include _temp_client_id if you want mapping
+                                    const result = await createShowtimeWithDay({
+                                        movie_id,
+                                        room_id,
+                                        movie_screen_id,
+                                        show_date,
+                                        _temp_client_id: undefined // parent will pass this in from component; see below
+                                    });
+                                    // API returns { ok: true, row: { ... , _temp_client_id } }
+                                    if (!result?.ok) throw new Error(result?.message ?? "create failed");
+                                    return result.row;
+                                }}
                             />
                         </div>
                     )}
