@@ -115,3 +115,17 @@ export async function getMovieShowAndUpcometimeByCinemaIdAPI(
     throw error.response?.data || error;
   }
 }
+
+// search
+export async function searchMovieAPI(name: string) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/movies/search?keyword=${name}`
+    );
+
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching movies:", error);
+    throw error.response?.data || error;
+  }
+}

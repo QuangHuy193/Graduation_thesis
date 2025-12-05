@@ -16,8 +16,12 @@ import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
 import LoadingLink from "../Link/LinkLoading";
 import { useSession, signOut } from "next-auth/react";
+import { Input } from "antd";
+import { useRouter } from "next/navigation";
 
 function Header() {
+  const [valueSearch, setValueSearch] = useState("");
+  const router = useRouter();
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
   const { data: session } = useSession();
   const user = session?.user;
@@ -68,14 +72,21 @@ function Header() {
         <div className="flex items-center gap-4">
           {/* Ô tìm kiếm */}
           <div className="hidden sm:block relative ">
-            <input
-              className="bg-white rounded-2xl outline-none py-1 pl-3 w-[250px]
-               text-gray-500 placeholder-gray-400 placeholder:text-[12px]"
+            <Input
+              value={valueSearch}
+              onChange={(e) => setValueSearch(e.target.value)}
+              onPressEnter={() => router.push(`search?keyword=${valueSearch}`)}
               placeholder="Tìm phim..."
-            />
-            <FontAwesomeIcon
-              className="absolute top-1/2 right-2 -translate-y-1/2 text-black"
-              icon={faMagnifyingGlass}
+              size="small"
+              className="w-[250px]! rounded-3xl! h-10! placeholder:text-[12px]!
+              text-gray-500! placeholder-gray-400! py-1! pl-3! text-[13px]!"
+              suffix={
+                <FontAwesomeIcon
+                  icon={faMagnifyingGlass}
+                  className="text-gray-500 cursor-pointer"
+                  onClick={() => router.push(`search?keyword=${valueSearch}`)}
+                />
+              }
             />
           </div>
 

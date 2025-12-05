@@ -81,14 +81,13 @@ function MovieDetail({
   });
 
   // tính tổng số vé
-  const totalTickets = useMemo(
-    () =>
-      Object.values(state.ticketSelected).reduce(
-        (sum, item) => sum + (item?.quantity ?? 0),
-        0
-      ),
-    [state.ticketSelected]
-  );
+  const totalTickets = useMemo(() => {
+    const tickets = state.ticketSelected ?? {}; // fallback object
+    return Object.values(tickets).reduce(
+      (sum, item) => sum + (item?.quantity ?? 0),
+      0
+    );
+  }, [state.ticketSelected]);
 
   // lấy dữ liệu từ session trường hợp đặt vé nhanh
   useEffect(() => {
@@ -293,13 +292,13 @@ function MovieDetail({
     // sau đó mới reset
     setState((prev) => ({ ...prev, seatSelected: [], ticketSelected: {} }));
     if (
-      state.timesSelected.room_id === -1 ||
-      state.timesSelected.showtime_id === -1
+      state.timesSelected?.room_id === -1 ||
+      state.timesSelected?.showtime_id === -1
     ) {
       return;
     }
 
-    if (state.timesSelected.showtime_id !== -1) {
+    if (state.timesSelected?.showtime_id !== -1) {
       scrollToPosition(0, true, "select_ticket_type", 120);
     }
 
@@ -322,13 +321,13 @@ function MovieDetail({
     };
 
     if (
-      state.timesSelected.room_id !== -1 &&
-      state.timesSelected.showtime_id !== -1
+      state.timesSelected?.room_id !== -1 &&
+      state.timesSelected?.showtime_id !== -1
     ) {
-      getRoomAsile(state.timesSelected.room_id);
+      getRoomAsile(state.timesSelected?.room_id);
       getSeats(
-        state.timesSelected.room_id,
-        state.timesSelected.showtime_id,
+        state.timesSelected?.room_id,
+        state.timesSelected?.showtime_id,
         state.dateSelected
       );
     }
@@ -337,8 +336,8 @@ function MovieDetail({
   // khi date thay đổi
   useEffect(() => {
     handleUnlocks(
-      state.seatSelected.map((s) => s.seat_id),
-      state.timesSelected.showtime_id
+      state.seatSelected?.map((s) => s.seat_id),
+      state.timesSelected?.showtime_id
     );
   }, [state.dateSelected]);
 
@@ -348,8 +347,8 @@ function MovieDetail({
       scrollToPosition(0, true, "select_seat", 100, 2000);
     }
     handleUnlocks(
-      state.seatSelected.map((s) => s.seat_id),
-      state.timesSelected.showtime_id
+      state.seatSelected?.map((s) => s.seat_id),
+      state.timesSelected?.showtime_id
     );
     setState((prev) => ({ ...prev, seatSelected: [] }));
   }, [state.ticketSelected]);
@@ -393,7 +392,7 @@ function MovieDetail({
   const timerStarted = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    if (state.seatSelected.length === 0) return;
+    if (state.seatSelected?.length === 0) return;
 
     if (!timerStarted.current) {
       timerStarted.current = true;
@@ -614,7 +613,9 @@ function MovieDetail({
           </div>
           {state.watchTrailer && (
             <VideoTrailer
-              onClose={() => setState({ watchTrailer: false })}
+              onClose={() =>
+                setState((prev) => ({ ...prev, watchTrailer: false }))
+              }
               src={data[0].trailer_url}
             />
           )}
@@ -654,8 +655,8 @@ function MovieDetail({
       <div id="select_ticket_type" className="mt-16">
         {!state.isFetch ? (
           <div>
-            {state.timesSelected.showtime_id !== -1 &&
-              state.ticketTypes.length !== 0 && (
+            {state?.timesSelected?.showtime_id !== -1 &&
+              state?.ticketTypes?.length !== 0 && (
                 <>
                   {/* hiện loại vé */}
                   <div className="pb-4 pt-10">
@@ -682,7 +683,7 @@ function MovieDetail({
                     </div>
 
                     <div className="flex gap-6 justify-center">
-                      {state.ticketTypes.map((t, i) => (
+                      {state?.ticketTypes?.map((t, i) => (
                         <div key={i}>
                           <PriceCard
                             data={t}
@@ -765,7 +766,7 @@ function MovieDetail({
                     <div>
                       <FoodDrinkList
                         title="Combo"
-                        data={state.foodList.combos}
+                        data={state?.foodList?.combos}
                         setFoodSelected={(name, price, inc) => {
                           handleSelectedFood(name, price, inc);
                         }}
@@ -775,7 +776,7 @@ function MovieDetail({
                     <div>
                       <FoodDrinkList
                         title="Bắp"
-                        data={state.foodList.foods}
+                        data={state?.foodList?.foods}
                         setFoodSelected={(name, price, inc) => {
                           handleSelectedFood(name, price, inc);
                         }}
@@ -785,7 +786,7 @@ function MovieDetail({
                     <div>
                       <FoodDrinkList
                         title="Nước ngọt"
-                        data={state.foodList.drinks}
+                        data={state?.foodList?.drinks}
                         setFoodSelected={(name, price, inc) => {
                           handleSelectedFood(name, price, inc);
                         }}
@@ -810,38 +811,42 @@ function MovieDetail({
             {data[0].name} ({data[0].age_require})
           </div>
           <div className="my-1">
-            {state.timesSelected.cinema_name}
+            {state?.timesSelected?.cinema_name}
             {/* hiện vé */}
-            {Object.keys(state.ticketSelected).map((key) => (
-              <span key={key}>
-                | {state.ticketSelected[key]?.quantity} vé {key}{" "}
-              </span>
-            ))}
+            {state?.ticketSelected &&
+              Object.keys(state.ticketSelected).map((key) => (
+                <span key={key}>
+                  | {state.ticketSelected[key]?.quantity} vé {key}{" "}
+                </span>
+              ))}
           </div>
           <div className="my-1">
-            {state.timesSelected.room_name !== "" &&
-              state.timesSelected.time !== "" &&
-              state.timesSelected.room_name + " | " + state.timesSelected.time}
-            {state.seatSelected.length !== 0 &&
-              state.seatSelected.map((m) => (
+            {state.timesSelected?.room_name !== "" &&
+              state.timesSelected?.time !== "" &&
+              state.timesSelected?.room_name +
+                " | " +
+                state.timesSelected?.time}
+            {state.seatSelected?.length !== 0 &&
+              state.seatSelected?.map((m) => (
                 <span key={m.seat_id}> | {m.label}</span>
               ))}
           </div>
           <div>
-            {Object.keys(state.foodSelected).map((key, i, arr) => (
-              <span key={i}>
-                {state.foodSelected[key]?.quantity} {key}{" "}
-                {i < arr.length - 1 && ", "}
-              </span>
-            ))}
+            {state.foodSelected &&
+              Object.keys(state.foodSelected).map((key, i, arr) => (
+                <span key={i}>
+                  {state.foodSelected[key]?.quantity} {key}{" "}
+                  {i < arr.length - 1 && ", "}
+                </span>
+              ))}
           </div>
         </div>
         <div className="flex gap-3">
           <div className="text-black bg-(--color-yellow) rounded-sm px-2 py-4">
             <div className="text-sm">Thời gian giữ vé:</div>
             <div className="font-bold">
-              {state.clock.minute.toString().padStart(2, "0")}:
-              {state.clock.second.toString().padStart(2, "0")}
+              {state.clock?.minute?.toString().padStart(2, "0")}:
+              {state.clock?.second?.toString().padStart(2, "0")}
             </div>
           </div>
           <div className="flex flex-col justify-between">
@@ -851,16 +856,18 @@ function MovieDetail({
                 {
                   // tổng tiền vé
                   (
+                    state.ticketSelected &&
+                    state.foodSelected &&
                     Object.keys(state.ticketSelected).reduce((sum, key) => {
                       const item = state.ticketSelected[key];
                       return sum + item.quantity * item.price;
                     }, 0) +
-                    // tổng tiền combo / food
-                    Object.keys(state.foodSelected).reduce((sum, key) => {
-                      const item = state.foodSelected[key];
-                      return sum + item.quantity * item.price;
-                    }, 0)
-                  ).toLocaleString("vi-VN")
+                      // tổng tiền combo / food
+                      Object.keys(state.foodSelected).reduce((sum, key) => {
+                        const item = state.foodSelected[key];
+                        return sum + item.quantity * item.price;
+                      }, 0)
+                  )?.toLocaleString("vi-VN")
                 }{" "}
                 VNĐ
               </span>

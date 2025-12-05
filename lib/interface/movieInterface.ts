@@ -22,6 +22,7 @@ export interface MovieItemITF {
   country: string;
   subtitle: string;
   duration: number;
+  trailer_url: string;
   genres: string[];
 }
 export interface MoviePayload {

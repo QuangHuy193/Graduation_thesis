@@ -7,16 +7,22 @@ import {
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons";
 import Button from "../Button/Button";
+import VideoTrailer from "../VideoTrailer/VideoTrailer";
 
 function MovieList({
   data,
   title,
+  more = true,
   link = "",
 }: {
   data: MovieItemITF[];
   title: string;
   link: string;
 }) {
+  const [trailer, setTrailer] = useState({
+    open: false,
+    url: "",
+  });
   const [page, setPage] = useState(0);
   const pageSize = 4;
 
@@ -33,6 +39,13 @@ function MovieList({
 
   return (
     <div>
+      {trailer.open && trailer.url !== "" && (
+        <VideoTrailer
+          src={trailer.url}
+          onClose={() => setTrailer((prev) => ({ ...prev, open: false }))}
+        />
+      )}
+
       <div className="w-full flex justify-center py-7 text-4xl font-bold">
         {title}
       </div>
@@ -64,7 +77,15 @@ function MovieList({
                     <div className="grid grid-cols-4 gap-6">
                       {slice.map((movie) => (
                         <div key={movie.movie_id}>
-                          <MovieItem data={movie} />
+                          <MovieItem
+                            data={movie}
+                            setUrl={(url) =>
+                              setTrailer((prev) => ({ ...prev, url: url }))
+                            }
+                            setOpenTrailer={(flag) =>
+                              setTrailer((prev) => ({ ...prev, open: flag }))
+                            }
+                          />
                         </div>
                       ))}
                     </div>
@@ -102,17 +123,19 @@ function MovieList({
       </div>
 
       <div className="w-full flex justify-center pt-3 pb-5">
-        <Button
-          text="XEM THÊM"
-          bg_color="transparent"
-          text_color="--color-yellow"
-          border="var(--color-yellow) 1px solid"
-          p_l_r="80px"
-          text_size="15px"
-          hover_text_color="--color-white"
-          hover_bg_color="#FF9933"
-          link={link}
-        />
+        {more && (
+          <Button
+            text="XEM THÊM"
+            bg_color="transparent"
+            text_color="--color-yellow"
+            border="var(--color-yellow) 1px solid"
+            p_l_r="80px"
+            text_size="15px"
+            hover_text_color="--color-white"
+            hover_bg_color="#FF9933"
+            link={link}
+          />
+        )}
       </div>
     </div>
   );

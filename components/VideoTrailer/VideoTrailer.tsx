@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 function VideoTrailer({ onClose, src }: { onClose: () => void; src: string }) {
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-99">
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-20">
       {/* Khung video */}
       <div className="w-[90%] max-w-3xl">
         {/* Nút đóng */}
@@ -17,7 +17,7 @@ function VideoTrailer({ onClose, src }: { onClose: () => void; src: string }) {
             <FontAwesomeIcon icon={faX} />
           </button>
         </div>
-        <div className=" aspect-video rounded-lg overflow-hidden shadow-lg">
+        <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
           <iframe
             src={src}
             title="Trailer"

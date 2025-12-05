@@ -1,3 +1,4 @@
+"use client";
 import { MovieItemITF } from "@/lib/interface/movieInterface";
 import Image from "next/image";
 import WatchTrailer from "../Button/WatchTrailer";
@@ -11,8 +12,19 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MovieItem.module.scss";
 import LoadingLink from "../Link/LinkLoading";
+import { useState } from "react";
+import VideoTrailer from "../VideoTrailer/VideoTrailer";
 
-function MovieItem({ data }: { data: MovieItemITF }) {
+function MovieItem({
+  data,
+  setUrl,
+  setOpenTrailer,
+}: {
+  data: MovieItemITF;
+  setUrl: (url: string) => void;
+  setOpenTrailer: (flag: boolean) => void;
+}) {
+  const [isTrailer, setIstrailer] = useState(false);
   return (
     <div className="h-full relative">
       <div className="relative group">
@@ -92,9 +104,16 @@ function MovieItem({ data }: { data: MovieItemITF }) {
         </LoadingLink>
       </div>
       <div className="flex gap-2 pb-5 absolute left-0 right-0 bottom-0">
-        <div className="flex-1">
+        <div
+          className="flex-1"
+          onClick={() => {
+            setUrl(data.trailer_url);
+            setOpenTrailer(true);
+          }}
+        >
           <WatchTrailer size="s" />
         </div>
+
         <div className="flex-1">
           <Button text="ĐẶT VÉ" wfull={true} link={`/movie/${data.movie_id}`} />
         </div>

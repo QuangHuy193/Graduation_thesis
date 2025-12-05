@@ -162,8 +162,8 @@ function ShowTime({
       }
     };
 
-    if (timeSelected.showtime_id !== -1) {
-      getTicketType(timeSelected.showtime_id, selected.dateSelected);
+    if (timeSelected?.showtime_id !== -1) {
+      getTicketType(timeSelected?.showtime_id, selected?.dateSelected);
     }
   }, [selected.dateSelected, timeSelected]);
 

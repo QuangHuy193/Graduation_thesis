@@ -9,7 +9,7 @@ function InfoBooking() {
   const router = useRouter();
   const [bookingData, setBookingData] = useState(null);
   const [state, setState] = useState({
-    clock: { minute: 5, second: 0 },
+    clock: { minute: 50, second: 0 },
   });
 
   const lockSeat = async (seats, showtime_id) => {
