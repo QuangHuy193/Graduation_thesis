@@ -35,14 +35,7 @@ type MoveItemInput =
         movie_id?: number | null;
         status?: "active" | "inactive";
     }
-    | {
-        showtime_id: number;
-        show_date: string;
-        to_room: number | null;
-        movie_id?: number | null;
-        to_movie_screen_id?: number | null;
-        status?: "active" | "inactive";
-    };
+    ;
 
 export async function POST(request: Request) {
     try {
@@ -130,54 +123,6 @@ export async function POST(request: Request) {
 
                     const [freshRows] = await conn.query(`SELECT * FROM showtime_days WHERE id = ?`, [m.showtime_day_id]);
                     results.push({ ok: true, action: "updated", row: (freshRows as any[])[0] });
-                } else {
-                    // showtime_id branch (validated already)
-                    const m = raw as Extract<MoveItemInput, { showtime_id: number }>;
-
-                    // attempt to infer movie_id if not provided
-                    let movieId = typeof m.movie_id !== "undefined" ? m.movie_id : null;
-                    if (movieId === null) {
-                        const [srows] = await conn.query(`SELECT movie_id FROM showtime WHERE id = ? LIMIT 1`, [m.showtime_id]);
-                        const s = (srows as any[])[0];
-                        if (s) movieId = s.movie_id ?? null;
-                    }
-
-                    const insertCols = ["showtime_id", "show_date", "room_id", "movie_screen_id", "movie_id", "status", "created_at", "updated_at"];
-                    const insertPlaceholders = insertCols.map(() => "?").join(", ");
-                    const insertValues = [
-                        m.showtime_id,
-                        m.show_date,
-                        m.to_room,
-                        typeof m.to_movie_screen_id !== "undefined" ? m.to_movie_screen_id : null,
-                        movieId,
-                        typeof m.status !== "undefined" ? m.status : "active",
-                        new Date(),
-                        new Date(),
-                    ];
-
-                    const dupUpdates = [
-                        "room_id = VALUES(room_id)",
-                        "movie_screen_id = VALUES(movie_screen_id)",
-                        "movie_id = VALUES(movie_id)",
-                        "status = VALUES(status)",
-                        "updated_at = NOW()",
-                    ].join(", ");
-
-                    await conn.query(
-                        `INSERT INTO showtime_days (${insertCols.join(", ")}) VALUES (${insertPlaceholders}) ON DUPLICATE KEY UPDATE ${dupUpdates}`,
-                        insertValues
-                    );
-
-                    const [foundRows] = await conn.query(
-                        `SELECT sd.* FROM showtime_days sd WHERE sd.showtime_id = ? AND sd.show_date = ? LIMIT 1`,
-                        [m.showtime_id, m.show_date]
-                    );
-                    const row = (foundRows as any[])[0] ?? null;
-                    if (!row) {
-                        results.push({ ok: false, reason: "not_found_after_upsert", input: m });
-                    } else {
-                        results.push({ ok: true, action: "upserted", row });
-                    }
                 }
             } // end for
 

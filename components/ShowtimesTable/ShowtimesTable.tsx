@@ -166,13 +166,13 @@ export default function ShowtimeTimetable({
       setState(prev => { const copy = [...prev]; copy[idx] = updated; return copy; });
       setPending(prev => ({ ...prev, [d.id]: { showtime_day_id: d.id, from_slot: old.movie_screen_id, to_slot: slotId, updated } }));
     } else {
-      if (!activeDate) return;
+      if (!activeDate) { dragData.current = null; return; }
       const tempId = genTempId();
       // newShow: temporary optimistic record
       const newShow: ShowtimeDay = {
         id: tempId,
-        showtime_id: 0, // placeholder; server will return real showtime_id
-        movie_id: d.movie_id || null,
+        showtime_id: 0, // placeholder; server will return real showtime_id on commit
+        movie_id: d.movie_id ?? null,
         room_id: roomId,
         show_date: activeDate,
         movie_title: d.movie_name ?? null,
@@ -180,7 +180,7 @@ export default function ShowtimeTimetable({
         movie_screen_id: slotId,
       };
 
-      // optimistic insert
+      // optimistic insert (same as before)
       setState(prev => {
         const copy = [...prev, newShow].sort((a, b) => {
           if (a.show_date < b.show_date) return -1;
@@ -191,53 +191,14 @@ export default function ShowtimeTimetable({
         });
         return copy;
       });
-      setPending(prev => ({ ...prev, [tempId]: { showtime_day_id: tempId, from_slot: null, to_slot: slotId, updated: newShow } }));
 
-      if (onAdd) {
-        try {
-          const serverObj = await onAdd({
-            movie_id: d.movie_id,
-            room_id: roomId,
-            movie_screen_id: slotId,
-            show_date: activeDate,
-            _temp_client_id: tempId,
-          });
+      // <-- IMPORTANT: only add to pending, DO NOT call onAdd() here
+      setPending(prev => ({
+        ...prev,
+        [tempId]: { showtime_day_id: tempId, from_slot: null, to_slot: slotId, updated: newShow }
+      }));
 
-          // ensure serverObj exists and has id
-          if (!serverObj || typeof (serverObj as any).id !== "number") {
-            // revert optimistic
-            setState(prev => prev.filter(p => p.id !== tempId));
-            setPending(prev => { const cp = { ...prev }; delete cp[tempId]; return cp; });
-            throw new Error("Invalid server response from onAdd");
-          }
-
-          // replace temp with server row
-          setState(prev => prev.map(p => (p.id === tempId ? serverObj : p)));
-
-          setPending(prev => {
-            const copy = { ...prev };
-            const item = copy[tempId];
-            if (!item) return copy;
-            delete copy[tempId];
-            copy[serverObj.id] = {
-              showtime_day_id: serverObj.id,
-              from_slot: null,
-              to_slot: slotId,
-              updated: serverObj,
-            };
-            return copy;
-          });
-        } catch (err) {
-          console.error("onAdd failed:", err);
-          // revert optimistic
-          setState(prev => prev.filter(p => p.id !== tempId));
-          setPending(prev => { const cp = { ...prev }; delete cp[tempId]; return cp; });
-          // optionally rethrow so caller (parent) can show toast
-          throw err;
-        }
-      }
     }
-
     dragData.current = null;
   };
 
@@ -306,7 +267,7 @@ export default function ShowtimeTimetable({
                                   <div className="text-xs text-gray-600 mb-1">{slot.start_time} – {slot.end_time}</div>
                                   {existing ? (
                                     <div className="p-2 bg-white border rounded cursor-move" draggable onDragStart={(e) => handleDragStart(e, existing)} onClick={() => onSelect?.(existing)}>
-                                      <div className="font-medium">{existing.movie_title ?? `Phim #${existing.movie_id}`}</div>
+                                      <div className="font-medium">{existing.movie_title}</div>
                                     </div>
                                   ) : (
                                     <div className="text-xs text-gray-400 italic">(Trống)</div>
