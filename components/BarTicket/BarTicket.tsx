@@ -122,7 +122,7 @@ function BarTicket() {
     const getDataTime = async (
       movie_id: number,
       cinema_id: number,
-      date: Date
+      showtime_id: number
     ) => {
       try {
         setState((prev) => ({
@@ -132,7 +132,7 @@ function BarTicket() {
         const res = await getTimeInShowtimeByCinemaMovieDateAPI(
           movie_id,
           cinema_id,
-          date
+          showtime_id
         );
         setState((prev) => ({ ...prev, timeList: res }));
       } catch (error) {

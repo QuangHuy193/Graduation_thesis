@@ -6,9 +6,11 @@ import {
   getMovieShowAndUpcometimeByCinemaIdAPI,
 } from "@/lib/axios/movieAPI";
 import MovieListInCinema from "../MovieListInCinema/MovieListInCinema";
+import Spinner from "../Spinner/Spinner";
 
 function CinemaPage({ cinema_id }: { cinema_id: number }) {
   const [state, setState] = useState({
+    isFetch: false,
     tab: 0,
     movieList: [],
   });
@@ -16,19 +18,25 @@ function CinemaPage({ cinema_id }: { cinema_id: number }) {
   useEffect(() => {
     const getMovieShowing = async (id: number) => {
       try {
+        setState((prev) => ({ ...prev, isFetch: true }));
         const res = await getMovieShowAndShowtimeByCinemaIdAPI(id);
         setState((prev) => ({ ...prev, movieList: res }));
       } catch (error) {
         console.log(error);
+      } finally {
+        setState((prev) => ({ ...prev, isFetch: false }));
       }
     };
 
     const getMovieUpcoming = async (id: number) => {
       try {
+        setState((prev) => ({ ...prev, isFetch: true }));
         const res = await getMovieShowAndUpcometimeByCinemaIdAPI(id);
         setState((prev) => ({ ...prev, movieList: res }));
       } catch (error) {
         console.log(error);
+      } finally {
+        setState((prev) => ({ ...prev, isFetch: false }));
       }
     };
 
@@ -74,7 +82,11 @@ function CinemaPage({ cinema_id }: { cinema_id: number }) {
       {/* content */}
       <div>
         {/* ds phim */}
-        {(state.tab === 0 || state.tab === 1) && (
+        {(state.tab === 0 || state.tab === 1) && state.isFetch ? (
+          <div className="py-10">
+            <Spinner />
+          </div>
+        ) : (
           <MovieListInCinema
             data={state.movieList}
             text={

@@ -90,6 +90,8 @@ function MovieListInCinema({ data, text }) {
                           {date.showtimes?.length > 0 &&
                             date.showtimes.map((s, ind) => (
                               <div
+                                // TODO thêm tương tự đặt vé nhanh
+                                onClick={() => console.log("aa")}
                                 key={ind}
                                 className="border border-gray-400 rounded-sm px-2 py-1
                                   hover:text-(--color-yellow) hover:border-(--color-yellow)

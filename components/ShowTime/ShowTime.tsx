@@ -149,10 +149,10 @@ function ShowTime({
 
   useEffect(() => {
     // gọi api lấy ds loại vé và giá theo showtime và ngày
-    const getTicketType = async (showtime_id: number, day: number) => {
+    const getTicketType = async (showtime_id: number) => {
       isFetch(true);
       try {
-        const res = await getTicketTypeByShowtimeDateAPI(showtime_id, day);
+        const res = await getTicketTypeByShowtimeDateAPI(showtime_id);
 
         setTicketTypes(res);
       } catch (error) {
@@ -163,7 +163,7 @@ function ShowTime({
     };
 
     if (timeSelected?.showtime_id !== -1) {
-      getTicketType(timeSelected?.showtime_id, selected?.dateSelected);
+      getTicketType(timeSelected?.showtime_id);
     }
   }, [selected.dateSelected, timeSelected]);
 

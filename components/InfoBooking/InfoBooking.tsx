@@ -3,19 +3,27 @@ import styles from "./InfoBooking.module.scss";
 import Spinner from "../Spinner/Spinner";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
-import { lockSeatAPI } from "@/lib/axios/seatsAPI";
+import { lockSeatAPI, unlocksSeatAPI } from "@/lib/axios/seatsAPI";
 
 function InfoBooking() {
   const router = useRouter();
   const [bookingData, setBookingData] = useState(null);
   const [state, setState] = useState({
-    clock: { minute: 50, second: 0 },
+    clock: { minute: 5, second: 0 },
   });
 
   const lockSeat = async (seats, showtime_id) => {
     for (const seat of seats) {
-      console.log("lock: ", seat.seat_id, showtime_id);
       await lockSeatAPI(seat.seat_id, showtime_id);
+    }
+  };
+
+  // unlock ghế
+  const unlockSeats = async (seats, showtime_id) => {
+    try {
+      await unlocksSeatAPI(seats, showtime_id);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -24,44 +32,65 @@ function InfoBooking() {
     if (data) {
       const dataString = JSON.parse(data);
       setBookingData(dataString);
+      console.log(dataString);
       lockSeat(dataString.seats, dataString.showtime_id);
     }
 
+    // --- SETUP TIMER ---
+    let expireTime = sessionStorage.getItem("expireTime");
+
+    if (!expireTime) {
+      // Lần đầu vào: tạo thời gian hết hạn mới
+      expireTime = Date.now() + 5 * 60 * 1000; // 5 phút
+      sessionStorage.setItem("expireTime", expireTime);
+    } else {
+      expireTime = Number(expireTime);
+    }
+
     const timer = setInterval(() => {
-      // bật đếm giờ
-      setState((prev) => {
-        let { minute, second } = prev.clock;
-        if (minute === 0 && second === 0) {
-          clearInterval(timer);
-          Swal.fire({
-            title: "LƯU Ý!",
-            text: "Đã hết thời gian giữ vé, vui lòng thao tác lại!",
-            confirmButtonText: "ĐỒNG Ý",
-            buttonsStyling: false,
-            allowOutsideClick: false,
-            customClass: {
-              popup: "popup_alert",
-              confirmButton: "btn_alert",
-            },
-          }).then((result: any) => {
-            if (result.isConfirmed) {
-              router.back();
-            }
-          });
-          return prev;
-        }
+      const now = Date.now();
+      const diff = expireTime - now;
 
-        if (second > 0) {
-          second -= 1;
-        } else {
-          second = 59;
-          minute -= 1;
-        }
+      // Hết giờ
+      if (diff <= 0) {
+        clearInterval(timer);
+        unlockSeats(
+          bookingData?.seats?.map((s) => s.seat_id) || [],
+          bookingData?.showtime_id || -1
+        );
+        sessionStorage.removeItem("expireTime");
 
-        return { ...prev, clock: { minute, second } };
-      });
+        Swal.fire({
+          title: "LƯU Ý!",
+          text: "Đã hết thời gian giữ vé, vui lòng thao tác lại!",
+          confirmButtonText: "ĐỒNG Ý",
+          buttonsStyling: false,
+          allowOutsideClick: false,
+          customClass: {
+            popup: "popup_alert",
+            confirmButton: "btn_alert",
+          },
+        }).then((result) => {
+          if (result.isConfirmed) router.back();
+        });
+
+        return;
+      }
+
+      const minute = Math.floor(diff / 1000 / 60);
+      const second = Math.floor((diff / 1000) % 60);
+
+      setState({ clock: { minute, second } });
     }, 1000);
-    return () => clearInterval(timer);
+
+    return () => {
+      clearInterval(timer);
+      unlockSeats(
+        bookingData?.seats?.map((s) => s.seat_id) || [],
+        bookingData?.showtime_id || -1
+      );
+      sessionStorage.removeItem("expireTime");
+    };
   }, []);
 
   if (bookingData === null) {

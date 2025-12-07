@@ -16,8 +16,8 @@ export async function GET(req: Request) {
       JOIN movies m ON st.movie_id = m.movie_id
       JOIN rooms r ON r.room_id = st.room_id
       JOIN cinemas c ON c.cinema_id = r.cinema_id
-      WHERE st.movie_id = ? AND ? >= st.start_date AND ? <= st.end_date AND ms.movie_screen_id = ?`,
-      [movie_id, date, date, time]
+      WHERE st.movie_id = ? AND st.date = ? AND ms.movie_screen_id = ?`,
+      [movie_id, date, time]
     );
 
     const data = rows?.map((d) => {

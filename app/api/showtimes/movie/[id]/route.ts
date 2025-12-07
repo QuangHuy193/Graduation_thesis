@@ -28,7 +28,7 @@ export async function GET(
 
   try {
     const [rows] = await db.query(
-      `SELECT s.showtime_id, s.start_date, s.end_date, s.movie_id,
+      `SELECT s.showtime_id, s.date, s.movie_id,
               JSON_ARRAYAGG(ms.start_time) AS start_time,
               c.cinema_id, c.name AS cinema_name, c.specific_address, c.ward, c.province,
               r.room_id, r.name AS room_name
@@ -37,12 +37,11 @@ export async function GET(
        JOIN rooms r ON s.room_id = r.room_id
        JOIN cinemas c ON c.cinema_id = r.cinema_id
        WHERE s.status = 1
-         AND DATE(s.start_date) <= ?
-         AND DATE(s.end_date) >= ?
+         AND DATE(s.date) = ?
          AND s.movie_id = ?
        GROUP BY s.showtime_id, c.cinema_id, r.room_id
-       ORDER BY c.cinema_id, r.room_id, s.start_date`,
-      [date, date, id]
+       ORDER BY c.cinema_id, r.room_id`,
+      [date, id]
     );
 
     const cinemasMap = new Map<string | number, any>();

@@ -311,9 +311,9 @@ function MovieDetail({
       }
     };
 
-    const getSeats = async (room: number, showtime: number, date: number) => {
+    const getSeats = async (room: number, showtime: number) => {
       try {
-        const res = await getSeatsWithRoomShowtimeAPI(room, showtime, date);
+        const res = await getSeatsWithRoomShowtimeAPI(room, showtime);
         setState((prev) => ({ ...prev, seats: res }));
       } catch (error) {
         console.log(error);
@@ -325,11 +325,7 @@ function MovieDetail({
       state.timesSelected?.showtime_id !== -1
     ) {
       getRoomAsile(state.timesSelected?.room_id);
-      getSeats(
-        state.timesSelected?.room_id,
-        state.timesSelected?.showtime_id,
-        state.dateSelected
-      );
+      getSeats(state.timesSelected?.room_id, state.timesSelected?.showtime_id);
     }
   }, [state.timesSelected]);
 

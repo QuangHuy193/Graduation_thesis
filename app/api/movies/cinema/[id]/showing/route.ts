@@ -12,32 +12,23 @@ export async function GET(
       return errorResponse("Thiếu cinema_id", 400);
     }
 
-    // chỉ lấy 2 ngày
+    // Lấy lịch chiếu trong 2 ngày: hôm nay + ngày mai
     const [rows] = await db.query(
       `
-      WITH RECURSIVE days AS (
-        SELECT CURDATE() AS d
-        UNION ALL
-        SELECT DATE_ADD(d, INTERVAL 1 DAY)
-        FROM days
-        WHERE d < DATE_ADD(CURDATE(), INTERVAL 1 DAY)   -- chỉ lấy đúng 2 ngày
-      )
       SELECT 
-        m.movie_id, 
-        m.name, 
-        m.duration, 
+        m.movie_id,
+        m.name,
+        m.duration,
         m.age_require,
         MAX(img.url) AS image,
-        c1.name AS country, 
+        c1.name AS country,
         c2.language AS subtitle,
         GROUP_CONCAT(DISTINCT g.name) AS genre,
         s.showtime_id,
+        s.date,                 
         mc.start_time,
-        mc.movie_screen_id,
-        days.d AS date
-      FROM days
-      JOIN showtime s 
-        ON days.d BETWEEN s.start_date AND s.end_date
+        mc.movie_screen_id
+      FROM showtime s
       JOIN movies m ON m.movie_id = s.movie_id
       JOIN images img ON img.movie_id = m.movie_id
       JOIN movie_screenings mc ON mc.movie_screen_id = s.movie_screen_id
@@ -47,20 +38,24 @@ export async function GET(
       JOIN genres g ON g.genre_id = mg.genre_id
       JOIN country c1 ON m.country_id = c1.country_id
       JOIN country c2 ON m.subtitle_id = c2.country_id
-      WHERE c.cinema_id = ? AND m.status = 1 AND s.status = 1
+      WHERE 
+        c.cinema_id = ? 
+        AND m.status = 1 
+        AND s.status = 1
+        AND s.date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 DAY)
       GROUP BY 
         m.movie_id, 
         s.showtime_id, 
-        days.d
+        s.date
       `,
       [id]
     );
 
     // group dữ liệu
-    const movies = {};
+    const movies: any = {};
 
-    for (const r of rows) {
-      // movie
+    for (const r of rows as any[]) {
+      // group theo movie
       if (!movies[r.movie_id]) {
         movies[r.movie_id] = {
           movie_id: r.movie_id,
@@ -77,12 +72,11 @@ export async function GET(
         };
       }
 
-      // date
+      // group theo date
       if (!movies[r.movie_id].dates[r.date]) {
         movies[r.movie_id].dates[r.date] = [];
       }
 
-      // showtimes
       movies[r.movie_id].dates[r.date].push({
         movie_screen_id: r.movie_screen_id,
         showtime_id: r.showtime_id,
@@ -91,7 +85,7 @@ export async function GET(
     }
 
     // convert object → array
-    const result = Object.values(movies).map((m) => ({
+    const result = Object.values(movies).map((m: any) => ({
       ...m,
       dates: Object.entries(m.dates).map(([date, showtimes]) => ({
         date,
