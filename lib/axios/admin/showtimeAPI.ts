@@ -73,27 +73,15 @@ export async function commitShowtimeMoves(moves: MovePayloadItem[] | Record<stri
 
 
 
-// lib/api/showtimeDays.ts
 
 
-export async function getShowtimeDays(from: string, to: string) {
-    const url = `/api/admin/showtime/getRangeShowtime?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-
-    const res = await axiosInstance.get(url);
-    // API đang trả dạng { success, message, data: { data: [], total }, status }
-    // nên bạn lấy res.data.data.data để ra mảng showtime_day
-    return res.data.data.data;
-}
-// lib/axios/admin/showtimeAPI.ts (append)
 
 
 export async function createShowtimeWithDay(payload: {
     movie_id: number;
     room_id: number;
     movie_screen_id: number;
-    show_date: string;
-    start_date?: string;
-    end_date?: string;
+    date: string;
     reuse_showtime?: boolean;
     _temp_client_id?: number;
 }) {

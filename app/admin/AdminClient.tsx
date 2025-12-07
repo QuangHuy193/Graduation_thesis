@@ -172,164 +172,179 @@ export default function AdminDashboard() {
             // Normalize moves -> lấy updated object u
             const normalized = moves.map(m => ({ pending: m, u: m.updated as any }));
 
-            // Separate creates vs updates:
-            // - Create if not have server id and not have master showtime_id
-            // - Update if have u.id > 0 (server id) OR u.showtime_id > 0 (master)
-            const creates = normalized.filter(x => {
+            // Partition: those that already have server-id vs those that are temp (no server id)
+            const withServerId = normalized.filter(x => {
                 const u = x.u;
-                const hasServerId = typeof u?.id === "number" && u.id > 0;
-                const hasMaster = typeof u?.showtime_id === "number" && u.showtime_id > 0;
-                return !hasServerId && !hasMaster;
+                return (typeof u?.showtime_id === "number" && u.showtime_id > 0)
+                    || (typeof u?.id === "number" && u.id > 0); // fallback if client used `id`
             });
-            const updates = normalized.filter(x => {
-                const u = x.u;
-                const hasServerId = typeof u?.id === "number" && u.id > 0;
-                const hasMaster = typeof u?.showtime_id === "number" && u.showtime_id > 0;
-                return hasServerId || hasMaster;
-            });
+            const withoutServerId = normalized.filter(x => !withServerId.includes(x));
 
-            // 1) Create all new showtimes (if any)
-            const tempMap = new Map<number, any>(); // tempId -> serverRow
-            if (creates.length > 0) {
-                // Prepare create calls
-                const createCalls = creates.map(async ({ u }) => {
-                    // build payload for createShowtimeWithDay
-                    const payload: any = {
+            // Step A: create all temp items (if any). We'll map tempId -> serverRow
+            const tempMap = new Map<number, any>(); // tempId -> server row
+            if (withoutServerId.length > 0) {
+                // Create in sequence to avoid race conditions on unique constraints (you can change to Promise.all if safe)
+                for (const item of withoutServerId) {
+                    const u = item.u;
+                    // Determine client's temp id (how you stored it). Common patterns: negative showtime_id or id
+                    const tempId = Number(u.showtime_id ?? u.id ?? NaN);
+                    if (!Number.isFinite(tempId)) {
+                        console.warn("Skipping create: missing temp id on item", item);
+                        continue;
+                    }
+
+                    // Build create payload consistent with your create API (we changed API to operate on `showtime`)
+                    const createPayload = {
                         movie_id: u.movie_id ?? null,
-                        room_id: u.room_id ?? u.to_room ?? null,
-                        movie_screen_id: u.movie_screen_id ?? u.movieScreenId ?? null,
-                        show_date: u.show_date ?? u.showDate ?? null,
-                        // send temp id so backend can echo it if supported
-                        _temp_client_id: u.id ?? null,
+                        room_id: u.room_id ?? null,
+                        movie_screen_id: u.movie_screen_id ?? null,
+                        date: u.date ?? u.show_date ?? null, // YYYY-MM-DD
+                        reuse_showtime: false, // prefer to create a unique showtime for this temp slot
+                        _temp_client_id: tempId,
+                        status: typeof u.status === "number" ? u.status : (u.status === "active" ? 1 : 1),
                     };
-                    if (u.start_time ?? u.screening_start) payload.screening_start = u.start_time ?? u.screening_start;
-                    if (u.end_time ?? u.screening_end) payload.screening_end = u.end_time ?? u.screening_end;
-                    if (typeof u.status === "string") payload.status = u.status;
 
-                    // call create API (wrap with your existing wrapper createShowtimeWithDay)
-                    const res = await createShowtimeWithDay(payload);
+                    const res = await createShowtimeWithDay(createPayload);
                     if (!res?.ok) {
+                        // If create fails, bubble up so UI can handle conflict or other problems
                         const err: any = new Error(res?.message ?? "createShowtimeWithDay failed");
                         err.response = { data: res };
                         throw err;
                     }
-                    // server row expected in res.row (adjust if your API returns differently)
-                    const row = res.row ?? res;
-                    return { tempId: u.id, serverRow: row };
-                });
 
-                // Run creates in parallel. If any throws, we go to catch.
-                const created = await Promise.all(createCalls);
+                    // Expect server returns res.row with showtime_id (or id). Normalize it.
+                    const serverRow = res.row ?? null;
+                    if (!serverRow) {
+                        console.warn("createShowtimeWithDay returned no row for tempId", tempId, res);
+                        continue;
+                    }
 
-                // Fill tempMap
-                for (const c of created) {
-                    if (c?.tempId != null) tempMap.set(Number(c.tempId), c.serverRow);
-                    else if (c?.serverRow?._temp_client_id != null) tempMap.set(Number(c.serverRow._temp_client_id), c.serverRow);
+                    // Normalize serverRow to include showtime_id and date fields
+                    const normalizedServerRow = {
+                        ...serverRow,
+                        showtime_id: Number(serverRow.showtime_id ?? serverRow.id ?? serverRow.insertId ?? NaN),
+                        date: serverRow.date ?? serverRow.show_date ?? serverRow.showDate ?? createPayload.date,
+                    };
+
+                    if (!Number.isFinite(normalizedServerRow.showtime_id)) {
+                        console.warn("Created server row has no showtime_id:", serverRow);
+                    }
+
+                    tempMap.set(tempId, normalizedServerRow);
                 }
             }
 
-            // 2) Build payloadMoves for commitShowtimeMoves
+            // Step B: build payloadMoves for commitShowtimeMoves
+            // For each normalized move, prefer server id resolved from tempMap (if was temp), else use existing showtime_id
             const payloadMoves: any[] = normalized.map(({ pending, u }) => {
-                // If this was a temp we just created -> convert to showtime_day_id using tempMap
-                const isTemp = !(typeof u?.id === "number" && u.id > 0) && !(typeof u?.showtime_id === "number" && u.showtime_id > 0);
-                if (isTemp && tempMap.has(u.id)) {
-                    const serverRow = tempMap.get(u.id);
+                // If temp and created, use created server id
+                const clientTempId = Number(u.showtime_id ?? u.id ?? NaN);
+                if (tempMap.has(clientTempId)) {
+                    const server = tempMap.get(clientTempId);
                     return {
-                        showtime_day_id: serverRow.id,
-                        show_date: serverRow.show_date ?? serverRow.showDate ?? null,
-                        to_room: serverRow.room_id ?? serverRow.to_room ?? null,
-                        to_movie_screen_id: serverRow.movie_screen_id ?? serverRow.movieScreenId ?? null,
-                        movie_id: serverRow.movie_id ?? null,
-                        status: serverRow.status ?? "active",
+                        showtime_id: server.showtime_id,
+                        date: server.date,
+                        to_room: server.room_id ?? u.room_id ?? u.to_room ?? null,
+                        to_movie_screen_id: server.movie_screen_id ?? u.movie_screen_id ?? u.movieScreenId ?? null,
+                        movie_id: server.movie_id ?? u.movie_id ?? u.movieId ?? null,
+                        status: typeof server.status === "number" ? server.status : (u.status === "active" ? 1 : u.status ?? 1),
                     };
                 }
 
-                // Existing or master upsert case (same logic bạn đang dùng)
-                const common: any = {
-                    show_date: u.show_date ?? u.showDate ?? null,
+                // not a temp
+                const stId = (typeof u.showtime_id === "number" && u.showtime_id > 0) ? u.showtime_id
+                    : ((typeof u.id === "number" && u.id > 0) ? u.id : null);
+
+                const date = u.date ?? u.show_date ?? u.showDate ?? null;
+
+                let status: number | null = null;
+                if (typeof u.status === "number") status = u.status;
+                else if (u.status === "active" || u.status === true) status = 1;
+                else if (u.status === "inactive" || u.status === false) status = 0;
+
+                return {
+                    showtime_id: stId,
+                    date,
                     to_room: u.room_id ?? u.to_room ?? null,
                     to_movie_screen_id: u.movie_screen_id ?? u.movieScreenId ?? null,
                     movie_id: u.movie_id ?? u.movieId ?? null,
-                    status: u.status ?? "active",
-                };
-
-                if (typeof u.id === "number" && u.id > 0) {
-                    return { showtime_day_id: u.id, ...common };
-                }
-
-                if (typeof u.showtime_id === "number" && u.showtime_id > 0) {
-                    return { showtime_id: u.showtime_id, ...common };
-                }
-
-                // Fallback: send as create-like payload with _temp_client_id (if backend supports)
-                return {
-                    showtime_id: null,
-                    _temp_client_id: u.id ?? null,
-                    ...common,
-                    screening_start: u.start_time ?? u.screening_start,
-                    screening_end: u.end_time ?? u.screening_end,
+                    status,
                 };
             });
 
-            // 3) Call commitShowtimeMoves with payloadMoves
-            const data = await commitShowtimeMoves(payloadMoves);
+            // Filter out any moves that still don't have showtime_id (shouldn't happen but be defensive)
+            const filteredPayload = payloadMoves.filter(pm => typeof pm.showtime_id === "number" && pm.showtime_id > 0);
+
+            if (filteredPayload.length === 0) {
+                Swal.fire({ icon: "warning", title: "Không có thay đổi để lưu", text: "Không có showtime_id hợp lệ để commit." });
+                // Optionally refresh to canonical state
+                await fetchShowtimes();
+                return { ok: true, message: "No server-side moves to commit" };
+            }
+
+            // Step C: call commitShowtimeMoves to apply updates in batch
+            const data = await commitShowtimeMoves(filteredPayload);
             if (!data?.ok) {
-                const err: any = new Error(data?.message ?? "move-batch failed");
+                const err: any = new Error(data?.message ?? "commitShowtimeMoves failed");
                 err.response = { data };
                 throw err;
             }
 
-            // 4) Merge response into client state (giống logic bạn có)
+            // Step D: merge server response into client state
             const results = data.results ?? data.updated ?? data.rows ?? null;
             if (Array.isArray(results)) {
-                setShowtimes((prev) => {
+                setShowtimes(prev => {
                     const prevMap = new Map<number, ShowtimeDay>();
-                    for (const p of prev) prevMap.set(Number((p as any).id), p);
+                    for (const p of prev) {
+                        const key = Number((p as any).showtime_id ?? (p as any).id ?? NaN);
+                        if (Number.isFinite(key)) prevMap.set(key, p);
+                    }
 
                     for (const r of results) {
-                        const rid = Number(r.id ?? r.showtime_day_id ?? r.row_id ?? NaN);
+                        const rid = Number(r.showtime_id ?? r.id ?? NaN);
                         if (Number.isFinite(rid)) {
                             prevMap.set(rid, { ...(prevMap.get(rid) ?? ({} as any)), ...(r as any) });
                         } else if (r._temp_client_id) {
+                            // handle mapping if server returned mapping rows
                             const tempId = Number(r._temp_client_id);
-                            for (const [k, v] of prevMap.entries()) {
-                                if ((v as any).id === tempId) prevMap.delete(k);
+                            const serverId = Number(r.showtime_id ?? r.id ?? NaN);
+                            if (Number.isFinite(tempId) && Number.isFinite(serverId)) {
+                                // remove temp entries if any keyed by tempId
+                                for (const [k, v] of prevMap.entries()) {
+                                    if ((v as any).temp_id === tempId || (v as any).id === tempId) prevMap.delete(k);
+                                }
+                                prevMap.set(serverId, r as any);
                             }
-                            const serverId = Number(r.id);
-                            if (Number.isFinite(serverId)) prevMap.set(serverId, r as any);
                         }
                     }
 
                     const out = Array.from(prevMap.values());
                     out.sort((a, b) => {
-                        if (a.show_date < b.show_date) return -1;
-                        if (a.show_date > b.show_date) return 1;
-                        if (a.room_id < b.room_id) return -1;
-                        if (a.room_id > b.room_id) return 1;
+                        if ((a.date ?? "") < (b.date ?? "")) return -1;
+                        if ((a.date ?? "") > (b.date ?? "")) return 1;
+                        if ((a.room_id ?? 0) < (b.room_id ?? 0)) return -1;
+                        if ((a.room_id ?? 0) > (b.room_id ?? 0)) return 1;
                         return (a.movie_screen_id ?? -1) - (b.movie_screen_id ?? -1);
                     });
                     return out;
                 });
             } else {
+                // fallback: re-fetch canonical data
                 await fetchShowtimes();
             }
 
-            Swal.fire({ icon: "success", title: "Commit thành công", timer: 1200, showConfirmButton: false });
+            Swal.fire({ icon: "success", title: "Thành công", timer: 1200, showConfirmButton: false });
+            // Ensure canonical state
             await fetchShowtimes();
             return data;
         } catch (err: any) {
             console.error("Commit failed:", err);
 
-            // Optional: cleanup created rows if commit failed
-            // if (tempMap && tempMap.size > 0) {
-            //   // if you have delete API: await Promise.all([...tempMap.values()].map(r => deleteShowtime(r.id)));
-            // }
-
             const api = err.response?.data ?? err;
             if (err.response?.status === 409 || api?.status === 409) {
                 const conflict = api?.conflict;
                 const msg = conflict
-                    ? `Xung đột: phòng ${conflict.target_room} có suất chồng giờ (showtime ${conflict.conflicting_show?.id ?? conflict.conflicting_show?.showtime_id}).`
+                    ? `Xung đột: phòng ${conflict.target_room} có suất chồng giờ (showtime ${conflict.conflicting?.showtime_id ?? conflict.conflicting?.id}).`
                     : "Xung đột khi lưu — có suất chồng giờ.";
                 Swal.fire({ icon: "error", title: "Commit thất bại", text: msg });
             } else {
@@ -341,6 +356,7 @@ export default function AdminDashboard() {
             setLoading(false);
         }
     };
+
 
 
     const TAB_TITLES = {
@@ -467,12 +483,12 @@ export default function AdminDashboard() {
                                 roomsList={roomsList}
                                 movieScreenings={screenings}
                                 externalMovies={movies}
-                                onAdd={async (payload) => {
-                                    // payload should include _temp_client_id when con gọi; forward it
-                                    const result = await createShowtimeWithDay(payload);
-                                    if (!result?.ok) throw new Error(result?.message ?? "create failed");
-                                    return result.row; // row nên chứa id (server id) và có thể _temp_client_id nếu server echo
-                                }}
+                            // onAdd={async (payload) => {
+                            //     // payload should include _temp_client_id when con gọi; forward it
+                            //     const result = await createShowtimeWithDay(payload);
+                            //     if (!result?.ok) throw new Error(result?.message ?? "create failed");
+                            //     return result.row; // row nên chứa id (server id) và có thể _temp_client_id nếu server echo
+                            // }}
                             />
                         </div>
                     )}

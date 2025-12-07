@@ -22,8 +22,8 @@ export async function GET() {
         u.name AS user_name,
         u.email AS user_email,
 
-        s.start_date AS showtime_start_date,
-        s.end_date AS showtime_end_date,
+        s.date AS showtime_date,
+       
         s.status AS showtime_status
 
       FROM booking b

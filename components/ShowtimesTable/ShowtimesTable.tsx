@@ -4,20 +4,17 @@ import Swal from "sweetalert2";
 
 export type MovieScreenSlot = { movie_screen_id: number; start_time: string; end_time: string };
 export type ShowtimeDay = {
-  id: number;
   showtime_id: number;
   movie_id: number | null;
   room_id: number;
-  show_date: string;
+  date: string;
   movie_title?: string | null;
   room_name?: string | null;
   movie_screen_id: number | null;
-  screening_start?: string | null;
-  screening_end?: string | null;
   cinema_id?: number | null;
   cinema_name?: string | null;
 };
-type PendingSlotUpdate = { showtime_day_id: number; from_slot: number | null; to_slot: number; updated: ShowtimeDay };
+type PendingSlotUpdate = { showtime_id: number; from_slot: number | null; to_slot: number; updated: ShowtimeDay };
 export type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null };
 export type CinemaEntry = { cinema_id: number; name?: string };
 type ExternalMovie = { movie_id?: number; id?: number; movieId?: number; name?: string | null; title?: string | null };
@@ -78,7 +75,7 @@ export default function ShowtimeTimetable({
   const grouped = useMemo(() => {
     const m: Record<string, Record<string, Record<number, ShowtimeDay | null>>> = {};
     for (const s of state) {
-      const dk = toDateKey(s.show_date);
+      const dk = toDateKey(s.date);
       if (!dk) continue;
       m[dk] ??= {};
       m[dk][String(s.room_id)] ??= {};
@@ -108,10 +105,9 @@ export default function ShowtimeTimetable({
   // existing drag start: also setData for browser compatibility
   const handleDragStart = (e: React.DragEvent, st: ShowtimeDay) => {
     e.dataTransfer.effectAllowed = "move";
-    try { e.dataTransfer.setData("text/plain", String(st.id)); } catch (_) { }
-    dragData.current = { type: "existing", id: st.id };
-    // debug
-    console.log("dragstart existing", st.id);
+    try { e.dataTransfer.setData("text/plain", String(st.showtime_id)); } catch (_) { }
+    dragData.current = { type: "existing", id: st.showtime_id };
+
   };
 
   // external drag start: normalize fields and setData
@@ -147,34 +143,33 @@ export default function ShowtimeTimetable({
     if (!d) return;
     const roomShow = grouped[activeDate ?? ""]?.[String(roomId)] ?? {};
     const currentOccupant = roomShow[slotId] || null;
-    if (currentOccupant && d.type === "existing" && currentOccupant.id === d.id) {
+    if (currentOccupant && d.type === "existing" && currentOccupant.showtime_id === d.id) {
       // Thả vào chính slot hiện tại — không làm gì
       dragData.current = null;
       return;
     }
-    if (currentOccupant && currentOccupant.id !== (d.type === "existing" ? d.id : undefined)) {
+    if (currentOccupant && currentOccupant.showtime_id !== (d.type === "existing" ? d.id : undefined)) {
       // Slot đã bị chiếm bởi show khác -> block drop
       console.warn("Target slot already occupied by another show, blocking drop.");
       dragData.current = null;
       return;
     }
     if (d.type === "existing") {
-      const idx = state.findIndex(s => s.id === d.id);
+      const idx = state.findIndex(s => s.showtime_id === d.id);
       if (idx === -1) { dragData.current = null; return; }
       const old = state[idx];
       const updated = { ...old, movie_screen_id: slotId, room_id: roomId };
       setState(prev => { const copy = [...prev]; copy[idx] = updated; return copy; });
-      setPending(prev => ({ ...prev, [d.id]: { showtime_day_id: d.id, from_slot: old.movie_screen_id, to_slot: slotId, updated } }));
+      setPending(prev => ({ ...prev, [d.id]: { showtime_id: d.id, from_slot: old.movie_screen_id, to_slot: slotId, updated } }));
     } else {
       if (!activeDate) { dragData.current = null; return; }
       const tempId = genTempId();
       // newShow: temporary optimistic record
       const newShow: ShowtimeDay = {
-        id: tempId,
-        showtime_id: 0, // placeholder; server will return real showtime_id on commit
+        showtime_id: tempId,
         movie_id: d.movie_id ?? null,
         room_id: roomId,
-        show_date: activeDate,
+        date: activeDate,
         movie_title: d.movie_name ?? null,
         room_name: undefined,
         movie_screen_id: slotId,
@@ -183,8 +178,8 @@ export default function ShowtimeTimetable({
       // optimistic insert (same as before)
       setState(prev => {
         const copy = [...prev, newShow].sort((a, b) => {
-          if (a.show_date < b.show_date) return -1;
-          if (a.show_date > b.show_date) return 1;
+          if (a.date < b.date) return -1;
+          if (a.date > b.date) return 1;
           if (a.room_id < b.room_id) return -1;
           if (a.room_id > b.room_id) return 1;
           return (a.movie_screen_id ?? -1) - (b.movie_screen_id ?? -1);
@@ -195,7 +190,7 @@ export default function ShowtimeTimetable({
       // <-- IMPORTANT: only add to pending, DO NOT call onAdd() here
       setPending(prev => ({
         ...prev,
-        [tempId]: { showtime_day_id: tempId, from_slot: null, to_slot: slotId, updated: newShow }
+        [tempId]: { showtime_id: tempId, from_slot: null, to_slot: slotId, updated: newShow }
       }));
 
     }
