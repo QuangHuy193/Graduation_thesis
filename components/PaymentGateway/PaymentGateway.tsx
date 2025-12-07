@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { createPayOSPayment } from "@/lib/axios/paymentAPI";
+import { getVoucherByUserAPI } from "@/lib/axios/voucherAPI";
+import { useSession } from "next-auth/react";
 /**
  * Usage:
  * <PaymentGateway
@@ -34,7 +36,7 @@ type PaymentGatewayProps = {
   items?: Array<{ name: string; quantity: number; price: number }>;
   buyer?: { name?: string; email?: string; phone?: string };
   onPay?: (method: PaymentMethodId | null, payload: any) => void;
-  onApplyCoupon?: (code: string) => Promise<ApplyCouponResult>;
+  onApplyCoupon?: (id: number) => Promise<ApplyCouponResult>;
 };
 
 export default function PaymentGateway({
@@ -49,7 +51,16 @@ export default function PaymentGateway({
   const [selected, setSelected] = useState<PaymentMethodId | null>(
     initialMethod
   );
-  const [coupon, setCoupon] = useState("");
+  // user
+  const { data: session } = useSession();
+  const user = session?.user;
+  // danh sách voucher của user đang có
+  const [couponListOption, setCouponListOption] = useState({
+    couponList: [],
+    couponDisplay: false,
+  });
+  // lưu id voucher
+  const [coupon, setCoupon] = useState(-1);
   const [couponMsg, setCouponMsg] = useState("Bạn đang có mã giảm giá");
   const [loadingCoupon, setLoadingCoupon] = useState(false);
 
@@ -57,11 +68,23 @@ export default function PaymentGateway({
   const [payError, setPayError] = useState<string | null>(null);
 
   useEffect(() => {
+    const getCoupon = async (user_id) => {
+      try {
+        const res = await getVoucherByUserAPI(user_id);
+        setCouponListOption((prev) => ({ ...prev, couponList: res }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getCoupon(user.user_id);
+  }, [user]);
+
+  useEffect(() => {
     setSelected(initialMethod);
   }, [initialMethod]);
 
   const handleApplyCoupon = useCallback(async () => {
-    if (!coupon || coupon.trim() === "") {
+    if (!coupon || coupon === -1) {
       setCouponMsg("Vui lòng chọn mã giảm giá");
       return;
     }
@@ -185,37 +208,69 @@ export default function PaymentGateway({
         </div>
 
         {/* Coupon block */}
-
-        <div
-          className="mt-6 p-4 bg-indigo-600 rounded-md flex cursor-pointer
-          hover:outline-2 hover:outline-indigo-500"
-        >
-          <div className="flex-2">
-            <div
-              className="w-10 h-10 bg-white/20 rounded flex items-center 
-            justify-center"
-            >
-              🏷️
+        {/* khi bấm chọn sổ ra ds voucher */}
+        <div className="bg-indigo-600 rounded-md">
+          <div
+            className="mt-6 p-4 rounded-md flex cursor-pointer
+            hover:outline-2 hover:outline-indigo-500"
+            onClick={() =>
+              setCouponListOption((prev) => ({
+                ...prev,
+                couponDisplay: !prev.couponDisplay,
+              }))
+            }
+          >
+            <div className="flex-2">
+              <div
+                className="w-10 h-10 bg-white/20 rounded flex items-center 
+              justify-center"
+              >
+                🏷️
+              </div>
+            </div>
+            <div className="flex-10">
+              <div className="font-semibold text-white">Chọn mã giảm giá</div>
+              <div className="text-sm text-indigo-100">{couponMsg}</div>
             </div>
           </div>
-          <div className="flex-10">
-            <div className="font-semibold text-white">Chọn mã giảm giá</div>
-            <div className="text-sm text-indigo-100">{couponMsg}</div>
+          {/* ds voucher */}
+          <div
+            className={`transition-all duration-500 overflow-hidden ${
+              couponListOption.couponDisplay
+                ? "max-h-[600px] opacity-100"
+                : "max-h-0 opacity-0"
+            } bg-indigo-600/95 rounded-b-md shadow-inner`}
+          >
+            <div className="pt-3 px-4 pb-4 space-y-3 text-white">
+              {/* map list */}
+              {couponListOption.couponList &&
+                couponListOption.couponList.map((c) => (
+                  <div
+                    key={c.voucher_id}
+                    className="p-3 bg-white/10 rounded-md border border-white/10 
+                       hover:bg-white/20 transition cursor-pointer"
+                    onClick={() => setCoupon(c.voucher_id)}
+                  >
+                    <div className="font-semibold">{c.name}</div>
+                    <div className="text-sm opacity-80">{c.description}</div>
+                  </div>
+                ))}
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleApplyCoupon}
+                  disabled={loadingCoupon}
+                  className="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-md 
+                    text-white font-medium disabled:opacity-50 cursor-pointer"
+                  type="button"
+                >
+                  {loadingCoupon ? "Đang..." : "Áp dụng"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        {/* khi bấm chọn sổ ra ds voucher */}
-        <div>
-          <div>voucher 1</div>
-          <button
-            onClick={handleApplyCoupon}
-            disabled={loadingCoupon}
-            className="px-3 py-2 bg-white/20 rounded-md text-white font-medium 
-            disabled:opacity-50 cursor-pointer"
-            type="button"
-          >
-            {loadingCoupon ? "Đang..." : "Áp dụng"}
-          </button>
-        </div>
+
         {/* <div className="mt-6 p-4 bg-indigo-600 rounded-md flex">
           <div className="flex gap-3">
             <div>

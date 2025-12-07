@@ -882,15 +882,15 @@ function MovieDetail({
                   <div className="bg-black/30 absolute top-0 left-0 h-full w-full z-10"></div>
                 </Tippy>
               ) : (
-                state.seatSelected.length !== totalTickets ||
-                (totalTickets === 0 && (
+                (state.seatSelected.length !== totalTickets ||
+                  totalTickets === 0) && (
                   <Tippy
                     placement="bottom"
                     content="Vui lòng chọn đủ số ghế để đặt vé."
                   >
                     <div className="bg-black/30 absolute top-0 left-0 h-full w-full z-10"></div>
                   </Tippy>
-                ))
+                )
               )}
             </div>
           </div>
