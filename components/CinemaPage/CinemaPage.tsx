@@ -48,6 +48,7 @@ function CinemaPage({ cinema_id }: { cinema_id: number }) {
       getMovieUpcoming(cinema_id);
     }
   }, [cinema_id, state.tab]);
+
   return (
     <div>
       {/* tab */}

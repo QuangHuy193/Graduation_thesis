@@ -167,9 +167,9 @@ function BarTicket() {
     const quickTicket = {
       // number
       movie_id: state.valueSelected.movie,
-      // number
+      // date
       date: state.valueSelected.date,
-      //
+      // number
       times: state.valueSelected.times,
     };
     sessionStorage.setItem("quickticket", JSON.stringify(quickTicket));

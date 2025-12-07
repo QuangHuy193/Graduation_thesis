@@ -1,3 +1,4 @@
+"use client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Image from "next/image";
 import styles from "./MovieListInCinema.module.scss";
@@ -10,8 +11,29 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { formatDateWithDay } from "@/lib/function";
 import LoadingLink from "../Link/LinkLoading";
+import { useRouter } from "next/navigation";
 
 function MovieListInCinema({ data, text }) {
+  const router = useRouter();
+
+  // set giá trị đặt vé nhanh cho movieDetail đọc
+  const handleSetQuickTicket = (
+    movie_id: number,
+    date: Date,
+    times: number
+  ) => {
+    const quickTicket = {
+      // number
+      movie_id: movie_id,
+      // date
+      date: date,
+      // number
+      times: times,
+    };
+    sessionStorage.setItem("quickticket", JSON.stringify(quickTicket));
+    router.push(`/movie/${movie_id}`);
+  };
+
   return (
     <div>
       <h1 className="font-bold text-4xl flex justify-center items-center pt-10 pb-5">
@@ -91,7 +113,13 @@ function MovieListInCinema({ data, text }) {
                             date.showtimes.map((s, ind) => (
                               <div
                                 // TODO thêm tương tự đặt vé nhanh
-                                onClick={() => console.log("aa")}
+                                onClick={() =>
+                                  handleSetQuickTicket(
+                                    d.movie_id,
+                                    date.date,
+                                    s.movie_screen_id
+                                  )
+                                }
                                 key={ind}
                                 className="border border-gray-400 rounded-sm px-2 py-1
                                   hover:text-(--color-yellow) hover:border-(--color-yellow)

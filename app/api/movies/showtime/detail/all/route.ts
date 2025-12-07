@@ -2,25 +2,33 @@ import { LIMITDAY } from "@/lib/constant";
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
 
-//Lấy danh phim bao gồm rạp, suất chiếu
+// Lấy danh phim bao gồm rạp + suất chiếu
 export async function GET() {
   try {
     const [rows] = await db.query(
-      `WITH RECURSIVE days AS (
-      SELECT CURDATE() AS d
-      UNION ALL
-      SELECT DATE_ADD(d, INTERVAL 1 DAY)
-      FROM days
-      WHERE d < DATE_ADD(CURDATE(), INTERVAL ${LIMITDAY - 1} DAY))
-      SELECT m.movie_id, m.name, m.duration, m.age_require, MAX(img.url) AS image,
-      c1.name AS country, c2.language AS subtitle,
-      GROUP_CONCAT(DISTINCT g.name) AS genre,
-      c.cinema_id, c.name AS cinema_name, c.specific_address, c.ward, c.province,
-      s.showtime_id, mc.start_time, mc.movie_screen_id,
-      days.d AS date
-      FROM days
-      JOIN showtime s 
-      ON days.d BETWEEN s.start_date AND s.end_date
+      `
+      SELECT 
+        m.movie_id, 
+        m.name, 
+        m.duration, 
+        m.age_require, 
+        MAX(img.url) AS image,
+        c1.name AS country, 
+        c2.language AS subtitle,
+        GROUP_CONCAT(DISTINCT g.name) AS genre,
+
+        c.cinema_id, 
+        c.name AS cinema_name, 
+        c.specific_address, 
+        c.ward, 
+        c.province,
+
+        s.showtime_id, 
+        s.date,                -- dùng trường date mới
+        mc.start_time, 
+        mc.movie_screen_id
+
+      FROM showtime s
       JOIN movies m ON m.movie_id = s.movie_id
       JOIN images img ON img.movie_id = m.movie_id
       JOIN movie_screenings mc ON mc.movie_screen_id = s.movie_screen_id
@@ -30,13 +38,26 @@ export async function GET() {
       JOIN genres g ON g.genre_id = mg.genre_id
       JOIN country c1 ON m.country_id = c1.country_id
       JOIN country c2 ON m.subtitle_id = c2.country_id 
-      GROUP BY m.movie_id, c.cinema_id, s.showtime_id, days.d`
+
+      WHERE 
+        s.date BETWEEN CURDATE() 
+        AND DATE_ADD(CURDATE(), INTERVAL ${LIMITDAY - 1} DAY)
+        AND m.status = 1
+        AND s.status = 1
+
+      GROUP BY 
+        m.movie_id, 
+        c.cinema_id, 
+        s.showtime_id, 
+        s.date
+      `
     );
 
-    // group theo movie
-    const movies = {};
+    // GROUP theo movie
+    const movies: any = {};
 
-    for (const r of rows) {
+    for (const r of rows as any[]) {
+      // movie
       if (!movies[r.movie_id]) {
         movies[r.movie_id] = {
           movie_id: r.movie_id,
@@ -68,7 +89,7 @@ export async function GET() {
         };
       }
 
-      // showtimes
+      // showtime
       movies[r.movie_id].dates[r.date][r.cinema_id].showtimes.push({
         movie_screen_id: r.movie_screen_id,
         showtime_id: r.showtime_id,
@@ -76,8 +97,8 @@ export async function GET() {
       });
     }
 
-    // convert object → array, date → cinema[]
-    const result = Object.values(movies).map((m) => ({
+    // convert về đúng cấu trúc cũ
+    const result = Object.values(movies).map((m: any) => ({
       ...m,
       dates: Object.entries(m.dates).map(([date, cinemas]) => ({
         date,
