@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MovieItem.module.scss";
 import LoadingLink from "../Link/LinkLoading";
+import Swal from "sweetalert2";
 
 function MovieItem({
   data,
@@ -104,10 +105,21 @@ function MovieItem({
       </div>
       <div className="flex gap-2 pb-5 absolute left-0 right-0 bottom-0">
         <div
-          className="hidden md:flex-1"
+          className="hidden md:flex flex-1"
           onClick={() => {
-            setUrl(data.trailer_url);
-            setOpenTrailer(true);
+            if (data.trailer_url) {
+              setUrl(data.trailer_url);
+              setOpenTrailer(true);
+            } else {
+              Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "info",
+                title: "Hiện chưa có trailer cho phim này!",
+                showConfirmButton: false,
+                timer: 2000,
+              });
+            }
           }}
         >
           <WatchTrailer size="s" />
