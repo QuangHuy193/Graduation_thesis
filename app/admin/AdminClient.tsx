@@ -183,6 +183,7 @@ export default function AdminDashboard() {
             // Step A: create all temp items (if any). We'll map tempId -> serverRow
             const tempMap = new Map<number, any>(); // tempId -> server row
             if (withoutServerId.length > 0) {
+
                 // Create in sequence to avoid race conditions on unique constraints (you can change to Promise.all if safe)
                 for (const item of withoutServerId) {
                     const u = item.u;
@@ -247,7 +248,7 @@ export default function AdminDashboard() {
                         to_room: server.room_id ?? u.room_id ?? u.to_room ?? null,
                         to_movie_screen_id: server.movie_screen_id ?? u.movie_screen_id ?? u.movieScreenId ?? null,
                         movie_id: server.movie_id ?? u.movie_id ?? u.movieId ?? null,
-                        status: typeof server.status === "number" ? server.status : (u.status === "active" ? 1 : u.status ?? 1),
+                        status: 1,
                     };
                 }
 
@@ -257,10 +258,6 @@ export default function AdminDashboard() {
 
                 const date = u.date ?? u.show_date ?? u.showDate ?? null;
 
-                let status: number | null = null;
-                if (typeof u.status === "number") status = u.status;
-                else if (u.status === "active" || u.status === true) status = 1;
-                else if (u.status === "inactive" || u.status === false) status = 0;
 
                 return {
                     showtime_id: stId,
@@ -268,7 +265,7 @@ export default function AdminDashboard() {
                     to_room: u.room_id ?? u.to_room ?? null,
                     to_movie_screen_id: u.movie_screen_id ?? u.movieScreenId ?? null,
                     movie_id: u.movie_id ?? u.movieId ?? null,
-                    status,
+                    status: u.status,
                 };
             });
 
@@ -288,49 +285,6 @@ export default function AdminDashboard() {
                 const err: any = new Error(data?.message ?? "commitShowtimeMoves failed");
                 err.response = { data };
                 throw err;
-            }
-
-            // Step D: merge server response into client state
-            const results = data.results ?? data.updated ?? data.rows ?? null;
-            if (Array.isArray(results)) {
-                setShowtimes(prev => {
-                    const prevMap = new Map<number, ShowtimeDay>();
-                    for (const p of prev) {
-                        const key = Number((p as any).showtime_id ?? (p as any).id ?? NaN);
-                        if (Number.isFinite(key)) prevMap.set(key, p);
-                    }
-
-                    for (const r of results) {
-                        const rid = Number(r.showtime_id ?? r.id ?? NaN);
-                        if (Number.isFinite(rid)) {
-                            prevMap.set(rid, { ...(prevMap.get(rid) ?? ({} as any)), ...(r as any) });
-                        } else if (r._temp_client_id) {
-                            // handle mapping if server returned mapping rows
-                            const tempId = Number(r._temp_client_id);
-                            const serverId = Number(r.showtime_id ?? r.id ?? NaN);
-                            if (Number.isFinite(tempId) && Number.isFinite(serverId)) {
-                                // remove temp entries if any keyed by tempId
-                                for (const [k, v] of prevMap.entries()) {
-                                    if ((v as any).temp_id === tempId || (v as any).id === tempId) prevMap.delete(k);
-                                }
-                                prevMap.set(serverId, r as any);
-                            }
-                        }
-                    }
-
-                    const out = Array.from(prevMap.values());
-                    out.sort((a, b) => {
-                        if ((a.date ?? "") < (b.date ?? "")) return -1;
-                        if ((a.date ?? "") > (b.date ?? "")) return 1;
-                        if ((a.room_id ?? 0) < (b.room_id ?? 0)) return -1;
-                        if ((a.room_id ?? 0) > (b.room_id ?? 0)) return 1;
-                        return (a.movie_screen_id ?? -1) - (b.movie_screen_id ?? -1);
-                    });
-                    return out;
-                });
-            } else {
-                // fallback: re-fetch canonical data
-                await fetchShowtimes();
             }
 
             Swal.fire({ icon: "success", title: "Thành công", timer: 1200, showConfirmButton: false });

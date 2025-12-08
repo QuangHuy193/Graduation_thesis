@@ -14,7 +14,7 @@ export type ShowtimeDay = {
   cinema_id?: number | null;
   cinema_name?: string | null;
 };
-type PendingSlotUpdate = { showtime_id: number; from_slot: number | null; to_slot: number; updated: ShowtimeDay };
+type PendingSlotUpdate = { showtime_id: number; from_slot: number | null; to_slot: number | null; updated: ShowtimeDay };
 export type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null };
 export type CinemaEntry = { cinema_id: number; name?: string };
 type ExternalMovie = { movie_id?: number; id?: number; movieId?: number; name?: string | null; title?: string | null };
@@ -49,12 +49,12 @@ export default function ShowtimeTimetable({
   onCommit,
   onSelect,
   externalMovies = [],
-  onAdd,
 }: Props) {
   const [state, setState] = useState<ShowtimeDay[]>(showtimes);
   const [pending, setPending] = useState<Record<number, PendingSlotUpdate>>({});
   const [activeDate, setActiveDate] = useState<string | null>(initialDate);
   const originalRef = useRef<ShowtimeDay[] | null>(null);
+  const [trashHover, setTrashHover] = useState(false);
   // dragData supports existing or external normalized
   const dragData = useRef<{ type: "existing"; id: number } | { type: "external"; movie_id: number; movie_name?: string } | null>(null);
 
@@ -101,7 +101,68 @@ export default function ShowtimeTimetable({
   }, [roomsList]);
 
   const handleSelectDate = (date: string) => { if (date === activeDate) return; setActiveDate(date); };
+  function readDragPayload(e?: React.DragEvent<HTMLDivElement>) {
+    try {
+      if (e) {
+        const txt = e.dataTransfer.getData("application/json");
+        if (txt) return JSON.parse(txt);
+      }
+    } catch (err) {
+      // ignore
+    }
+    // fallback to shared ref (if your code uses dragData.current)
+    // @ts-ignore
+    return (dragData && (dragData.current ?? null)) || null;
+  }
 
+  function handleDragOverTrash(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setTrashHover(true);
+  }
+  function handleDragLeaveTrash(_e: React.DragEvent<HTMLDivElement>) {
+    setTrashHover(false);
+  }
+
+  async function handleDropToTrash(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setTrashHover(false);
+
+    const payload = readDragPayload(e);
+    if (!payload) return;
+
+    // Determine id and whether it's an existing showtime or external movie
+    // your drag payload for existing probably has shape { type: 'existing', id: <showtime_id>, ... }
+    const type = payload.type ?? payload?.dragType ?? null;
+
+    // If external movie (not an existing show), we don't delete (no-op)
+    if (type === "external" || payload.movie_id) {
+      // nothing to delete — maybe show warning
+      return;
+    }
+
+    // if existing show
+    const showtimeId = Number(payload.id ?? payload.showtime_id ?? payload.movie_screen_id ?? NaN);
+    if (!Number.isFinite(showtimeId)) return;
+
+    // optimistic removal from UI state
+    setState(prev => prev.filter(s => Number((s as any).showtime_id ?? (s as any).id ?? NaN) !== showtimeId));
+
+    // Add pending delete: set status = 0 (inactive)
+    setPending(prev => {
+      const out = { ...prev };
+      out[showtimeId] = {
+        showtime_id: showtimeId,
+        // from_slot can be useful for audit / rollback
+        from_slot: payload.movie_screen_id ?? payload.to_slot ?? null,
+        to_slot: null,
+        updated: { ...payload, status: 0 },
+      };
+      return out;
+    });
+
+    // Optionally show small feedback
+    // Swal.fire({ icon: 'success', title: 'Đã đưa vào thùng rác', timer: 900, showConfirmButton: false });
+  }
   // existing drag start: also setData for browser compatibility
   const handleDragStart = (e: React.DragEvent, st: ShowtimeDay) => {
     e.dataTransfer.effectAllowed = "move";
@@ -124,12 +185,10 @@ export default function ShowtimeTimetable({
     } catch (_) { }
 
     if (!Number.isFinite(movie_id)) {
-      console.warn("external movie missing numeric id", mv);
       dragData.current = { type: "external", movie_id: undefined as any, movie_name };
     } else {
       dragData.current = { type: "external", movie_id, movie_name };
     }
-    console.log("dragstart external", dragData.current);
   };
 
 
@@ -139,59 +198,183 @@ export default function ShowtimeTimetable({
   const handleDropSlot = async (roomId: number, slotId: number, e: React.DragEvent) => {
     e.preventDefault();
     const d = dragData.current;
-    console.log("drop attempt", { roomId, slotId, activeDate, dragData: d });
     if (!d) return;
     const roomShow = grouped[activeDate ?? ""]?.[String(roomId)] ?? {};
     const currentOccupant = roomShow[slotId] || null;
+    //Nếu thả movie vào slot hiện tại có movie đó
     if (currentOccupant && d.type === "existing" && currentOccupant.showtime_id === d.id) {
       // Thả vào chính slot hiện tại — không làm gì
       dragData.current = null;
       return;
     }
-    if (currentOccupant && currentOccupant.showtime_id !== (d.type === "existing" ? d.id : undefined)) {
-      // Slot đã bị chiếm bởi show khác -> block drop
-      console.warn("Target slot already occupied by another show, blocking drop.");
-      dragData.current = null;
-      return;
-    }
+
+    // Nếu thả movie vào slot có movie khác
+    // if (currentOccupant && currentOccupant.showtime_id !== (d.type === "existing" ? d.id : undefined)) {
+    //   // Slot đã bị chiếm bởi show khác -> block drop
+    //   dragData.current = null;
+    //   return;
+    // }
+
+    //trường hợp movie đã có showtime
     if (d.type === "existing") {
-      const idx = state.findIndex(s => s.showtime_id === d.id);
-      if (idx === -1) { dragData.current = null; return; }
-      const old = state[idx];
-      const updated = { ...old, movie_screen_id: slotId, room_id: roomId };
-      setState(prev => { const copy = [...prev]; copy[idx] = updated; return copy; });
-      setPending(prev => ({ ...prev, [d.id]: { showtime_id: d.id, from_slot: old.movie_screen_id, to_slot: slotId, updated } }));
-    } else {
-      if (!activeDate) { dragData.current = null; return; }
-      const tempId = genTempId();
-      // newShow: temporary optimistic record
-      const newShow: ShowtimeDay = {
-        showtime_id: tempId,
-        movie_id: d.movie_id ?? null,
-        room_id: roomId,
-        date: activeDate,
-        movie_title: d.movie_name ?? null,
-        room_name: undefined,
-        movie_screen_id: slotId,
-      };
+      //Trường hợp thả movie đã có showtime vào một slot trống
+      if (!currentOccupant) {
+        const idx = state.findIndex(s => s.showtime_id === d.id);
+        if (idx === -1) { dragData.current = null; return; }
+        const old = state[idx];
+        const updated = { ...old, movie_screen_id: slotId, room_id: roomId };
+        setState(prev => { const copy = [...prev]; copy[idx] = updated; return copy; });
+        setPending(prev => ({ ...prev, [d.id]: { showtime_id: d.id, from_slot: old.movie_screen_id, to_slot: slotId, updated } }));
+      }//Trường hợp thả movie đã có showtime vào slot đã có movie khác
+      else {
+        const occupantId = Number(currentOccupant?.showtime_id ?? NaN);
+        const srcId = Number(d.id);
 
-      // optimistic insert (same as before)
-      setState(prev => {
-        const copy = [...prev, newShow].sort((a, b) => {
-          if (a.date < b.date) return -1;
-          if (a.date > b.date) return 1;
-          if (a.room_id < b.room_id) return -1;
-          if (a.room_id > b.room_id) return 1;
-          return (a.movie_screen_id ?? -1) - (b.movie_screen_id ?? -1);
+        // defensive checks
+        if (!Number.isFinite(occupantId) || !Number.isFinite(srcId) || occupantId === srcId) {
+          dragData.current = null;
+          return;
+        }
+
+        const srcIdx = state.findIndex(s => Number((s as any).showtime_id ?? (s as any).id) === srcId);
+        const occIdx = state.findIndex(s => Number((s as any).showtime_id ?? (s as any).id) === occupantId);
+
+        if (srcIdx === -1 || occIdx === -1) {
+          // something's off (missing entries) — bail out gracefully
+          dragData.current = null;
+          return;
+        }
+
+        const src = state[srcIdx];
+        const occ = state[occIdx];
+
+        // compute swapped values:
+        // src (the dragged show) moves to destination slot (slotId, roomId)
+        const updatedSrc = {
+          ...src,
+          movie_screen_id: slotId,
+          room_id: roomId,
+        };
+        // occ (current occupant) moves into src's old slot (src.movie_screen_id, src.room_id)
+        const updatedOcc = {
+          ...occ,
+          movie_screen_id: src.movie_screen_id,
+          room_id: src.room_id,
+        };
+
+        // apply to UI state
+        setState(prev => {
+          const copy = [...prev];
+          copy[srcIdx] = updatedSrc;
+          copy[occIdx] = updatedOcc;
+          return copy;
         });
-        return copy;
-      });
 
-      // <-- IMPORTANT: only add to pending, DO NOT call onAdd() here
-      setPending(prev => ({
-        ...prev,
-        [tempId]: { showtime_id: tempId, from_slot: null, to_slot: slotId, updated: newShow }
-      }));
+        // update pending for both items (record from -> to)
+        setPending(prev => {
+          const out = { ...prev };
+
+          // dragged item pending
+          out[srcId] = {
+            showtime_id: srcId,
+            from_slot: src.movie_screen_id ?? null,
+            to_slot: slotId,
+            updated: updatedSrc,
+          };
+
+          // occupant pending (moves to source slot)
+          out[occupantId] = {
+            showtime_id: occupantId,
+            from_slot: occ.movie_screen_id ?? null,
+            to_slot: src.movie_screen_id ?? null,
+            updated: updatedOcc,
+          };
+          return out;
+        });
+        // dragData.current = null;
+      }
+
+    }//Trường hợp movie chưa có showtime 
+    else {
+      //Trường hợp kéo movie chưa có showtime vào slot trống
+      if (!currentOccupant) {
+        if (!activeDate) { dragData.current = null; return; }
+        const tempId = genTempId();
+        // newShow: temporary optimistic record
+        const newShow: ShowtimeDay = {
+          showtime_id: tempId,
+          movie_id: d.movie_id ?? null,
+          room_id: roomId,
+          date: activeDate,
+          movie_title: d.movie_name ?? null,
+          room_name: undefined,
+          movie_screen_id: slotId,
+        };
+
+        // optimistic insert (same as before)
+        setState(prev => {
+          const copy = [...prev, newShow].sort((a, b) => {
+            if (a.date < b.date) return -1;
+            if (a.date > b.date) return 1;
+            if (a.room_id < b.room_id) return -1;
+            if (a.room_id > b.room_id) return 1;
+            return (a.movie_screen_id ?? -1) - (b.movie_screen_id ?? -1);
+          });
+          return copy;
+        });
+
+        setPending(prev => ({
+          ...prev,
+          [tempId]: { showtime_id: tempId, from_slot: null, to_slot: slotId, updated: newShow }
+        }));
+      } else {
+        // Case: dragging a movie without a showtime INTO an occupied slot.
+        // Behaviour: overwrite the occupant's show with the dragged movie (no new showtime created).
+        if (!activeDate) { dragData.current = null; return; }
+
+        const occ = currentOccupant as ShowtimeDay;
+        const occId = Number((occ as any).showtime_id ?? (occ as any).id ?? NaN);
+        if (!Number.isFinite(occId)) {
+          // occupant has no server id (weird) — fallback to create a temp and replace as above
+          dragData.current = null;
+          return;
+        }
+
+        // Keep original slot (slotId, roomId) — we are replacing the movie occupying it.
+        // Build updated occupant row (overwrite movie-related fields)
+        const updatedOcc: ShowtimeDay = {
+          ...occ,
+          // assign movie data from dragged item 'd'
+          movie_id: d.movie_id ?? null,
+          movie_title: d.movie_name ?? occ.movie_title ?? null,
+          // ensure it's on this slot/room/date
+          movie_screen_id: slotId,
+          room_id: roomId,
+          // ensure date: if dragged movie provides an activeDate, keep it; else preserve existing
+          date: activeDate ?? occ.date,
+        };
+
+        // Update UI state: replace occupant in state array
+        setState(prev => {
+          const copy = [...prev];
+          const idx = copy.findIndex(s => Number((s as any).showtime_id ?? (s as any).id ?? NaN) === occId);
+          if (idx !== -1) copy[idx] = updatedOcc;
+          return copy;
+        });
+
+        // Add pending update for the occupant (so commit will update existing showtime)
+        setPending(prev => {
+          const out = { ...prev };
+          out[occId] = {
+            showtime_id: occId,
+            from_slot: occ.movie_screen_id ?? null,
+            to_slot: slotId,
+            updated: updatedOcc,
+          };
+          return out;
+        });
+      }
+
 
     }
     dragData.current = null;
@@ -200,13 +383,13 @@ export default function ShowtimeTimetable({
   // --- replacement applyServerResults + commit (handles {ok, action, row} shape) ---
 
   // helper to normalize server result item -> plain row object
-  const normalizeServerItem = (item: any) => {
-    if (!item) return null;
-    // if wrapper { ok, action, row }
-    if (typeof item === "object" && "row" in item) return item.row;
-    // else assume it's already a row
-    return item;
-  };
+  // const normalizeServerItem = (item: any) => {
+  //   if (!item) return null;
+  //   // if wrapper { ok, action, row }
+  //   if (typeof item === "object" && "row" in item) return item.row;
+  //   // else assume it's already a row
+  //   return item;
+  // };
 
   // helper: merge server results into local state (synchronous merge using current `state`)
   const commit = async () => {
@@ -282,8 +465,8 @@ export default function ShowtimeTimetable({
         </div>
 
         <div className="w-72 border-l pl-4">
-          <div className="font-medium mb-2">Danh sách phim</div>
-          <div className="space-y-2 max-h-[60vh] overflow-auto pr-2">
+          <div className="font-medium mb-2 ">Danh sách phim</div>
+          <div className="space-y-2 max-h-[60vh] overflow-auto pr-2 ">
             {externalMovies.length === 0 && <div className="text-sm text-gray-500 italic">Không có phim.</div>}
             {externalMovies.map(mv => {
               // normalize display name & id for robustness
@@ -297,8 +480,168 @@ export default function ShowtimeTimetable({
               );
             })}
           </div>
+          {/* Trash can area */}
+          <div
+            onDragOver={handleDragOverTrash}
+            onDragEnter={handleDragOverTrash}
+            onDragLeave={handleDragLeaveTrash}
+            onDrop={handleDropToTrash}
+            className={`mt-3 rounded border-dashed border-2 p-3 flex items-center justify-center cursor-copy transition-colors ${trashHover ? "bg-red-50 border-red-400" : "bg-white border-gray-200"
+              }`}
+            aria-label="Trash"
+            role="button"
+          >
+            <div className="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M10 3h4l1 4H9l1-4z" />
+              </svg>
+              <div className="text-sm text-red-700 font-medium">{trashHover ? "Thả để xóa" : "Thùng rác"}</div>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
   );
 }
+// // app/api/showtimes/move-batch/route.ts
+// import { NextResponse } from "next/server";
+// import { db } from "@/lib/db";
+
+// type MoveItemInput = {
+//   showtime_id: number;
+//   date?: string; // optional, YYYY-MM-DD
+//   to_room?: number | null;
+//   to_movie_screen_id?: number | null;
+//   movie_id?: number | null;
+//   status?: 0 | 1 | null;
+// };
+
+// export async function POST(request: Request) {
+//   try {
+//     const body = await request.json().catch(() => null);
+//     if (!body || !Array.isArray(body.moves)) {
+//       return NextResponse.json(
+//         { ok: false, message: "Invalid payload; expected { moves: [...] }" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const moves: MoveItemInput[] = body.moves;
+
+//     if (moves.length === 0) {
+//       return NextResponse.json({ ok: false, message: "No moves provided" }, { status: 400 });
+//     }
+
+//     // Pre-validation
+//     const validationErrors: any[] = [];
+//     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+//     for (let i = 0; i < moves.length; i++) {
+//       const raw = moves[i] as any;
+//       if (!("showtime_id" in raw) || typeof raw.showtime_id !== "number" || !Number.isFinite(raw.showtime_id)) {
+//         validationErrors.push({ index: i, reason: "showtime_id is required and must be a number", input: raw });
+//         continue;
+//       }
+//       if ("date" in raw && raw.date != null && typeof raw.date !== "string") {
+//         validationErrors.push({ index: i, reason: "date must be a string YYYY-MM-DD if provided", input: raw });
+//       } else if ("date" in raw && raw.date != null && !dateRegex.test(raw.date)) {
+//         validationErrors.push({ index: i, reason: "date must be YYYY-MM-DD", input: raw });
+//       }
+//       // other fields are optional; no extra validation here
+//     }
+
+//     if (validationErrors.length) {
+//       return NextResponse.json({ ok: false, message: "Validation failed", errors: validationErrors }, { status: 400 });
+//     }
+
+//     console.log("move-batch payload validated, count:", moves.length);
+
+//     const conn = await db.getConnection();
+//     try {
+//       await conn.beginTransaction();
+
+//       const results: any[] = [];
+
+//       for (const raw of moves) {
+//         const m = raw as MoveItemInput;
+
+//         // Lock the target showtime row
+//         const [selRows] = await conn.query(`SELECT * FROM showtime WHERE showtime_id = ? FOR UPDATE`, [m.showtime_id]);
+//         const existing = (selRows as any[])[0] ?? null;
+
+//         if (!existing) {
+//           results.push({ ok: false, reason: "not_found", input: m });
+//           continue;
+//         }
+
+//         // --- NEW: if payload does NOT have key 'date' (i.e. date is undefined / not provided),
+//         // then delete the showtime row instead of updating it. ---
+//         if (!Object.prototype.hasOwnProperty.call(m, "date")) {
+//           await conn.query(`DELETE FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
+//           results.push({ ok: true, action: "deleted", input: m });
+//           continue;
+//         }
+//         // --- END NEW ---
+
+//         // Build updates dynamically. Use 'in' checks to allow explicit nulls.
+//         const updates: string[] = [];
+//         const params: any[] = [];
+
+//         if (Object.prototype.hasOwnProperty.call(m, "to_room")) {
+//           updates.push("room_id = ?");
+//           params.push(m.to_room);
+//         }
+//         if (Object.prototype.hasOwnProperty.call(m, "to_movie_screen_id")) {
+//           updates.push("movie_screen_id = ?");
+//           params.push(m.to_movie_screen_id);
+//         }
+//         if (Object.prototype.hasOwnProperty.call(m, "movie_id")) {
+//           updates.push("movie_id = ?");
+//           params.push(m.movie_id);
+//         }
+//         if (Object.prototype.hasOwnProperty.call(m, "status")) {
+//           updates.push("status = ?");
+//           params.push(m.status);
+//         }
+//         if (Object.prototype.hasOwnProperty.call(m, "date")) {
+//           updates.push("date = ?");
+//           params.push(m.date);
+//         }
+
+//         if (updates.length) {
+//           // push where param
+//           params.push(m.showtime_id);
+//           const sql = `UPDATE showtime SET ${updates.join(", ")} WHERE showtime_id = ?`;
+//           await conn.query(sql, params);
+//           // fetch fresh row
+//           const [fresh] = await conn.query(`SELECT * FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
+//           results.push({ ok: true, action: "updated", row: (fresh as any[])[0] });
+//         } else {
+//           // nothing to update
+//           results.push({ ok: true, action: "noop", row: existing });
+//         }
+//       } // end for
+
+//       await conn.commit();
+//       return NextResponse.json({ ok: true, results }, { status: 200 });
+//     } catch (err) {
+//       try {
+//         await conn.rollback();
+//       } catch (rbErr) {
+//         console.error("rollback failed:", rbErr);
+//       }
+//       console.error("move-batch error (during transaction):", err);
+//       return NextResponse.json({ ok: false, message: "Internal server error", error: `${err}` }, { status: 500 });
+//     } finally {
+//       try {
+//         conn.release();
+//       } catch (relErr) {
+//         console.error("connection release error:", relErr);
+//       }
+//     }
+//   } catch (err) {
+//     console.error("move-batch outer error:", err);
+//     return NextResponse.json({ ok: false, message: "Bad request or server error" }, { status: 400 });
+//   }
+// }
