@@ -168,8 +168,8 @@ function ShowTime({
   }, [selected.dateSelected, timeSelected]);
 
   return (
-    <div className="px-35">
-      <div className="text-4xl font-bold justify-center flex mb-6">
+    <div className="px-0 md:px-25 lg:px-35">
+      <div className="text-2xl md:text-4xl font-bold justify-center flex mb-4 md:mb-6 mt-6">
         LỊCH CHIẾU
       </div>
       <div className="flex gap-5 justify-center mb-6">
@@ -192,8 +192,10 @@ function ShowTime({
         ))}
       </div>
 
-      <div className="flex justify-between mb-4">
-        <div className="text-4xl font-bold">DANH SÁCH RẠP</div>
+      <div className="flex justify-between mb-4 items-center">
+        <div className="text-lg md:text-2xl lg:text-4xl font-bold">
+          DANH SÁCH RẠP
+        </div>
         <Select
           onChange={(value) => {
             setSelected((prev) => ({ ...prev, provinceSelected: value }));
@@ -244,11 +246,13 @@ function ShowTime({
               )
             ) : (
               <div
-                className="flex justify-center items-center text-4xl text-(--color-yellow) 
-                py-10 gap-3"
+                className="flex justify-center items-center text-2xl md:text-4xl text-(--color-yellow) 
+                py-10 gap-2 md:gap-3 text-center"
               >
-                <FontAwesomeIcon icon={faVideoSlash} />
-                <span>HIỆN CHƯA CÓ LỊCH CHIẾU</span>
+                <span>
+                  <FontAwesomeIcon icon={faVideoSlash} /> HIỆN CHƯA CÓ LỊCH
+                  CHIẾU
+                </span>
               </div>
             )}
           </div>

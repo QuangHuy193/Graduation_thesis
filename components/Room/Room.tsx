@@ -19,7 +19,10 @@ function Room({
   if (!data || !Array.isArray(data.aside_gap)) return <Spinner />;
   return (
     <div>
-      <div className="flex justify-center text-4xl font-bold my-12 uppercase">
+      <div
+        className="flex justify-center text-2xl md:text-4xl font-bold my-4 md:my-12 uppercase
+      text-center"
+      >
         CHỌN GHẾ - {data.name}
       </div>
       <div className="flex justify-center">
@@ -41,7 +44,7 @@ function Room({
               width={120}
               height={50}
               alt="màn hình"
-              className="w-full "
+              className="w-full"
             />
             <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2">
               MÀN HÌNH
@@ -57,8 +60,8 @@ function Room({
             }> = [];
 
             return (
-              <div key={i} className="flex gap-4 p-3">
-                <div className="w-8">{numberToLetter(i)}</div>
+              <div key={i} className="flex gap-1 md:gap-4 p-1 md:p-3">
+                <div className="hidden md:block w-8">{numberToLetter(i)}</div>
 
                 {Array.from({ length: data.width }).map((_, col) => {
                   const column = col + 1;
@@ -114,8 +117,8 @@ function Room({
                           : seatSelected.some((s) => s.seat_id === seat_id)
                           ? "bg-(--color-yellow) hover:cursor-pointer"
                           : "bg-white hover:cursor-pointer"
-                      } w-10 h-8 rounded-xl flex items-center justify-center text-(--color-purple)
-                          font-semibold`}
+                      } w-8 h-6 md:w-10 md:h-8 rounded-lg md:rounded-xl flex items-center 
+                      justify-center text-(--color-purple) font-semibold`}
                       onClick={
                         !isBooked && !isAside
                           ? () =>
@@ -138,7 +141,7 @@ function Room({
           })}
         </div>
       </div>
-      <div className="flex justify-between ">
+      <div className="flex justify-between">
         <div className="flex gap-3">
           <div className="bg-white w-10 h-8 rounded-xl"> </div>
           <div>Ghế trống</div>

@@ -12,8 +12,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./MovieItem.module.scss";
 import LoadingLink from "../Link/LinkLoading";
-import { useState } from "react";
-import VideoTrailer from "../VideoTrailer/VideoTrailer";
 
 function MovieItem({
   data,
@@ -24,7 +22,6 @@ function MovieItem({
   setUrl: (url: string) => void;
   setOpenTrailer: (flag: boolean) => void;
 }) {
-  const [isTrailer, setIstrailer] = useState(false);
   return (
     <div className="h-full relative">
       <div className="relative group">
@@ -33,7 +30,7 @@ function MovieItem({
           width={250}
           height={50}
           alt={data.name}
-          className="w-full h-[360px] cursor-pointer rounded-sm"
+          className="w-full h-[250px] lg:h-[360px] md:h-[330px] cursor-pointer rounded-sm"
         />
 
         <div
@@ -95,9 +92,11 @@ function MovieItem({
           </div>
         </LoadingLink>
       </div>
+
+      {/* name */}
       <div
-        className="uppercase hover:text-(--color-yellow) font-bold flex justify-center
-        cursor-pointer pt-5 pb-18 text-xl text-center min-h-[90px]"
+        className="uppercase hover:text-(--color-yellow) md:font-bold flex justify-center
+        cursor-pointer pt-5 pb-18 md:text-xl text-center min-h-[90px]"
       >
         <LoadingLink href={`/movie/${data.movie_id}`}>
           {data.name} (T{data.age_require})
@@ -105,7 +104,7 @@ function MovieItem({
       </div>
       <div className="flex gap-2 pb-5 absolute left-0 right-0 bottom-0">
         <div
-          className="flex-1"
+          className="hidden md:flex-1"
           onClick={() => {
             setUrl(data.trailer_url);
             setOpenTrailer(true);

@@ -25,6 +25,7 @@ export async function GET(
 
   // Format YYYY-MM-DD
   const date = target.toISOString().split("T")[0];
+  console.log(date);
 
   try {
     const [rows] = await db.query(

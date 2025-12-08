@@ -49,6 +49,12 @@ function CinemaPage({ cinema_id }: { cinema_id: number }) {
     }
   }, [cinema_id, state.tab]);
 
+  useEffect(() => {
+    return () => {
+      sessionStorage.removeItem("cinema");
+    };
+  }, []);
+
   return (
     <div>
       {/* tab */}

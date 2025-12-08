@@ -1,6 +1,6 @@
 import { MovieItemITF } from "@/lib/interface/movieInterface";
 import MovieItem from "../MovieItem/MovieItem";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
@@ -19,12 +19,17 @@ function MovieList({
   title: string;
   link: string;
 }) {
+  // dùng cho thao tác lướt qua lại bằng tay
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
+
   const [trailer, setTrailer] = useState({
     open: false,
     url: "",
   });
   const [page, setPage] = useState(0);
-  const pageSize = 4;
+  // kích thước của trang (số cột)
+  const [pageSize, setPageSize] = useState(4);
 
   // Số trang tối đa
   const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
@@ -37,6 +42,39 @@ function MovieList({
     if (page > 0) setPage((p) => p - 1);
   };
 
+  useEffect(() => {
+    const updatePageSize = () => {
+      const w = window.innerWidth;
+
+      if (w < 768) setPageSize(2); // Mobile: 2 phim
+      else if (w < 1024) setPageSize(3); // Tablet: 3 phim
+      else setPageSize(4); // Desktop: 4 phim
+    };
+
+    updatePageSize(); // chạy lần đầu
+
+    window.addEventListener("resize", updatePageSize);
+    return () => window.removeEventListener("resize", updatePageSize);
+  }, []);
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX - touchEndX;
+
+    // vuốt qua trái → next
+    if (diff > 50) nextPage();
+
+    // vuốt qua phải → prev
+    if (diff < -50) prevPage();
+  };
+
   return (
     <div>
       {trailer.open && trailer.url !== "" && (
@@ -46,7 +84,7 @@ function MovieList({
         />
       )}
 
-      <div className="w-full flex justify-center py-7 text-4xl font-bold">
+      <div className="w-full flex justify-center py-7 text-4xl font-bold text-center">
         {title}
       </div>
 
@@ -60,13 +98,18 @@ function MovieList({
         </button>
 
         {/* VIEWPORT - ẩn overflow, giữ kích thước */}
-        <div className={`sliderViewport`}>
+        <div
+          className={`sliderViewport`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* TRACK - sẽ dịch chuyển bằng transform */}
           <div
             className={`sliderTrack`}
             style={{ transform: `translateX(-${page * 100}%)` }}
           >
-            {/* Mỗi slide chứa 4 item (grid) */}
+            {/* Mỗi slide chứa 2,3,4 item (grid) */}
             {Array.from({ length: totalPages }).map((_, p) => {
               const start = p * pageSize;
               const slice = data.slice(start, start + pageSize);
@@ -74,7 +117,7 @@ function MovieList({
                 <div className={`slide`} key={p}>
                   {/* slideInner giữ padding/gutter - không làm slide vượt 100% */}
                   <div className={`slideInner`}>
-                    <div className="grid grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                       {slice.map((movie) => (
                         <div key={movie.movie_id}>
                           <MovieItem

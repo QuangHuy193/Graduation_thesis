@@ -13,11 +13,12 @@ function FoodDrinkList({
   return (
     <div className="flex flex-col">
       <div
-        className={`flex justify-center uppercase text-2xl pb-3 text-(--color-yellow) font-semibold`}
+        className={`flex justify-center uppercase text-2xl pb-3 text-(--color-yellow) 
+        font-semibold`}
       >
         {title}
       </div>
-      <div className="flex grid-cols-3 justify-center">
+      <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {data?.map((d, i) => (
           <div key={i}>
             <PriceCard

@@ -2,7 +2,7 @@
   :global(.ant-select-selector) {
     color: var(--color-purple) !important;
     font-weight: bold !important;
-    width: 160px !important;
+    width: 200px !important;
   }
 
   :global(.ant-select-selection-placeholder),
@@ -10,14 +10,25 @@
     color: var(--color-purple) !important;
     font-weight: bold !important;
   }
+
+  :global(.ant-select-arrow) {
+    color: var(--color-purple) !important;
+  }
+
+  /* Tablet */
+  @media (min-width: 768px) {
+    :global(.ant-select-selector) {
+      width: 100px !important;
+    }
+  }
+  @media (min-width: 1024px) {
+    :global(.ant-select-selector) {
+      width: 160px !important;
+    }
+  }
 }
 
 .dropdown {
-  :global(.ant-select-dropdown) {
-    width: auto !important;
-    min-width: max-content !important; // tự giãn theo nội dung
-  }
-
   // not found content
   :global(.ant-select-item-empty) {
     padding: 10px 12px;
@@ -25,5 +36,12 @@
     color: #575555;
     text-align: center;
     line-height: 1.4;
+  }
+
+  /* Tablet */
+  @media (min-width: 768px) {
+    :global(.ant-select-dropdown) {
+      width: auto !important;
+    }
   }
 }

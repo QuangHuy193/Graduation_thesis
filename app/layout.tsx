@@ -24,8 +24,8 @@ export default function RootLayout({
         <GlobalLoading />
         <Providers>
           <Header />
-          <div className="h-(--height-header) bg-(--color-blue-black)"></div>
-          <main className="px-10 bg">{children}</main>
+          <div className="h-(--height-header-mobile) md:h-(--height-header) bg-(--color-blue-black)"></div>
+          <main className="px-3 md:px-10 bg">{children}</main>
           <Footer />
         </Providers>
       </body>
