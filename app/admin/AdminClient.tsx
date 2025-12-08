@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getAllMovies, callBulkApi } from "@/lib/axios/admin/movieAPI";
+import { getAllMovies, callBulkApi, getAllMoviesEx } from "@/lib/axios/admin/movieAPI";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
@@ -28,6 +28,7 @@ type PendingSlotUpdate = {
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("dashboard");
     const [movies, setMovies] = useState<MovieFullITF[]>([]);
+    const [moviesEx, setMoviesEx] = useState<MovieFullITF[]>([]);
     const [bookings, setBookings] = useState([]);
 
     const [screenings, setScreenings] = useState([]);
@@ -59,11 +60,14 @@ export default function AdminDashboard() {
     async function fetchMovies() {
         try {
             const data = await getAllMovies();
+            const dataEx = await getAllMoviesEx();
             setMovies(data);
+            setMoviesEx(dataEx);
         } catch (e) {
             console.error(e);
-            // fallback: mock
+
             setMovies([]);
+            setMoviesEx([]);
         }
     }
     async function fetchScreenings() {
@@ -154,8 +158,8 @@ export default function AdminDashboard() {
         }
     }
 
-    function handleEdit(movie: MovieFullITF) {
-        console.log("Edit:", movie);
+    function handleEdit() {
+        fetchMovies();
     }
 
     const handleDeleteFromChild = () => {
@@ -436,7 +440,7 @@ export default function AdminDashboard() {
                                 cinemasMap={cinemasMap}
                                 roomsList={roomsList}
                                 movieScreenings={screenings}
-                                externalMovies={movies}
+                                externalMovies={moviesEx}
                             // onAdd={async (payload) => {
                             //     // payload should include _temp_client_id when con gọi; forward it
                             //     const result = await createShowtimeWithDay(payload);

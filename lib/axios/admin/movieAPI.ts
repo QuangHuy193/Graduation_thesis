@@ -9,6 +9,15 @@ export async function getAllMovies() {
         throw error.response?.data || error;
     }
 }
+export async function getAllMoviesEx() {
+    try {
+        const res = await axiosInstance.get("/api/admin/movies/getAllMovieAct");
+        return res.data;
+    } catch (error: any) {
+        console.error("Error fetching movies:", error);
+        throw error.response?.data || error;
+    }
+}
 export async function createMovie(data: MovieFullITF) {
     try {
         const res = await axiosInstance.post("/api/admin/movies/addMovie", data);

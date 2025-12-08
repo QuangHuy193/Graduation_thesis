@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
-
+import styles from "./ShowtimesTable.module.scss"
 export type MovieScreenSlot = { movie_screen_id: number; start_time: string; end_time: string };
 export type ShowtimeDay = {
   showtime_id: number;
@@ -28,7 +28,6 @@ type Props = {
   onCommit?: (changes: PendingSlotUpdate[]) => Promise<any>;
   onSelect?: (s: ShowtimeDay) => void;
   externalMovies?: ExternalMovie[];
-  onAdd?: (payload: { movie_id: number; room_id: number; movie_screen_id: number; show_date: string; _temp_client_id?: number }) => Promise<ShowtimeDay>;
 };
 
 const toDateKey = (d: string) => d?.slice(0, 10);
@@ -55,6 +54,11 @@ export default function ShowtimeTimetable({
   const [activeDate, setActiveDate] = useState<string | null>(initialDate);
   const originalRef = useRef<ShowtimeDay[] | null>(null);
   const [trashHover, setTrashHover] = useState(false);
+  // animation states
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [hoverSlot, setHoverSlot] = useState<string | null>(null);
+  const [justInserted, setJustInserted] = useState<string | null>(null);
+
   // dragData supports existing or external normalized
   const dragData = useRef<{ type: "existing"; id: number } | { type: "external"; movie_id: number; movie_name?: string } | null>(null);
 
@@ -63,6 +67,11 @@ export default function ShowtimeTimetable({
     if (originalRef.current === null) originalRef.current = showtimes;
   }, [showtimes]);
 
+  useEffect(() => {
+    setDraggingId(null);
+    setHoverSlot(null);
+    dragData.current = null;
+  }, [externalMovies])
   const WINDOW_DAYS = 15;
   const startDate = initialDate ?? todayVN();
 
@@ -83,12 +92,28 @@ export default function ShowtimeTimetable({
     }
     return m;
   }, [state]);
-
+  const clearDragState = () => {
+    setHoverSlot(null);
+    setDraggingId?.(null);        // nếu bạn có draggingId state
+    dragData.current = null;
+  };
   useEffect(() => {
     if (!activeDate) {
       setActiveDate(startDate);
     }
   }, [startDate, activeDate]);
+  useEffect(() => {
+    const onDragEndGlobal = () => {
+      clearDragState();
+    };
+    window.addEventListener("dragend", onDragEndGlobal);
+    // also listen to pointerup to cover mobile/edge cases
+    window.addEventListener("pointerup", onDragEndGlobal);
+    return () => {
+      window.removeEventListener("dragend", onDragEndGlobal);
+      window.removeEventListener("pointerup", onDragEndGlobal);
+    };
+  }, []);
 
   const roomsByCinema = useMemo(() => {
     const out: Record<string, RoomEntry[]> = {};
@@ -164,13 +189,26 @@ export default function ShowtimeTimetable({
     // Swal.fire({ icon: 'success', title: 'Đã đưa vào thùng rác', timer: 900, showConfirmButton: false });
   }
   // existing drag start: also setData for browser compatibility
+  // const handleDragStart = (e: React.DragEvent, st: ShowtimeDay) => {
+  //   e.dataTransfer.effectAllowed = "move";
+  //   try { e.dataTransfer.setData("text/plain", String(st.showtime_id)); } catch (_) { }
+  //   dragData.current = { type: "existing", id: st.showtime_id };
+
+  // };
   const handleDragStart = (e: React.DragEvent, st: ShowtimeDay) => {
+    setDraggingId(st.showtime_id);
     e.dataTransfer.effectAllowed = "move";
-    try { e.dataTransfer.setData("text/plain", String(st.showtime_id)); } catch (_) { }
     dragData.current = { type: "existing", id: st.showtime_id };
 
+    // Ẩn ghost image mặc định
+    const img = new Image();
+    img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3C/svg%3E";
+    e.dataTransfer.setDragImage(img, 0, 0);
   };
-
+  const handleDragEndLocal = () => {
+    // called from onDragEnd on elements and global dragend
+    clearDragState();
+  };
   // external drag start: normalize fields and setData
   const handleDragStartExternal = (e: React.DragEvent, mv: ExternalMovie) => {
     e.dataTransfer.effectAllowed = "copy";
@@ -189,6 +227,9 @@ export default function ShowtimeTimetable({
     } else {
       dragData.current = { type: "external", movie_id, movie_name };
     }
+    const img = new Image();
+    img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3C/svg%3E";
+    e.dataTransfer.setDragImage(img, 0, 0);
   };
 
 
@@ -441,16 +482,42 @@ export default function ShowtimeTimetable({
                             {movieScreenings.map(slot => {
                               const existing = roomShow[slot.movie_screen_id] || null;
                               return (
-                                <div key={slot.movie_screen_id} className="border rounded p-2 bg-gray-50" onDragOver={(e) => e.preventDefault()} onDrop={(e) => void handleDropSlot(room.room_id, slot.movie_screen_id, e)}>
+                                <div
+                                  key={slot.movie_screen_id}
+                                  className={`border rounded p-2 bg-gray-50 transition-all
+    ${hoverSlot === `${room.room_id}-${slot.movie_screen_id}` ? styles.slotHover : ""}
+    ${justInserted === `${room.room_id}-${slot.movie_screen_id}` ? styles.insertFlash : ""}
+  `}
+                                  onDragOver={(e) => {
+                                    e.preventDefault();
+                                    setHoverSlot(`${room.room_id}-${slot.movie_screen_id}`);
+                                  }}
+                                  onDragLeave={() => setHoverSlot(null)}
+                                  onDrop={(e) => {
+                                    setHoverSlot(null);
+                                    setJustInserted(`${room.room_id}-${slot.movie_screen_id}`);
+                                    setTimeout(() => setJustInserted(null), 400);
+                                    void handleDropSlot(room.room_id, slot.movie_screen_id, e);
+                                  }}
+                                >
                                   <div className="text-xs text-gray-600 mb-1">{slot.start_time} – {slot.end_time}</div>
                                   {existing ? (
-                                    <div className="p-2 bg-white border rounded cursor-move" draggable onDragStart={(e) => handleDragStart(e, existing)} onClick={() => onSelect?.(existing)}>
+                                    <div
+                                      className={`p-2 bg-white border rounded cursor-move ${styles.dragItem}
+    ${draggingId === existing.showtime_id ? styles.dragging : ""}
+    ${justInserted === `${room.room_id}-${slot.movie_screen_id}` ? styles.fadeIn : ""}
+  `}
+                                      draggable
+                                      onDragStart={(e) => handleDragStart(e, existing)}
+                                      onDragEnd={handleDragEndLocal}
+                                    >
                                       <div className="font-medium">{existing.movie_title}</div>
                                     </div>
                                   ) : (
                                     <div className="text-xs text-gray-400 italic">(Trống)</div>
                                   )}
                                 </div>
+
                               );
                             })}
                           </div>
@@ -465,7 +532,7 @@ export default function ShowtimeTimetable({
         </div>
 
         <div className="w-72 border-l pl-4">
-          <div className="font-medium mb-2 ">Danh sách phim</div>
+          <div className="font-medium mb-2 ">Danh sách phim đang chiếu</div>
           <div className="space-y-2 max-h-[60vh] overflow-auto pr-2 ">
             {externalMovies.length === 0 && <div className="text-sm text-gray-500 italic">Không có phim.</div>}
             {externalMovies.map(mv => {
@@ -473,7 +540,13 @@ export default function ShowtimeTimetable({
               const displayId = mv?.movie_id ?? mv?.id ?? mv?.movieId;
               const displayName = mv?.name ?? mv?.title ?? "";
               return (
-                <div key={String(displayId ?? Math.random())} className="p-2 border rounded bg-white cursor-grab" draggable onDragStart={(e) => handleDragStartExternal(e, mv)} title="Kéo phim vào slot">
+                <div
+                  className={`p-2 border rounded bg-white cursor-grab ${styles.dragItem}
+    ${draggingId === displayId ? styles.dragging : ""}`}
+                  draggable
+                  onDragStart={(e) => handleDragStartExternal(e, mv)}
+                  onDragEnd={handleDragEndLocal}
+                >
                   <div className="font-medium text-sm">Phim {displayName}</div>
                   <div className="text-xs text-gray-500">ID: {displayId}</div>
                 </div>
@@ -482,14 +555,13 @@ export default function ShowtimeTimetable({
           </div>
           {/* Trash can area */}
           <div
+            className={`mt-3 rounded border-dashed border-2 p-3 flex items-center justify-center cursor-copy 
+    ${styles.trashGlow} 
+    ${trashHover ? styles.trashActive : ""}`}
             onDragOver={handleDragOverTrash}
             onDragEnter={handleDragOverTrash}
             onDragLeave={handleDragLeaveTrash}
             onDrop={handleDropToTrash}
-            className={`mt-3 rounded border-dashed border-2 p-3 flex items-center justify-center cursor-copy transition-colors ${trashHover ? "bg-red-50 border-red-400" : "bg-white border-gray-200"
-              }`}
-            aria-label="Trash"
-            role="button"
           >
             <div className="flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -504,144 +576,3 @@ export default function ShowtimeTimetable({
     </div>
   );
 }
-// // app/api/showtimes/move-batch/route.ts
-// import { NextResponse } from "next/server";
-// import { db } from "@/lib/db";
-
-// type MoveItemInput = {
-//   showtime_id: number;
-//   date?: string; // optional, YYYY-MM-DD
-//   to_room?: number | null;
-//   to_movie_screen_id?: number | null;
-//   movie_id?: number | null;
-//   status?: 0 | 1 | null;
-// };
-
-// export async function POST(request: Request) {
-//   try {
-//     const body = await request.json().catch(() => null);
-//     if (!body || !Array.isArray(body.moves)) {
-//       return NextResponse.json(
-//         { ok: false, message: "Invalid payload; expected { moves: [...] }" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const moves: MoveItemInput[] = body.moves;
-
-//     if (moves.length === 0) {
-//       return NextResponse.json({ ok: false, message: "No moves provided" }, { status: 400 });
-//     }
-
-//     // Pre-validation
-//     const validationErrors: any[] = [];
-//     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
-//     for (let i = 0; i < moves.length; i++) {
-//       const raw = moves[i] as any;
-//       if (!("showtime_id" in raw) || typeof raw.showtime_id !== "number" || !Number.isFinite(raw.showtime_id)) {
-//         validationErrors.push({ index: i, reason: "showtime_id is required and must be a number", input: raw });
-//         continue;
-//       }
-//       if ("date" in raw && raw.date != null && typeof raw.date !== "string") {
-//         validationErrors.push({ index: i, reason: "date must be a string YYYY-MM-DD if provided", input: raw });
-//       } else if ("date" in raw && raw.date != null && !dateRegex.test(raw.date)) {
-//         validationErrors.push({ index: i, reason: "date must be YYYY-MM-DD", input: raw });
-//       }
-//       // other fields are optional; no extra validation here
-//     }
-
-//     if (validationErrors.length) {
-//       return NextResponse.json({ ok: false, message: "Validation failed", errors: validationErrors }, { status: 400 });
-//     }
-
-//     console.log("move-batch payload validated, count:", moves.length);
-
-//     const conn = await db.getConnection();
-//     try {
-//       await conn.beginTransaction();
-
-//       const results: any[] = [];
-
-//       for (const raw of moves) {
-//         const m = raw as MoveItemInput;
-
-//         // Lock the target showtime row
-//         const [selRows] = await conn.query(`SELECT * FROM showtime WHERE showtime_id = ? FOR UPDATE`, [m.showtime_id]);
-//         const existing = (selRows as any[])[0] ?? null;
-
-//         if (!existing) {
-//           results.push({ ok: false, reason: "not_found", input: m });
-//           continue;
-//         }
-
-//         // --- NEW: if payload does NOT have key 'date' (i.e. date is undefined / not provided),
-//         // then delete the showtime row instead of updating it. ---
-//         if (!Object.prototype.hasOwnProperty.call(m, "date")) {
-//           await conn.query(`DELETE FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
-//           results.push({ ok: true, action: "deleted", input: m });
-//           continue;
-//         }
-//         // --- END NEW ---
-
-//         // Build updates dynamically. Use 'in' checks to allow explicit nulls.
-//         const updates: string[] = [];
-//         const params: any[] = [];
-
-//         if (Object.prototype.hasOwnProperty.call(m, "to_room")) {
-//           updates.push("room_id = ?");
-//           params.push(m.to_room);
-//         }
-//         if (Object.prototype.hasOwnProperty.call(m, "to_movie_screen_id")) {
-//           updates.push("movie_screen_id = ?");
-//           params.push(m.to_movie_screen_id);
-//         }
-//         if (Object.prototype.hasOwnProperty.call(m, "movie_id")) {
-//           updates.push("movie_id = ?");
-//           params.push(m.movie_id);
-//         }
-//         if (Object.prototype.hasOwnProperty.call(m, "status")) {
-//           updates.push("status = ?");
-//           params.push(m.status);
-//         }
-//         if (Object.prototype.hasOwnProperty.call(m, "date")) {
-//           updates.push("date = ?");
-//           params.push(m.date);
-//         }
-
-//         if (updates.length) {
-//           // push where param
-//           params.push(m.showtime_id);
-//           const sql = `UPDATE showtime SET ${updates.join(", ")} WHERE showtime_id = ?`;
-//           await conn.query(sql, params);
-//           // fetch fresh row
-//           const [fresh] = await conn.query(`SELECT * FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
-//           results.push({ ok: true, action: "updated", row: (fresh as any[])[0] });
-//         } else {
-//           // nothing to update
-//           results.push({ ok: true, action: "noop", row: existing });
-//         }
-//       } // end for
-
-//       await conn.commit();
-//       return NextResponse.json({ ok: true, results }, { status: 200 });
-//     } catch (err) {
-//       try {
-//         await conn.rollback();
-//       } catch (rbErr) {
-//         console.error("rollback failed:", rbErr);
-//       }
-//       console.error("move-batch error (during transaction):", err);
-//       return NextResponse.json({ ok: false, message: "Internal server error", error: `${err}` }, { status: 500 });
-//     } finally {
-//       try {
-//         conn.release();
-//       } catch (relErr) {
-//         console.error("connection release error:", relErr);
-//       }
-//     }
-//   } catch (err) {
-//     console.error("move-batch outer error:", err);
-//     return NextResponse.json({ ok: false, message: "Bad request or server error" }, { status: 400 });
-//   }
-// }
