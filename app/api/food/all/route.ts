@@ -5,17 +5,17 @@ import { successResponse, errorResponse } from "@/lib/function";
 export async function GET() {
   try {
     const [foods] = await db.query(
-      `SELECT food_id, name, image, price as price_final
+      `SELECT food_id, name, description, image, price as price_final
       FROM foods
       WHERE type = 'food'`
     );
     const [drinks] = await db.query(
-      `SELECT food_id, name, image, price as price_final
+      `SELECT food_id, name, description, image, price as price_final
       FROM foods
       WHERE type = 'drink'`
     );
     const [combos] = await db.query(
-      `SELECT food_id, name, image, price as price_final
+      `SELECT food_id, name, description, image, price as price_final
       FROM foods
       WHERE type = 'combo'`
     );

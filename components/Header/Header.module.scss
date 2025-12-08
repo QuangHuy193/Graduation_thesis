@@ -41,3 +41,25 @@
   background-color: #ef4444;
   /* red-500 */
 }
+
+.select_cinema {
+  width: 100%;
+  min-width: 0 !important;
+
+  // bên trong khung hiển thị (selector)
+  :global(.ant-select-selector) {
+    width: 100% !important;
+    background-color: var(--color-blue-black) !important;
+    border: 1px #ccc solid !important;
+  }
+
+  :global(.ant-select-arrow) {
+    color: var(--color-yellow) !important;
+  }
+
+  :global(.ant-select-selection-placeholder),
+  :global(.ant-select-selection-item) {
+    color: var(--color-yellow) !important;
+    font-weight: bold !important;
+  }
+}

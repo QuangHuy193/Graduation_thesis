@@ -520,73 +520,112 @@ function MovieDetail({
   return (
     <div>
       {/* chi tiết phim */}
-      <div className="flex">
-        <div className="flex-4 px-2 ">
-          <div className="relative h-[550px]">
-            <Image
-              src={data[0].image}
-              width={120}
-              height={50}
-              alt="poster"
-              className="h-full w-full rounded-sm border border-gray-400 "
-            />
-            <div
-              className="absolute top-0 left-0 text-xl font-bold px-2 py-1 bg-red-500
-            rounded-tl-sm"
-            >
-              T{data[0].age_require}
+      <div className="flex flex-col">
+        <div className="flex gap-2">
+          <div className="flex-4">
+            <div className="relative h-[330px] md:h-[500px] lg:h-[550px]">
+              <Image
+                src={data[0].image}
+                width={120}
+                height={50}
+                alt="poster"
+                className="h-full w-full rounded-sm border border-gray-400 "
+              />
+              <div
+                className="absolute top-0 left-0 text-xl font-bold px-2 py-1 bg-red-500
+              rounded-tl-sm"
+              >
+                T{data[0].age_require}
+              </div>
             </div>
+          </div>
+          <div className="flex-6">
+            <h1 className="uppercase text-2xl md:text-4xl font-bold py-1 mb-4">
+              {data[0].name} (T{data[0].age_require})
+            </h1>
+            <div>
+              <div className={`${styles.info_Item}`}>
+                <div>
+                  <FontAwesomeIcon icon={faTag} />
+                </div>
+                <span>
+                  {data[0].genres.map((genre, i) => (
+                    <span key={i}>
+                      {genre}
+                      {i < data[0].genres.length - 1 && ", "}
+                    </span>
+                  ))}
+                </span>
+              </div>
+              <div className={`${styles.info_Item}`}>
+                <div>
+                  <FontAwesomeIcon icon={faClock} />
+                </div>
+                <span>{data[0].duration} phút</span>
+              </div>
+              <div className={`${styles.info_Item}`}>
+                <div>
+                  <FontAwesomeIcon icon={faEarth} />
+                </div>
+                <span>{data[0].country}</span>
+              </div>
+              <div className={`${styles.info_Item}`}>
+                <div>
+                  <FontAwesomeIcon icon={faComment} />
+                </div>
+                <span>{data[0].subtitle}</span>
+              </div>
+              <div className={`${styles.info_Item}`}>
+                <div>
+                  <FontAwesomeIcon icon={faUserCheck} />
+                </div>
+                <span className="bg-(--color-yellow) text-black">
+                  T{data[0].age_require}: Phim dành cho khán giả từ đủ{" "}
+                  {data[0].age_require} tuổi trở lên ({data[0].age_require}+)
+                </span>
+              </div>
+            </div>
+            {/* mo tả */}
+            <div className="hidden md:block">
+              <h3 className={`${styles.sub_title}`}>MÔ TẢ</h3>
+              <div>
+                <div>
+                  Diễn viên:{" "}
+                  {data[0].actors.map((actor, i) => (
+                    <span key={i}>
+                      {actor}
+                      {i < data[0].actors.length - 1 ? ", " : ", ..."}
+                    </span>
+                  ))}
+                </div>
+                <div>Khởi chiếu: {formatDateWithDay(data[0].release_date)}</div>
+              </div>
+              <h3 className={`${styles.sub_title}`}>NỘI DUNG</h3>
+              <div>{data[0].description}</div>
+            </div>
+            <div
+              className="my-2 w-fit"
+              onClick={() =>
+                setState((prev) => ({ ...prev, watchTrailer: true }))
+              }
+            >
+              <WatchTrailer size="m" />
+            </div>
+            {state.watchTrailer && (
+              <VideoTrailer
+                onClose={() =>
+                  setState((prev) => ({ ...prev, watchTrailer: false }))
+                }
+                src={data[0].trailer_url}
+              />
+            )}
           </div>
         </div>
-        <div className="flex-6 px-2">
-          <h1 className="uppercase text-4xl font-bold py-1 mb-4">
-            {data[0].name} (T{data[0].age_require})
-          </h1>
-          <div>
-            <div className={`${styles.info_Item}`}>
-              <div>
-                <FontAwesomeIcon icon={faTag} />
-              </div>
-              <span>
-                {data[0].genres.map((genre, i) => (
-                  <span key={i}>
-                    {genre}
-                    {i < data[0].genres.length - 1 && ", "}
-                  </span>
-                ))}
-              </span>
-            </div>
-            <div className={`${styles.info_Item}`}>
-              <div>
-                <FontAwesomeIcon icon={faClock} />
-              </div>
-              <span>{data[0].duration} phút</span>
-            </div>
-            <div className={`${styles.info_Item}`}>
-              <div>
-                <FontAwesomeIcon icon={faEarth} />
-              </div>
-              <span>{data[0].country}</span>
-            </div>
-            <div className={`${styles.info_Item}`}>
-              <div>
-                <FontAwesomeIcon icon={faComment} />
-              </div>
-              <span>{data[0].subtitle}</span>
-            </div>
-            <div className={`${styles.info_Item}`}>
-              <div>
-                <FontAwesomeIcon icon={faUserCheck} />
-              </div>
-              <span className="bg-(--color-yellow) text-black">
-                T{data[0].age_require}: Phim dành cho khán giả từ đủ{" "}
-                {data[0].age_require} tuổi trở lên ({data[0].age_require}+)
-              </span>
-            </div>
-          </div>
+        <div className="block md:hidden">
+          {/* mo tả mobile*/}
           <h3 className={`${styles.sub_title}`}>MÔ TẢ</h3>
           <div>
-            <div>
+            <div className="text-[13px]">
               Diễn viên:{" "}
               {data[0].actors.map((actor, i) => (
                 <span key={i}>
@@ -595,26 +634,12 @@ function MovieDetail({
                 </span>
               ))}
             </div>
-            <div>Khởi chiếu: {formatDateWithDay(data[0].release_date)}</div>
+            <div className="text-[13px]">
+              Khởi chiếu: {formatDateWithDay(data[0].release_date)}
+            </div>
           </div>
-          <h3 className={`${styles.sub_title}`}>NỘI DUNG</h3>
-          <div>{data[0].description}</div>
-          <div
-            className="my-2 w-fit"
-            onClick={() =>
-              setState((prev) => ({ ...prev, watchTrailer: true }))
-            }
-          >
-            <WatchTrailer size="m" />
-          </div>
-          {state.watchTrailer && (
-            <VideoTrailer
-              onClose={() =>
-                setState((prev) => ({ ...prev, watchTrailer: false }))
-              }
-              src={data[0].trailer_url}
-            />
-          )}
+          <h3 className={`${styles.sub_title} `}>NỘI DUNG</h3>
+          <div className="text-[13px]">{data[0].description}</div>
         </div>
       </div>
       {/* hiện lịch chiếu */}
@@ -648,15 +673,18 @@ function MovieDetail({
       </div>
 
       {/* chọn loại vé, ghế, bắp nước */}
-      <div id="select_ticket_type" className="mt-16">
+      <div id="select_ticket_type" className="mt-10 md:mt-16">
         {!state.isFetch ? (
           <div>
             {state?.timesSelected?.showtime_id !== -1 &&
               state?.ticketTypes?.length !== 0 && (
                 <>
                   {/* hiện loại vé */}
-                  <div className="pb-4 pt-10">
-                    <div className="flex justify-center text-4xl font-bold mb-12">
+                  <div className="md:pb-4 md:pt-10">
+                    <div
+                      className="flex justify-center text-2xl md:text-4xl font-bold mb-2 
+                    md:mb-12"
+                    >
                       CHỌN LOẠI VÉ
                     </div>
 
@@ -678,9 +706,9 @@ function MovieDetail({
                       </div>
                     </div>
 
-                    <div className="flex gap-6 justify-center">
+                    <div className="flex flex-col md:flex-row gap-3 md:gap-6 justify-center">
                       {state?.ticketTypes?.map((t, i) => (
-                        <div key={i}>
+                        <div key={i} className="flex justify-center">
                           <PriceCard
                             data={t}
                             setTicketSelected={(name, price, inc) => {
@@ -756,10 +784,10 @@ function MovieDetail({
 
                   {/* hiện bắp nước */}
                   <div className="pb-4 pt-10">
-                    <div className="flex justify-center text-4xl font-bold mb-12">
+                    <div className="flex justify-center text-2xl md:text-4xl font-bold mb-12">
                       CHỌN BẮP NƯỚC
                     </div>
-                    <div>
+                    <div className="pb-4">
                       <FoodDrinkList
                         title="Combo"
                         data={state?.foodList?.combos}
@@ -769,7 +797,7 @@ function MovieDetail({
                         foodSelected={state.foodSelected}
                       />
                     </div>
-                    <div>
+                    <div className="pb-4">
                       <FoodDrinkList
                         title="Bắp"
                         data={state?.foodList?.foods}
@@ -779,7 +807,7 @@ function MovieDetail({
                         foodSelected={state.foodSelected}
                       />
                     </div>
-                    <div>
+                    <div className="pb-4">
                       <FoodDrinkList
                         title="Nước ngọt"
                         data={state?.foodList?.drinks}
@@ -801,7 +829,10 @@ function MovieDetail({
       </div>
 
       {/* thanh tổng kết */}
-      <div className="flex justify-between border-t border-t-gray-50 py-3 items-center">
+      <div
+        className="flex flex-col md:flex-row items-start md:justify-between border-t 
+        border-t-gray-50 py-3"
+      >
         <div>
           <div className="text-2xl font-bold my-1">
             {data[0].name} ({data[0].age_require})
@@ -837,8 +868,11 @@ function MovieDetail({
               ))}
           </div>
         </div>
-        <div className="flex gap-3">
-          <div className="text-black bg-(--color-yellow) rounded-sm px-2 py-4">
+        <div className="flex flex-col md:flex-row gap-3 py-2 md:py-0 w-full">
+          <div
+            className="text-black bg-(--color-yellow) rounded-sm px-2 py-1 md:py-4
+          flex md:block gap-2 items-center w-fit"
+          >
             <div className="text-sm">Thời gian giữ vé:</div>
             <div className="font-bold">
               {state.clock?.minute?.toString().padStart(2, "0")}:
@@ -870,6 +904,7 @@ function MovieDetail({
             </div>
             <div className="relative" onClick={() => handleBooking()}>
               <Button
+                wfull={true}
                 text="ĐẶT VÉ"
                 text_color="black"
                 hover_bg_color="#5E4CA2"

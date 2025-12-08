@@ -80,7 +80,7 @@ export default function Home() {
       </div>
 
       <div>
-        <div className="pb-[50px]">
+        <div className="pb-[20px] md:pb-[50px]">
           <MovieList
             data={bannerMovieShowng}
             title="PHIM ĐANG CHIẾU"
@@ -88,7 +88,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="pb-[50px]">
+        <div className="pb-[20px] md:pb-[50px]">
           <MovieList
             data={bannerMovieUpcoming}
             title="PHIM SẮP CHIẾU"
@@ -96,7 +96,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="pb-[50px]">
+        <div className="pb-[20px] md:pb-[50px]">
           <PromotionList
             data={promotionList}
             title="KHUYẾN MÃI"

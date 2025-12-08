@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PromotionItem from "../PromotionItem/PromotionItem";
 import Button from "../Button/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -16,8 +16,13 @@ function PromotionList({
   title: string;
   link: string;
 }) {
+  // dùng cho thao tác lướt qua lại bằng tay
+  const [touchStartX, setTouchStartX] = useState(0);
+  const [touchEndX, setTouchEndX] = useState(0);
+
   const [page, setPage] = useState(0);
-  const pageSize = 3;
+  // kích thước của trang (số cột)
+  const [pageSize, setPageSize] = useState(3);
 
   // Số trang tối đa
   const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
@@ -29,13 +34,51 @@ function PromotionList({
   const prevPage = () => {
     if (page > 0) setPage((p) => p - 1);
   };
+
+  useEffect(() => {
+    const updatePageSize = () => {
+      const w = window.innerWidth;
+
+      if (w < 768) setPageSize(2); // Mobile: 2 phim
+      else if (w < 1024) setPageSize(3); // Tablet: 3 phim
+      else setPageSize(4); // Desktop: 4 phim
+    };
+
+    updatePageSize(); // chạy lần đầu
+
+    window.addEventListener("resize", updatePageSize);
+    return () => window.removeEventListener("resize", updatePageSize);
+  }, []);
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX - touchEndX;
+
+    // vuốt qua trái → next
+    if (diff > 50) nextPage();
+
+    // vuốt qua phải → prev
+    if (diff < -50) prevPage();
+  };
   return (
     <div>
-      <div className="w-full flex justify-start py-7 text-4xl font-bold">
+      <div className="text-2xl w-full flex justify-start py-7 md:text-4xl font-bold">
         {title}
       </div>
 
-      <div className="relative">
+      <div
+        className="relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <button
           onClick={prevPage}
           disabled={page === 0}
@@ -59,7 +102,7 @@ function PromotionList({
                 <div className={`slide`} key={p}>
                   {/* slideInner giữ padding/gutter - không làm slide vượt 100% */}
                   <div className={`slideInner`}>
-                    <div className="grid grid-cols-3 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                       {slice.map((img, index) => (
                         <div key={index}>
                           <PromotionItem image={img} link={link} />

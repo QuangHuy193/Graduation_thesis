@@ -14,6 +14,9 @@ import {
 import { weekdays } from "@/lib/constant";
 
 function BarTicket() {
+  // kiểm tra loại giao diện
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
   const [state, setState] = useState({
     // danh sách rạp
     cinemaList: [],
@@ -177,18 +180,23 @@ function BarTicket() {
 
   return (
     <div
-      className="w-full bg-white rounded-sm flex 
+      className="w-full bg-white rounded-sm lg:flex md:flex
     items-center justify-between px-5 py-4"
     >
       <div>
-        <div className="text-2xl text-gray-400 font-bold">ĐẶT VÉ NHANH</div>
+        <div
+          className="text-2xl md:text-[16px] text-gray-400 font-bold justify-center
+        flex pb-3 md:pb-0"
+        >
+          ĐẶT VÉ NHANH
+        </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 md:flex-row ">
         {/* rạp */}
-        <div>
+        <div className="flex justify-center">
           <Select
-            popupMatchSelectWidth={false}
+            popupMatchSelectWidth={isMobile ? true : false}
             notFoundContent={<Spinner text="Đang tải danh sách rạp" />}
             className={styles.select}
             classNames={{
@@ -216,9 +224,9 @@ function BarTicket() {
         </div>
 
         {/* phim */}
-        <div>
+        <div className="flex justify-center">
           <Select
-            popupMatchSelectWidth={false}
+            popupMatchSelectWidth={isMobile ? true : false}
             notFoundContent={
               state.isFetch ? (
                 <Spinner text="Đang tải danh sách phim" />
@@ -255,9 +263,9 @@ function BarTicket() {
         </div>
 
         {/* ngày */}
-        <div>
+        <div className="flex justify-center">
           <Select
-            popupMatchSelectWidth={false}
+            popupMatchSelectWidth={isMobile ? true : false}
             notFoundContent={
               state.isFetch ? (
                 <Spinner text="Đang tải danh sách ngày chiếu" />
@@ -294,9 +302,9 @@ function BarTicket() {
         </div>
 
         {/* suất */}
-        <div>
+        <div className="flex justify-center">
           <Select
-            popupMatchSelectWidth={false}
+            popupMatchSelectWidth={isMobile ? true : false}
             notFoundContent={
               state.isFetch ? (
                 <Spinner text="Đang tải danh sách suất chiếu" />
@@ -331,14 +339,20 @@ function BarTicket() {
             }
           />
         </div>
-        <div className="relative" onClick={handleSetQuickTicket}>
-          <Button
-            text="ĐẶT NGAY"
-            link={`/movie/${state.valueSelected.movie}`}
-          />
-          {state.valueSelected.times === null && (
-            <div className="absolute top-0 right-0 left-0 bottom-0 z-10 bg-black/20 rounded-sm"></div>
-          )}
+        <div
+          className="relative flex justify-center"
+          onClick={handleSetQuickTicket}
+        >
+          <div className="relative inline-block">
+            <Button
+              text="ĐẶT NGAY"
+              link={`/movie/${state.valueSelected.movie}`}
+            />
+
+            {state.valueSelected.times === null && (
+              <div className="absolute inset-0 z-10 bg-black/20 rounded-sm"></div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import {
   faMagnifyingGlass,
   faTicket,
   faCircleUser,
+  faList,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./Header.module.scss";
@@ -16,13 +17,15 @@ import { CinemaOnlyCity } from "@/lib/interface/cinemaInterface";
 import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
 import LoadingLink from "../Link/LinkLoading";
 import { useSession, signOut } from "next-auth/react";
-import { Input } from "antd";
+import { Input, Select } from "antd";
 import { useRouter } from "next/navigation";
 
 function Header() {
   const [valueSearch, setValueSearch] = useState("");
   const router = useRouter();
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
+  // rạp dc chọn khi ở menu mobile
+  const [cinema, setCinema] = useState(-1);
   const { data: session } = useSession();
   const user = session?.user;
 
@@ -40,10 +43,21 @@ function Header() {
     signOut({ callbackUrl: "/" });
   };
 
+  // chuyển trang rạp
+  useEffect(() => {
+    if (cinema !== -1) {
+      router.push(`/cinema/${cinema}`);
+      sessionStorage.setItem("cinema", cinema + "");
+    }
+  }, [cinema]);
+
   return (
-    <header className="bg-(--color-blue-black) text-white px-10 w-full h-(--width-header) fixed z-11">
+    <header
+      className="bg-(--color-blue-black) text-white w-full fixed z-11 
+      h-(--height-header-mobile)"
+    >
       <div
-        className="max-w-7xl mx-auto flex items-center justify-between border-b
+        className="flex items-center justify-between border-b px-3 md:px-10
        border-b-gray-500 py-1"
       >
         <div className="flex gap-5">
@@ -59,7 +73,8 @@ function Header() {
             </LoadingLink>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* nút đặt vé */}
+          <div className="hidden lg:flex md:flex items-center gap-4 ">
             <Button
               text="ĐẶT VÉ NGAY"
               icon={faTicket}
@@ -69,9 +84,9 @@ function Header() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4">
           {/* Ô tìm kiếm */}
-          <div className="hidden sm:block relative ">
+          <div className="relative ">
             <Input
               value={valueSearch}
               onChange={(e) => setValueSearch(e.target.value)}
@@ -96,10 +111,41 @@ function Header() {
             <UserMenu user={user} handleLogout={handleLogout}></UserMenu>
           </div>
         </div>
+
+        {/* mobile */}
+        <div className="flex md:hidden justify-center items-center gap-3">
+          {/* chọn rạp mobile */}
+          <div className="w-[200px]">
+            <Select
+              value={cinema !== -1 ? cinema : null}
+              onChange={(v) => setCinema(v)}
+              popupMatchSelectWidth={false}
+              className={`${styles.select_cinema}`}
+              placeholder="Chọn rạp"
+              options={
+                cinemas?.length > 0
+                  ? cinemas.map((c: CinemaOnlyCity) => {
+                      return {
+                        value: c.cinema_id,
+                        label: c.name + " (" + c.province + ")",
+                      };
+                    })
+                  : []
+              }
+            />
+          </div>
+          {/*icon menu mobile */}
+          <div>
+            <FontAwesomeIcon className="text-xl" icon={faList} />
+          </div>
+        </div>
       </div>
 
       {/* Dòng dưới của header */}
-      <div className="flex items-center justify-between pt-2 pb-4">
+      <div
+        className="hidden md:flex items-center justify-between pt-2 pb-4 px-10 
+      bg-(--color-blue-black)"
+      >
         <div className="flex gap-3">
           <div className={`${styles.hd_bottom_left_item}`}>
             <div>
