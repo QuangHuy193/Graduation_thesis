@@ -45,6 +45,18 @@ function Checkout() {
   // const hanndlePayment = (method: any, payload: any) => {
   //   console.log("onPay called in Checkout:", method, payload);
   // };
+
+  //Lấy lại booking data từ session
+  useEffect(() => {
+    const data = sessionStorage.getItem("bookingData");
+    if (data) {
+      setBookingData(JSON.parse(data));
+    } else {
+      // fallback khi user mở tab mới / reload mất data
+      console.warn("Không tìm thấy bookingData");
+    }
+  }, []);
+
   useEffect(() => {
     const updateBooking = async (bookingID, data) => {
       await updateBookingToPaid(bookingID, data); // ⬅ Gọi API /booking/[id]
@@ -55,6 +67,7 @@ function Checkout() {
       console.log("Thanh toán thành công" + paymentStatus);
 
       if (bookingID) {
+        console.log("bookingData: ", bookingData);
         // lấy thông tin booking
         const seats = bookingData.seats || [];
         const foods = bookingData.food_drink || [];
@@ -120,16 +133,7 @@ function Checkout() {
       setAuth(false);
     }
   }, [status, user]);
-  //Lấy lại booking data từ session
-  useEffect(() => {
-    const data = sessionStorage.getItem("bookingData");
-    if (data) {
-      setBookingData(JSON.parse(data));
-    } else {
-      // fallback khi user mở tab mới / reload mất data
-      console.warn("Không tìm thấy bookingData");
-    }
-  }, []);
+
   async function handleCreateBooking() {
     if (!bookingData) {
       console.error("Không tìm thấy bookingData");
