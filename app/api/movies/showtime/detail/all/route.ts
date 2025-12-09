@@ -56,6 +56,11 @@ export async function GET() {
     // GROUP theo movie
     const movies: any = {};
 
+    // lấy thời gian hiện tại
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const today = now.toISOString().split("T")[0];
+
     for (const r of rows as any[]) {
       // movie
       if (!movies[r.movie_id]) {
@@ -89,12 +94,25 @@ export async function GET() {
         };
       }
 
-      // showtime
-      movies[r.movie_id].dates[r.date][r.cinema_id].showtimes.push({
-        movie_screen_id: r.movie_screen_id,
-        showtime_id: r.showtime_id,
-        start_time: r.start_time,
-      });
+      // 🔥 lọc giờ (nếu là hôm nay)
+      let canPush = true;
+
+      if (r.date === today) {
+        const [hh, mm] = r.start_time.split(":").map(Number);
+        const timeMinutes = hh * 60 + mm;
+
+        if (timeMinutes <= currentMinutes) {
+          canPush = false;
+        }
+      }
+
+      if (canPush) {
+        movies[r.movie_id].dates[r.date][r.cinema_id].showtimes.push({
+          movie_screen_id: r.movie_screen_id,
+          showtime_id: r.showtime_id,
+          start_time: r.start_time,
+        });
+      }
     }
 
     // convert về đúng cấu trúc cũ

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
 
-// lấy danh sách ghế thoe booking
+// lấy danh sách ghế theo booking
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const booking_id = url.searchParams.get("booking_id");
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
 
   try {
     const [rows] = await db.query(
-      `SELECT t.ticket_id, t.qr_code, b.showtime_date, s.seat_row, s.seat_column, r.name, ms.start_time
+      `SELECT t.ticket_id, t.qr_code, s.showtime_date, s.seat_row, s.seat_column, r.name, ms.start_time
       FROM ticket t
       JOIN booking b ON b.booking_id = t.booking_id
       JOIN showtime st ON st.showtime_id = b.showtime_id

@@ -12,26 +12,21 @@ export async function POST(
   try {
     const body = await req.json();
     const { id } = await params;
-    const { total_price, showtime_id, showtime_date } = body;
+    const { total_price, showtime_id } = body;
 
-    // if (!total_price || !showtime_id || !showtime_date) {
-    //   return errorResponse("Thiếu dữ liệu đầu vào", 400);
-    // }
     if (!total_price) {
       return errorResponse("Thiếu total_price đầu vào", 400);
     } else if (!showtime_id) {
       return errorResponse("Thiếu showtime đầu vào", 400);
-    } else if (!showtime_date) {
-      return errorResponse("Thiếu showtime_date đầu vào", 400);
     }
 
     const booking_time = getCurrentDateTime();
 
     const [data] = await db.query(
       `INSERT INTO booking 
-      (total_price, booking_time, status, showtime_id, showtime_date, user_id)
-       values (?,?,?,?,?,?)`,
-      [total_price, booking_time, 0, showtime_id, showtime_date, id]
+      (total_price, booking_time, status, showtime_id, user_id)
+       values (?,?,?,?,?)`,
+      [total_price, booking_time, 0, showtime_id, id]
     );
 
     return successResponse(

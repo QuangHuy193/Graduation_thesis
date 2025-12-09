@@ -15,6 +15,8 @@ import BookingHistory from "@/components/BookingHistory/BookingHistory";
 export default function verifyOtp() {
   const { data: session, status } = useSession();
   const [userData, setUserData] = useState<any | null>(null);
+  // đang hủy vé reset lại booking
+  const [isCancelBooking, setIsCancelBooking] = useState(false);
   const [bookingHis, setBookingHis] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,18 @@ export default function verifyOtp() {
         .finally(() => setLoading(false));
     }
   }, [session, status]);
+
+  useEffect(() => {
+    getBookingHistory(userID)
+      .then((res) => {
+        setBookingHis(res);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(String(err?.message || err));
+      })
+      .finally(() => setLoading(false));
+  }, [isCancelBooking]);
 
   if (status === "loading") {
     return (
@@ -167,7 +181,11 @@ export default function verifyOtp() {
               )}
               {showHistoryBooking && (
                 <>
-                  <BookingHistory bookings={bookingHis} />
+                  <BookingHistory
+                    bookings={bookingHis}
+                    isCancelBooking={isCancelBooking}
+                    setIsCancelBooking={setIsCancelBooking}
+                  />
                 </>
               )}
             </div>

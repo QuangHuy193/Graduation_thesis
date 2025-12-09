@@ -1,17 +1,26 @@
 "use client";
 
-import { CANCELBOOKING } from "@/lib/constant";
-import {
-  faChevronCircleDown,
-  faChevronDown,
-} from "@fortawesome/free-solid-svg-icons";
+import { cancelBookingAPI } from "@/lib/axios/bookingAPI";
+import { getRefundPercent } from "@/lib/function";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
 import Swal from "sweetalert2";
 
-export default function BookingHistory({ bookings = [] }) {
+export default function BookingHistory({
+  bookings = [],
+  isCancelBooking,
+  setIsCancelBooking,
+}) {
+  // mở vé của booking
   const [openId, setOpenId] = useState(-1);
+
+  // lấy user
+  const { data: session } = useSession();
+  const user = session?.user;
+  console.log(user);
 
   const fmtDate = (iso) => {
     if (!iso) return "-";
@@ -35,6 +44,70 @@ export default function BookingHistory({ bookings = [] }) {
       style: "currency",
       currency: "VND",
     }).format(value);
+  };
+
+  const handleCancelBooking = async (
+    booking_id: number | string,
+    date: Date,
+    time: string
+  ) => {
+    Swal.fire({
+      icon: "warning",
+      text: `Bạn có chắc muốn hủy đơn hàng? 
+      Việc hủy có thể làm bạn mất một phần giá trị vé theo quy định hoàn tiền, 
+      và thao tác này sẽ không thể hoàn tác.`,
+      confirmButtonText: "ĐỒNG Ý",
+      cancelButtonText: "HỦY",
+      showCancelButton: true,
+      customClass: {
+        popup: "popup_alert",
+        confirmButton: `btn_alert`,
+        cancelButton: `btn_alert`,
+      },
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        // TODO thêm vip của user
+        const refundPercent = getRefundPercent(date, time, 0);
+
+        if (refundPercent === 0) {
+          Swal.fire({
+            icon: "error",
+            text: "Suất chiếu còn dưới 3 giờ nên không thể hủy vé!",
+          });
+          return;
+        }
+
+        // gọi api
+        try {
+          setIsCancelBooking(true);
+
+          const res = await cancelBookingAPI(booking_id, refundPercent);
+
+          console.log(res);
+
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: res.success ? "success" : "error",
+            text: res.success ? "Đã hủy đơn hàng" : "Hủy đơn hàng thất bại",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        } catch (error) {
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            text: "Hủy đơn hàng thất bại",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+          console.log(error);
+        } finally {
+          setIsCancelBooking(false);
+        }
+      }
+    });
   };
 
   return (
@@ -115,31 +188,54 @@ export default function BookingHistory({ bookings = [] }) {
                   <div className="font-bold text-yellow-300 text-right">
                     {fmtCurrency(b.total_price)}
                   </div>
-                  {b.status === 1 && (
-                    <div className="flex justify-between">
-                      {/* Mũi tên gợi ý mở/đóng */}
-                      <div className="pl-5">
-                        <FontAwesomeIcon
-                          icon={faChevronDown}
-                          className={`w-4 h-4 text-yellow-300 transition-transform
+
+                  <div className="flex justify-between">
+                    {/* Mũi tên gợi ý mở/đóng */}
+                    <div className="pl-5">
+                      <FontAwesomeIcon
+                        icon={faChevronDown}
+                        className={`w-4 h-4 text-yellow-300 transition-transform
                              duration-300 ${
                                openId === b.booking_id
                                  ? "rotate-180"
                                  : "rotate-0"
                              }`}
-                        />
-                      </div>
+                      />
+                    </div>
+
+                    {b.status === 0 && (
+                      <div className="text-yellow-500">Chờ thanh toán</div>
+                    )}
+
+                    {b.status === 1 && (
                       <button
                         onClick={(e) => {
+                          handleCancelBooking(
+                            b.booking_id,
+                            b.showtime_date,
+                            b.start_time
+                          );
                           e.stopPropagation(); // không toggle mở/đóng drawer
                         }}
                         className="h-fit px-3 py-2 bg-red-600 hover:bg-red-700
                            text-white rounded-md text-xs sm:text-sm cursor-pointer"
                       >
-                        Hủy vé
+                        {isCancelBooking ? "Đang hủy..." : "Hủy"}
                       </button>
-                    </div>
-                  )}
+                    )}
+
+                    {b.status === 2 && (
+                      <div className="text-blue-500">Đã xem</div>
+                    )}
+
+                    {b.status === 3 && (
+                      <div className="text-purple-500">Đang hoàn tiền</div>
+                    )}
+
+                    {b.status === 4 && (
+                      <div className="text-red-500">Đã hủy</div>
+                    )}
+                  </div>
                 </div>
 
                 {/* --- Tickets Drawer --- */}

@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import QRCode from "qrcode";
 import { errorResponse, successResponse } from "@/lib/function";
-import { start } from "nprogress";
 
 export async function PUT(
   req: Request,
@@ -80,7 +79,6 @@ export async function PUT(
         );
 
         // lấy food cho qr
-
         const [foodRow] = await db.query(
           `SELECT f.name, fo.quantity
           FROM food_order fo

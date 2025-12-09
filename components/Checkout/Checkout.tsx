@@ -46,13 +46,48 @@ function Checkout() {
   //   console.log("onPay called in Checkout:", method, payload);
   // };
   useEffect(() => {
+    const updateBooking = async (bookingID, data) => {
+      await updateBookingToPaid(bookingID, data); // ⬅ Gọi API /booking/[id]
+    };
     if (paymentStatus === "PAID") {
       const bookingIDRaw = sessionStorage.getItem("booking_id");
       const bookingID = Number(bookingIDRaw);
       console.log("Thanh toán thành công" + paymentStatus);
 
       if (bookingID) {
-        updateBookingToPaid(bookingID); // ⬅ Gọi API /booking/[id]
+        // lấy thông tin booking
+        const seats = bookingData.seats || [];
+        const foods = bookingData.food_drink || [];
+        const ticketType = bookingData.ticket; // { "HS-SV": { quantity, price } }
+
+        // lấy ticket_type_id đầu tiên
+        const ticketTypeKey = Object.keys(ticketType)[0];
+        const ticketInfo = ticketType[ticketTypeKey];
+
+        // tách food thành dạng gọn
+        const foodList = foods.map((f: any) => {
+          const key = Object.keys(f)[0];
+          return {
+            food_id: f[key].food_id,
+            quantity: f[key].quantity,
+          };
+        });
+
+        // tạo tickets cho từng ghế
+        const tickets = seats.map((seat: any, index: number) => ({
+          seat_id: seat.seat_id,
+          ticket_type_id: 1, // huynh fix cứng hoặc map theo DB
+          price: Number(ticketInfo.price),
+          total_price:
+            Number(ticketInfo.price) +
+            (index === 0
+              ? foodList.reduce((a, b) => a + b.quantity * 0, 0)
+              : 0), // nếu food có giá riêng thì cộng vào đây
+          food: index === 0 ? foodList : [], // FOOD CHỈ GẮN VÀO TICKET ĐẦU
+        }));
+        console.log(tickets);
+        updateBooking(bookingID, tickets);
+
         setState((prev) => ({ ...prev, step: 3 }));
       }
     }
@@ -106,7 +141,6 @@ function Checkout() {
       payload = {
         total_price: bookingData.total_price,
         showtime_id: bookingData.showtime_id,
-        showtime_date: normalizedDate,
         name: userInfo.name,
         phone: userInfo.phone,
         email: userInfo.email,
@@ -127,7 +161,6 @@ function Checkout() {
     payload = {
       total_price: bookingData.total_price,
       showtime_id: bookingData.showtime_id,
-      showtime_date: normalizedDate,
       user_id: userId,
     };
 

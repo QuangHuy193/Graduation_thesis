@@ -170,7 +170,6 @@ function InfoUserCheckout({
         const isInsert = await createBookingNoAuth({
           total_price,
           showtime_id,
-          showtime_date,
           name,
           email,
           phone,

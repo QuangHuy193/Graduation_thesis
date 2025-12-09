@@ -9,6 +9,9 @@ export async function GET(
   const { searchParams } = new URL(req.url);
   const day = searchParams.get("day");
   const { id } = await params;
+  // lấy thời gian hiện tại
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   if (!day) {
     return errorResponse("Thiếu ngày (day)", 400);
@@ -25,7 +28,6 @@ export async function GET(
 
   // Format YYYY-MM-DD
   const date = target.toISOString().split("T")[0];
-  console.log(date);
 
   try {
     const [rows] = await db.query(
@@ -48,6 +50,7 @@ export async function GET(
     const cinemasMap = new Map<string | number, any>();
 
     for (const item of rows as any[]) {
+      // lọc lấy các giờ lớn hơn hiện tại
       const cinemaId = item.cinema_id;
       // parse start_time (nếu driver trả về string)
       let startTimes: string[] = [];
@@ -63,29 +66,40 @@ export async function GET(
         startTimes = [];
       }
 
-      const showtimeObj = {
-        showtime_id: item.showtime_id,
-        movie_id: item.movie_id,
-        start_date: item.start_date,
-        end_date: item.end_date,
-        start_times: startTimes, // mảng giờ trong showtime (từ movie_screenings)
-        room: {
-          room_id: item.room_id,
-          room_name: item.room_name,
-        },
-      };
+      const futureTimes = startTimes.filter((t) => {
+        // "18:00" -> [18, 00]
+        const [h, m] = t.split(":").map(Number);
+        const minutes = h * 60 + m;
+        return minutes > currentMinutes;
+      });
+      let showtimeObj;
+      if (futureTimes.length > 0) {
+        showtimeObj = {
+          showtime_id: item.showtime_id,
+          movie_id: item.movie_id,
+          start_date: item.start_date,
+          end_date: item.end_date,
+          start_times: futureTimes, // mảng giờ trong showtime (từ movie_screenings)
+          room: {
+            room_id: item.room_id,
+            room_name: item.room_name,
+          },
+        };
+      }
 
-      if (!cinemasMap.has(cinemaId)) {
-        cinemasMap.set(cinemaId, {
-          cinema_id: item.cinema_id,
-          cinema_name: item.cinema_name,
-          specific_address: item.specific_address,
-          ward: item.ward,
-          province: item.province,
-          showtimes: [showtimeObj],
-        });
-      } else {
-        cinemasMap.get(cinemaId).showtimes.push(showtimeObj);
+      if (showtimeObj) {
+        if (!cinemasMap.has(cinemaId)) {
+          cinemasMap.set(cinemaId, {
+            cinema_id: item.cinema_id,
+            cinema_name: item.cinema_name,
+            specific_address: item.specific_address,
+            ward: item.ward,
+            province: item.province,
+            showtimes: [showtimeObj],
+          });
+        } else {
+          cinemasMap.get(cinemaId).showtimes.push(showtimeObj);
+        }
       }
     }
 

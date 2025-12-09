@@ -8,8 +8,7 @@ import {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { total_price, showtime_id, showtime_date, name, phone, email } =
-      body;
+    const { total_price, showtime_id, name, phone, email } = body;
 
     if (!total_price || !showtime_id || !name || !phone || !email) {
       return errorResponse("Thiếu dữ liệu đầu vào", 400);
@@ -19,18 +18,9 @@ export async function POST(req: Request) {
 
     const [data] = await db.query(
       `INSERT INTO booking 
-      (total_price, booking_time, status, showtime_id, showtime_date, name, phone, email)
-       values (?,?,?,?,?,?,?,?)`,
-      [
-        total_price,
-        booking_time,
-        0,
-        showtime_id,
-        showtime_date,
-        name,
-        phone,
-        email,
-      ]
+      (total_price, booking_time, status, showtime_id, name, phone, email)
+       values (?,?,?,?,?,?,?)`,
+      [total_price, booking_time, 0, showtime_id, name, phone, email]
     );
 
     return successResponse(
@@ -106,4 +96,3 @@ export async function POST(req: Request) {
 //     return errorResponse("Tạo booking thất bại", 500, err.message);
 //   }
 // }
-

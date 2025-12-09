@@ -3,7 +3,6 @@ import axiosInstance from "./config";
 export async function createBookingNoAuth(data: {
   total_price: number;
   showtime_id: number;
-  showtime_date: Date;
   name: string;
   phone: string;
   email: string;
@@ -20,7 +19,6 @@ export async function createBookingNoAuth(data: {
 export async function createBookingAuth(data: {
   total_price: number;
   showtime_id: number;
-  showtime_date: Date;
   user_id: number;
 }) {
   try {
@@ -34,10 +32,11 @@ export async function createBookingAuth(data: {
     throw error.response?.data || error;
   }
 }
-export async function updateBookingToPaid(bookingID: number) {
+export async function updateBookingToPaid(bookingID: number, data) {
   try {
     const payload = {
-      payment_method: "PAYOS"
+      payment_method: "PAYOS",
+      ...data,
     };
 
     const res = await axiosInstance.put(`/api/booking/${bookingID}`, payload);
@@ -55,5 +54,21 @@ export async function getBookingHistory(userId) {
   } catch (err) {
     console.error("Lỗi khi gọi API:", err);
     throw err;
+  }
+}
+
+export async function cancelBookingAPI(
+  booking_id: number | number,
+  percent: number
+) {
+  try {
+    const response = await axiosInstance.delete(
+      `/api/booking/cancel/${booking_id}`,
+      { data: { percent } }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching cinemas:", error);
+    throw error.response?.data || error;
   }
 }

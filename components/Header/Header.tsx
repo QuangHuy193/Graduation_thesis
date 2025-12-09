@@ -26,6 +26,7 @@ function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
   // rạp dc chọn khi ở menu mobile
   const [cinema, setCinema] = useState(-1);
+
   const { data: session } = useSession();
   const user = session?.user;
 

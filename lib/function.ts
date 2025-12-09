@@ -380,3 +380,28 @@ export function getDayOffset(dateString: Date) {
 
   return diffDays; // số ngày lệch: 0, 1, 2,...
 }
+
+// tính toán % hoàn tiền
+export function getRefundPercent(date: Date, time: string, vip: number) {
+  // Ghép date + time thành datetime chuẩn
+  const [hour, minute] = time.split(":").map(Number);
+  const showtime = new Date(date);
+  showtime.setHours(hour, minute, 0, 0);
+
+  const now = new Date();
+  const diffMs = showtime.getTime() - now.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+
+  if (vip === 0) {
+    if (diffHours >= 24) return 100;
+    if (diffHours >= 12) return 95;
+    if (diffHours >= 6) return 90;
+    if (diffHours >= 3) return 80;
+  } else if (vip === 1) {
+    if (diffHours >= 12) return 100;
+    if (diffHours >= 6) return 95;
+    if (diffHours >= 3) return 85;
+  }
+
+  return 0; // dưới 3 giờ không cho hủy
+}
