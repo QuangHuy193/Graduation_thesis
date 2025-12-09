@@ -23,12 +23,30 @@ export async function PUT(
       );
       await db.query(`INSERT into payment (payment_time, amount, booking_id) value (?,?,?)`, [getCurrentDateTime(), total_price, id]);
     } else {
+      //Lấy total price
+      const [bookingRows] = await db.execute(
+        `SELECT total_price FROM booking WHERE booking_id = ?`,
+        [id]
+      );
+
+      if (!bookingRows || bookingRows.length === 0) {
+        return errorResponse("Booking không tồn tại", 404);
+      }
+
+      const currentTotal = bookingRows[0].total_price ?? 0;
+
       await db.query(
         `UPDATE booking SET
         payment_method = ?, status = 1, voucher_id = ?
         WHERE booking_id = ?`,
         [payment_method, voucher_id ?? null, id]
       );
+      if (currentTotal > 0) {
+        await db.query(
+          `INSERT INTO payment (payment_time, amount, booking_id) VALUE (?,?,?)`,
+          [getCurrentDateTime(), currentTotal, id]
+        );
+      }
     }
 
     // cập nhật voucher nếu có
