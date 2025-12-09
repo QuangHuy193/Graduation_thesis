@@ -29,12 +29,16 @@ export async function DELETE(req: Request, { params }: { params: string }) {
       "SELECT amount FROM payment WHERE booking_id = ?",
       [id]
     );
-    const totalPaid = pmRows[0]?.amount ?? 0;
+    // tính toán thêm percent
+    let totalRefund = pmRows[0]?.amount ?? 0;
+    totalRefund = (totalRefund * percent) / 100;
 
     // gọi api hoàn trả
     if (booking.payment_method === "payos") {
     }
     // TODO thành công thì làm
+    // TODO thất bại thì trả về booking status về lại 1
+
     // tạo bảng refund
 
     //  chuyển sang đã hủy
