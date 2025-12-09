@@ -26,6 +26,7 @@ function Checkout() {
   const { data: session, status } = useSession();
   const user = session?.user ?? null;
   const [bookingData, setBookingData] = useState<any>(null);
+  const [bookingID, setBookingID] = useState<any>(null);
   const [state, setState] = useState({
     step: 1,
   });
@@ -51,6 +52,7 @@ function Checkout() {
     const data = sessionStorage.getItem("bookingData");
     if (data) {
       setBookingData(JSON.parse(data));
+      console.log("getBookingdata", data);
     } else {
       // fallback khi user mở tab mới / reload mất data
       console.warn("Không tìm thấy bookingData");
@@ -58,67 +60,84 @@ function Checkout() {
   }, []);
 
   useEffect(() => {
+    if (paymentStatus !== "PAID") return;
+
     const updateBooking = async (bookingID, data) => {
       await updateBookingToPaid(bookingID, data); // ⬅ Gọi API /booking/[id]
     };
-    if (paymentStatus === "PAID") {
-      const bookingIDRaw = sessionStorage.getItem("booking_id");
-      const bookingID = Number(bookingIDRaw);
-      console.log("Thanh toán thành công" + paymentStatus);
-
-      if (bookingID) {
-        console.log("bookingData: ", bookingData);
-        // lấy thông tin booking
-        const seats = bookingData.seats || [];
-        const foods = bookingData.food_drink || [];
-        const ticketType = bookingData.ticket; // { "HS-SV": { quantity, price } }
-
-        // lấy ticket_type_id đầu tiên
-        const ticketTypeKey = Object.keys(ticketType)[0];
-        const ticketInfo = ticketType[ticketTypeKey];
-
-        // tách food thành dạng gọn
-        const foodList = foods.map((f: any) => {
-          const key = Object.keys(f)[0];
-          return {
-            food_id: f[key].food_id,
-            quantity: f[key].quantity,
-          };
-        });
-
-        // tạo tickets cho từng ghế
-        const tickets = seats.map((seat: any, index: number) => ({
-          seat_id: seat.seat_id,
-          ticket_type_id: 1, // huynh fix cứng hoặc map theo DB
-          price: Number(ticketInfo.price),
-          total_price:
-            Number(ticketInfo.price) +
-            (index === 0
-              ? foodList.reduce((a, b) => a + b.quantity * 0, 0)
-              : 0), // nếu food có giá riêng thì cộng vào đây
-          food: index === 0 ? foodList : [], // FOOD CHỈ GẮN VÀO TICKET ĐẦU
-        }));
-        // TODO kiểm tra lại mảng tickets
-        //     "ticket": [
-        //     {
-        //         "seat_id": 175,
-        //         "ticket_type_id": 1,
-        //         "price": 55000,
-        //         "total_price": 75000,
-        //         "food": [
-        //             {
-        //                 "food_id": 1,
-        //                 "quantity": 1
-        //             }
-        //         ]
-        //     }
-        // ]
-        //console.log(tickets);
-        updateBooking(bookingID, tickets);
-
-        setState((prev) => ({ ...prev, step: 3 }));
-      }
+    const bookingDataRaw = sessionStorage.getItem("bookingData");
+    console.log("Booking data session:", bookingDataRaw);
+    if (!bookingDataRaw) {
+      // console.warn("Không có bookingData trong sessionStorage khi PAID");
+      return;
     }
+    let data;
+    try {
+      data = JSON.parse(bookingDataRaw);
+      console.log("Booking data parse:", data);
+      console.log("booking seat: ", data)
+    } catch (e) {
+      console.error("Parse bookingData lỗi", e);
+      return;
+    }
+    const bookingIDRaw = sessionStorage.getItem("booking_id");
+    const bookingID = Number(bookingIDRaw);
+    // console.log("Thanh toán thành công" + paymentStatus);
+    if (!bookingID) return;
+    setBookingID(bookingID);
+    // console.log("bookingData: ", bookingData);
+    // lấy thông tin booking
+
+    const seats = data.seats || [];
+    const foods = data.food_drink || [];
+    const ticketType = data.ticket; // { "HS-SV": { quantity, price } }
+
+    // lấy ticket_type_id đầu tiên
+    const ticketTypeKey = Object.keys(ticketType)[0];
+    const ticketInfo = ticketType[ticketTypeKey];
+
+    // tách food thành dạng gọn
+    const foodList = foods.map((f: any) => {
+      const key = Object.keys(f)[0];
+      return {
+        food_id: f[key].food_id,
+        quantity: f[key].quantity,
+      };
+    });
+
+    // tạo tickets cho từng ghế
+    const tickets = seats.map((seat: any, index: number) => ({
+      seat_id: seat.seat_id,
+      ticket_type_id: 1, // huynh fix cứng hoặc map theo DB
+      price: Number(ticketInfo.price),
+      total_price:
+        Number(ticketInfo.price) +
+        (index === 0
+          ? foodList.reduce((a, b) => a + b.quantity * 0, 0)
+          : 0), // nếu food có giá riêng thì cộng vào đây
+      food: index === 0 ? foodList : [], // FOOD CHỈ GẮN VÀO TICKET ĐẦU
+    }));
+    // TODO kiểm tra lại mảng tickets
+    //     "ticket": [
+    //     {
+    //         "seat_id": 175,
+    //         "ticket_type_id": 1,
+    //         "price": 55000,
+    //         "total_price": 75000,
+    //         "food": [
+    //             {
+    //                 "food_id": 1,
+    //                 "quantity": 1
+    //             }
+    //         ]
+    //     }
+    // ]
+    //console.log(tickets);
+    updateBooking(bookingID, tickets);
+
+    setState((prev) => ({ ...prev, step: 3 }));
+
+
   }, [paymentStatus]);
   useEffect(() => {
     if (status === "authenticated" && user) {
@@ -204,18 +223,16 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${
-              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+              }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${
-              state.step === 3 && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
+              }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>
@@ -255,7 +272,7 @@ function Checkout() {
           </div>
         </div>
       )}
-      {state.step === 3 && <InfoTicket bookingId={36} />}
+      {state.step === 3 && <InfoTicket bookingId={bookingID} />}
     </div>
   );
 }
