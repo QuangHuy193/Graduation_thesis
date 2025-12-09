@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import QRCode from "qrcode";
-import { errorResponse, successResponse } from "@/lib/function";
+import { errorResponse, getCurrentDateTime, successResponse } from "@/lib/function";
 
 export async function PUT(
   req: Request,
@@ -13,6 +13,7 @@ export async function PUT(
     const { total_price, payment_method, voucher_id, ticket } = body;
 
     // cập nhật booking
+
     if (total_price !== undefined) {
       await db.query(
         `UPDATE booking SET
@@ -20,6 +21,7 @@ export async function PUT(
         WHERE booking_id = ?`,
         [total_price, payment_method, voucher_id ?? null, id]
       );
+      await db.query(`INSERT into payment (payment_time, amount, booking_id) value (?,?,?)`, [getCurrentDateTime(), total_price, id]);
     } else {
       await db.query(
         `UPDATE booking SET
