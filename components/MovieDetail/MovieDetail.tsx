@@ -830,10 +830,10 @@ function MovieDetail({
 
       {/* thanh tổng kết */}
       <div
-        className="flex flex-col md:flex-row items-start md:justify-between border-t 
-        border-t-gray-50 py-3"
+        className="flex flex-col md:flex-row items-start md:justify-between border-t
+      border-t-gray-50 py-3"
       >
-        <div>
+        <div className="md:flex-1">
           <div className="text-2xl font-bold my-1">
             {data[0].name} ({data[0].age_require})
           </div>
@@ -868,7 +868,10 @@ function MovieDetail({
               ))}
           </div>
         </div>
-        <div className="flex flex-col md:flex-row gap-3 py-2 md:py-0 w-full">
+        <div
+          className="flex flex-col md:flex-row gap-3 py-2 md:py-0 md:flex-1 md:justify-end
+        w-full"
+        >
           <div
             className="text-black bg-(--color-yellow) rounded-sm px-2 py-1 md:py-4
           flex md:block gap-2 items-center w-fit"
