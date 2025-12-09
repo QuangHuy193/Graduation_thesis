@@ -9,7 +9,7 @@ export async function DELETE(req: Request, { params }: { params: string }) {
 
     // (1) Lấy booking
     const [bookingRows] = await db.execute(
-      "SELECT payment_method, status FROM booking WHERE booking_id = ?",
+      "SELECT payment_method, status, showtime_id FROM booking WHERE booking_id = ?",
       [id]
     );
 
@@ -32,14 +32,34 @@ export async function DELETE(req: Request, { params }: { params: string }) {
     const totalPaid = pmRows[0]?.amount ?? 0;
 
     // gọi api hoàn trả
-
-    // cập nhật bảng refund
+    if (booking.payment_method === "payos") {
+    }
+    // TODO thành công thì làm
+    // tạo bảng refund
 
     //  chuyển sang đã hủy
     await db.query(`UPDATE booking SET status = 4 WHERE booking_id = ?`, [id]);
 
-    if (booking.payment_method === "payos") {
-    }
+    // chuyển trạng thái ghế
+    const showtime_id = booking.showtime_id;
+
+    /// Lấy danh sách seat_id
+    const [ticketRows] = await db.execute(
+      "SELECT seat_id FROM ticket WHERE booking_id = ?",
+      [id]
+    );
+
+    const seatIds = ticketRows.map((t: any) => t.seat_id);
+
+    /// Update ghế về trạng thái 0
+    await db.execute(
+      `UPDATE showtime_seat 
+     SET status = 0 
+     WHERE showtime_id = ? 
+       AND seat_id IN (${seatIds.map(() => "?").join(",")})`,
+      [showtime_id, ...seatIds]
+    );
+
     return successResponse({}, "Hủy booking thành công", 200);
   } catch (error) {
     console.error(error);

@@ -85,7 +85,22 @@ function Checkout() {
               : 0), // nếu food có giá riêng thì cộng vào đây
           food: index === 0 ? foodList : [], // FOOD CHỈ GẮN VÀO TICKET ĐẦU
         }));
-        console.log(tickets);
+        // TODO kiểm tra lại mảng tickets
+        //     "ticket": [
+        //     {
+        //         "seat_id": 175,
+        //         "ticket_type_id": 1,
+        //         "price": 55000,
+        //         "total_price": 75000,
+        //         "food": [
+        //             {
+        //                 "food_id": 1,
+        //                 "quantity": 1
+        //             }
+        //         ]
+        //     }
+        // ]
+        //console.log(tickets);
         updateBooking(bookingID, tickets);
 
         setState((prev) => ({ ...prev, step: 3 }));

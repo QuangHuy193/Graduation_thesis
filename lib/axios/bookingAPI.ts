@@ -32,7 +32,9 @@ export async function createBookingAuth(data: {
     throw error.response?.data || error;
   }
 }
+
 export async function updateBookingToPaid(bookingID: number, data) {
+  // TODO có thể thêm các trường để tạo payment
   try {
     const payload = {
       payment_method: "PAYOS",
