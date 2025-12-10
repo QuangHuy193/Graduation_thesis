@@ -24,3 +24,28 @@ export async function createPayOSPayment(data: {
         );
     }
 }
+
+
+export async function triggerRefund() {
+    try {
+        const resp = await axiosInstance.post(`/api/payout-mock`,
+            {
+                payouts: [
+                    {
+                        referenceId: "refund_001",
+                        toAccount: "0123456789",
+                        toBankCode: "970436",
+                        toName: "Nguyen Van A",
+                        amount: 50000,
+                        description: "Refund order #123"
+                    }
+                ]
+            }
+        );
+
+        return resp.data;
+    } catch (err: any) {
+        console.error("refund error:", err.response?.data || err.message);
+        throw err;
+    }
+}

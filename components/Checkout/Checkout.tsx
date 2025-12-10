@@ -26,6 +26,7 @@ function Checkout() {
   const { data: session, status } = useSession();
   const user = session?.user ?? null;
   const [bookingData, setBookingData] = useState<any>(null);
+  const [bookingID, setBookingID] = useState<any>(null);
   const [state, setState] = useState({
     step: 1,
   });
@@ -51,6 +52,7 @@ function Checkout() {
     const data = sessionStorage.getItem("bookingData");
     if (data) {
       setBookingData(JSON.parse(data));
+      console.log("getBookingdata", data);
     } else {
       // fallback khi user mở tab mới / reload mất data
       console.warn("Không tìm thấy bookingData");
@@ -58,6 +60,8 @@ function Checkout() {
   }, []);
 
   useEffect(() => {
+    if (paymentStatus !== "PAID") return;
+
     const updateBooking = async (bookingID, data) => {
       await updateBookingToPaid(bookingID, data); // ⬅ Gọi API /booking/[id]
     };
@@ -67,17 +71,22 @@ function Checkout() {
       console.log("Thanh toán thành công" + paymentStatus);
 
       if (bookingID) {
-        const sessionBoking = sessionStorage.getItem("bookingData");
-        if (sessionBoking) {
-          const bookingData = JSON.parse(sessionBoking);
-          const tickets = convertToTickets(bookingData);
+       const bookingData= sessionStorage.getItem("bookingData")
+       if(bookingData){
 
+         const data = JSON.parse(bookingData)
+         const tickets = convertToTickets(data)
           updateBooking(bookingID, tickets);
         }
 
-        setState((prev) => ({ ...prev, step: 3 }));
+        
+       
+       
+       
       }
-    }
+    setState((prev) => ({ ...prev, step: 3 }));
+      
+
   }, [paymentStatus]);
   useEffect(() => {
     if (status === "authenticated" && user) {
@@ -170,18 +179,16 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${
-              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+              }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${
-              state.step === 3 && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
+              }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>
@@ -221,11 +228,7 @@ function Checkout() {
           </div>
         </div>
       )}
-      {state.step === 3 && (
-        <InfoTicket
-          bookingId={JSON.parse(sessionStorage.getItem("booking_id"))}
-        />
-      )}
+      {state.step === 3 && <InfoTicket bookingId={36} />}
     </div>
   );
 }
