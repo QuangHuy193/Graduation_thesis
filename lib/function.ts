@@ -405,3 +405,38 @@ export function getRefundPercent(date: Date, time: string, vip: number) {
 
   return 0; // dưới 3 giờ không cho hủy
 }
+
+//  chuyển bookingData sang ticket
+export function convertToTickets(booking) {
+  const seats = booking.seats || [];
+  const ticketTypes = booking.ticket_type || [];
+  const foods = booking.food_drink || [];
+
+  const tickets = seats.map((seat, index) => {
+    // Gán ticket_type theo thứ tự (hoặc random cũng được)
+    const tt = ticketTypes[index % ticketTypes.length];
+
+    return {
+      seat_id: seat.seat_id,
+      ticket_type_id: tt.ticket_type_id,
+      price: Number(tt.price_final),
+      total_price: Number(tt.price_final),
+      food: [], // sẽ gắn food sau
+    };
+  });
+
+  // Gắn toàn bộ foods vào vé đầu tiên (nếu có)
+  if (foods.length > 0 && tickets.length > 0) {
+    tickets[0].food = foods.map((item) => {
+      const key = Object.keys(item)[0]; // "Bắp M", "Bắp L"
+      const value = item[key]; // { quantity, price, food_id }
+
+      return {
+        food_id: value.food_id,
+        quantity: value.quantity,
+      };
+    });
+  }
+
+  return tickets;
+}

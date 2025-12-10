@@ -10,7 +10,7 @@ import {
 } from "@/lib/axios/bookingAPI";
 import { useSearchParams } from "next/navigation";
 import InfoBooking from "../InfoBooking/InfoBooking";
-import { toMySQLDate } from "@/lib/function";
+import { convertToTickets, toMySQLDate } from "@/lib/function";
 import InfoTicket from "../InfoTicket/InfoTicket";
 
 type UserInfo = {
@@ -67,54 +67,13 @@ function Checkout() {
       console.log("Thanh toán thành công" + paymentStatus);
 
       if (bookingID) {
-        console.log("bookingData: ", bookingData);
-        // lấy thông tin booking
-        const seats = bookingData.seats || [];
-        const foods = bookingData.food_drink || [];
-        const ticketType = bookingData.ticket; // { "HS-SV": { quantity, price } }
+        const sessionBoking = sessionStorage.getItem("bookingData");
+        if (sessionBoking) {
+          const bookingData = JSON.parse(sessionBoking);
+          const tickets = convertToTickets(bookingData);
 
-        // lấy ticket_type_id đầu tiên
-        const ticketTypeKey = Object.keys(ticketType)[0];
-        const ticketInfo = ticketType[ticketTypeKey];
-
-        // tách food thành dạng gọn
-        const foodList = foods.map((f: any) => {
-          const key = Object.keys(f)[0];
-          return {
-            food_id: f[key].food_id,
-            quantity: f[key].quantity,
-          };
-        });
-
-        // tạo tickets cho từng ghế
-        const tickets = seats.map((seat: any, index: number) => ({
-          seat_id: seat.seat_id,
-          ticket_type_id: 1, // huynh fix cứng hoặc map theo DB
-          price: Number(ticketInfo.price),
-          total_price:
-            Number(ticketInfo.price) +
-            (index === 0
-              ? foodList.reduce((a, b) => a + b.quantity * 0, 0)
-              : 0), // nếu food có giá riêng thì cộng vào đây
-          food: index === 0 ? foodList : [], // FOOD CHỈ GẮN VÀO TICKET ĐẦU
-        }));
-        // TODO kiểm tra lại mảng tickets
-        //     "ticket": [
-        //     {
-        //         "seat_id": 175,
-        //         "ticket_type_id": 1,
-        //         "price": 55000,
-        //         "total_price": 75000,
-        //         "food": [
-        //             {
-        //                 "food_id": 1,
-        //                 "quantity": 1
-        //             }
-        //         ]
-        //     }
-        // ]
-        //console.log(tickets);
-        updateBooking(bookingID, tickets);
+          updateBooking(bookingID, tickets);
+        }
 
         setState((prev) => ({ ...prev, step: 3 }));
       }
@@ -190,6 +149,13 @@ function Checkout() {
     // TODO: redirect sang Payment
   }
 
+  useEffect(() => {
+    return () => {
+      // tránh trường hợp reload tạo vé liên tục
+      sessionStorage.removeItem("booking_id");
+    };
+  }, []);
+
   return (
     <div>
       <div className="text-3xl font-bold pb-8">TRANG THANH TOÁN</div>
@@ -255,7 +221,11 @@ function Checkout() {
           </div>
         </div>
       )}
-      {state.step === 3 && <InfoTicket bookingId={36} />}
+      {state.step === 3 && (
+        <InfoTicket
+          bookingId={JSON.parse(sessionStorage.getItem("booking_id"))}
+        />
+      )}
     </div>
   );
 }

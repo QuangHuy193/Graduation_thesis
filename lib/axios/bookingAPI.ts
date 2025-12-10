@@ -33,12 +33,11 @@ export async function createBookingAuth(data: {
   }
 }
 
-export async function updateBookingToPaid(bookingID: number, data) {
-  // TODO có thể thêm các trường để tạo payment vào data
+export async function updateBookingToPaid(bookingID: number, ticket) {
   try {
     const payload = {
       payment_method: "PAYOS",
-      ...data,
+      ticket: [...ticket],
     };
 
     const res = await axiosInstance.put(`/api/booking/${bookingID}`, payload);

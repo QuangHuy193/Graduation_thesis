@@ -71,7 +71,7 @@ function InfoBooking() {
             confirmButton: "btn_alert",
           },
         }).then((result) => {
-          if (result.isConfirmed) router.back();
+          if (result.isConfirmed) router.push("/");
         });
 
         return;
@@ -91,7 +91,7 @@ function InfoBooking() {
       );
       sessionStorage.removeItem("expireTime");
     };
-  }, []);
+  }, [bookingData, router]);
 
   if (bookingData === null) {
     return <Spinner />;

@@ -1,5 +1,9 @@
 import { db } from "@/lib/db";
-import { errorResponse, getCurrentDateTime, successResponse } from "@/lib/function";
+import {
+  errorResponse,
+  getCurrentDateTime,
+  successResponse,
+} from "@/lib/function";
 
 export async function DELETE(req: Request, { params }: { params: string }) {
   try {
@@ -9,7 +13,7 @@ export async function DELETE(req: Request, { params }: { params: string }) {
 
     // (1) Lấy booking
     const [bookingRows] = await db.execute(
-      "SELECT payment_method, status, showtime_id FROM booking WHERE booking_id = ?",
+      "SELECT payment_method, status, showtime_id, user_id FROM booking WHERE booking_id = ?",
       [id]
     );
 
@@ -35,16 +39,20 @@ export async function DELETE(req: Request, { params }: { params: string }) {
 
     // gọi api hoàn trả
     if (booking.payment_method === "payos") {
-      await db.query(`INSERT into refund (percent, amount,time,booking_id ) value (?,?,?,?)`, [percent, totalRefund, getCurrentDateTime(), id]);
+      await db.query(
+        `INSERT into refund (percent, amount,time, reason,booking_id ) value (?,?,?,?,?)`,
+        [percent, totalRefund, getCurrentDateTime(), "Người dùng hủy", id]
+      );
     }
     // TODO thành công thì làm
     // TODO thất bại thì trả về booking status về lại 1
     // tạo bảng refund
 
-
     //  chuyển sang đã hủy
     await db.query(`UPDATE booking SET status = 4 WHERE booking_id = ?`, [id]);
-    //
+
+    // update status cho vé
+    await db.query(`UPDATE ticket SET status = 2 WHERE booking_id = ?`, [id]);
 
     // chuyển trạng thái ghế
     const showtime_id = booking.showtime_id;

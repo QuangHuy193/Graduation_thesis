@@ -506,6 +506,7 @@ function MovieDetail({
       ticket: state.ticketSelected,
       seats: state.seatSelected,
       food_drink: selectedFoodsWithId,
+      ticket_type: state.ticketTypes,
     };
     sessionStorage.setItem("bookingData", JSON.stringify(bookingData));
   };

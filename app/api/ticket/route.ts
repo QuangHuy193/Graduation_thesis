@@ -12,7 +12,7 @@ export async function GET(req: Request) {
 
   try {
     const [rows] = await db.query(
-      `SELECT t.ticket_id, t.qr_code, s.showtime_date, s.seat_row, s.seat_column, r.name, ms.start_time
+      `SELECT t.ticket_id, t.qr_code, st.date as showtime_date, s.seat_row, s.seat_column, r.name, ms.start_time
       FROM ticket t
       JOIN booking b ON b.booking_id = t.booking_id
       JOIN showtime st ON st.showtime_id = b.showtime_id

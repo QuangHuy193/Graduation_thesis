@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 import QRCode from "qrcode";
-import { errorResponse, getCurrentDateTime, successResponse } from "@/lib/function";
+import {
+  errorResponse,
+  getCurrentDateTime,
+  successResponse,
+} from "@/lib/function";
 
 export async function PUT(
   req: Request,
@@ -21,7 +25,10 @@ export async function PUT(
         WHERE booking_id = ?`,
         [total_price, payment_method, voucher_id ?? null, id]
       );
-      await db.query(`INSERT into payment (payment_time, amount, booking_id) value (?,?,?)`, [getCurrentDateTime(), total_price, id]);
+      await db.query(
+        `INSERT into payment (payment_time, amount, booking_id) value (?,?,?)`,
+        [getCurrentDateTime(), total_price, id]
+      );
     } else {
       //Lấy total price
       const [bookingRows] = await db.execute(
@@ -41,6 +48,7 @@ export async function PUT(
         WHERE booking_id = ?`,
         [payment_method, voucher_id ?? null, id]
       );
+
       if (currentTotal > 0) {
         await db.query(
           `INSERT INTO payment (payment_time, amount, booking_id) VALUE (?,?,?)`,

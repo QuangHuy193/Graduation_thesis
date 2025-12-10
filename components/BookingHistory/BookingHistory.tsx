@@ -79,7 +79,7 @@ export default function BookingHistory({
 
         // gọi api
         try {
-          setIsCancelBooking(true);
+          setIsCancelBooking(booking_id);
 
           const res = await cancelBookingAPI(booking_id, refundPercent);
 
@@ -104,7 +104,7 @@ export default function BookingHistory({
           });
           console.log(error);
         } finally {
-          setIsCancelBooking(false);
+          setIsCancelBooking(-1);
         }
       }
     });
@@ -220,7 +220,9 @@ export default function BookingHistory({
                         className="h-fit px-3 py-2 bg-red-600 hover:bg-red-700
                            text-white rounded-md text-xs sm:text-sm cursor-pointer"
                       >
-                        {isCancelBooking ? "Đang hủy..." : "Hủy"}
+                        {isCancelBooking === b.booking_id
+                          ? "Đang hủy..."
+                          : "Hủy"}
                       </button>
                     )}
 
@@ -281,21 +283,23 @@ export default function BookingHistory({
                             </div>
                           </div>
 
-                          <div
-                            className="mt-4 sm:mt-0 flex justify-center flex-col
+                          {t.status === 0 && (
+                            <div
+                              className="mt-4 sm:mt-0 flex justify-center flex-col
                           items-center"
-                          >
-                            <div className="text-gray-300 text-sm mb-1">
-                              Mã QR:
-                            </div>
+                            >
+                              <div className="text-gray-300 text-sm mb-1">
+                                Mã QR:
+                              </div>
 
-                            <Image
-                              src={t.qr_code}
-                              alt="Mã QR"
-                              height={80}
-                              width={80}
-                            />
-                          </div>
+                              <Image
+                                src={t.qr_code}
+                                alt="Mã QR"
+                                height={80}
+                                width={80}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}

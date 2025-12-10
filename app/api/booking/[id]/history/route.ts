@@ -13,8 +13,8 @@ export async function GET(
         b.booking_id, m.name AS movie, c.name AS cinema, b.booking_time, 
         b.total_price AS booking_total, b.status, 
         s.date AS showtime_date, ms.start_time,
-        t.ticket_id, t.total_price AS ticket_total, t.qr_code,
-        se.seat_row, se.seat_column, se.seat_id,
+        t.ticket_id, t.total_price AS ticket_total, t.qr_code, t.status as ticket_status,
+        se.seat_row, se.seat_column, se.seat_id, 
         f.name AS food_name, fo.quantity
       FROM users u 
       JOIN booking b ON b.user_id = u.user_id 
@@ -61,6 +61,7 @@ export async function GET(
           ticket_id: row.ticket_id,
           qr_code: row.qr_code,
           total_price: row.ticket_total,
+          status: row.ticket_status,
           seat: {
             seat_id: row.seat_id,
             seat_row: row.seat_row,
