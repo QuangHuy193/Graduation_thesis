@@ -1,0 +1,89 @@
+"use client";
+import { MENUSUPERADMIN } from "@/lib/constant";
+import { useState } from "react";
+import RevenueChart from "../RevenueChart/RevenueChart";
+
+function SuperAdminPage() {
+  const [state, setState] = useState({
+    pageTitle: 0,
+    selected: {
+      month: 0,
+      year: 2025,
+    },
+  });
+
+  return (
+    <div className="flex h-[515px] relative bg-gray-50 rounded-md">
+      {/* ASIDE */}
+      <aside
+        className="absolute left-0 top-0 h-[515px] w-(--width-sidebar-sadmin)
+       bg-gray-900 text-gray-200 p-4 shadow-lg flex flex-col gap-3
+       rounded-tl-md rounded-bl-md"
+      >
+        <div className="text-lg font-bold text-white mb-3 tracking-wide">
+          TRANG THỐNG KÊ
+        </div>
+
+        {MENUSUPERADMIN.map((m) => (
+          <div
+            key={m.index}
+            onClick={() =>
+              setState((prev) => ({ ...prev, pageTitle: m.index }))
+            }
+            className={`
+                px-3 py-2 rounded-md  cursor-pointer transition-all
+                ${
+                  state.pageTitle === m.index
+                    ? "bg-blue-600 text-white"
+                    : "hover:bg-gray-700"
+                }
+              `}
+          >
+            {m.title}
+          </div>
+        ))}
+      </aside>
+
+      {/* RIGHT AREA */}
+      <div className="flex-1 ml-(--width-sidebar-sadmin) flex flex-col min-h-screen">
+        {/* HEADER */}
+        <header
+          className="relative top-0 right-0 left-0 h-16 bg-white 
+        shadow-md flex items-center px-6 justify-between border-b"
+        >
+          <div className="text-xl font-semibold text-gray-800">
+            {MENUSUPERADMIN[state.pageTitle].title}
+          </div>
+          <div className="text-gray-600 font-medium tracking-wide">
+            CHỦ CÔNG TY
+          </div>
+        </header>
+
+        {/* CONTENT */}
+        <main className="p-4 flex-1 overflow-y-auto">
+          <div
+            className="overflow-y-scroll h-[calc(500px-70px)] bg-white shadow rounded-lg p-4 
+            scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 text-black"
+          >
+            {state.pageTitle === 0 && (
+              <RevenueChart
+                selected={state.selected}
+                setSelected={(key, value) => {
+                  setState((prev) => ({
+                    ...prev,
+                    selected: {
+                      ...prev.selected,
+                      [key]: value,
+                    },
+                  }));
+                }}
+              />
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default SuperAdminPage;

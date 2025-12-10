@@ -9,6 +9,8 @@
 
   --height-header: 120px;
   --height-header-mobile: 70px;
+
+  --width-sidebar-sadmin: 256px;
 }
 
 body {
@@ -166,6 +168,7 @@ body {
 
 /* end alert */
 
+/* xóa css thừa khi tải vé */
 .no-capture-selection,
 .no-capture-selection * {
   user-select: none !important;

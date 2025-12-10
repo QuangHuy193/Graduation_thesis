@@ -142,3 +142,19 @@ hiện tại so với thời gian chiếu, cụ thể như sau: Hủy trước 2
 Hủy từ 12 giờ - 24 giờ: Hoàn 90%, Hủy từ 6 giờ - 12 giờ: Hoàn 85%,
 Hủy từ 3 giờ - 6 giờ: Hoàn 70%, Dưới 3 giờ trước giờ chiếu: Không hỗ trợ hủy vé.
 Thành viên VIP được cộng thêm 5% trên mức hoàn ở mỗi mốc.`;
+
+// menu sadmin
+export const MENUSUPERADMIN = [
+  {
+    index: 0,
+    title: "Thống kê doanh thu",
+  },
+  {
+    index: 1,
+    title: "Lịch sử chỉnh sửa lịch chiếu",
+  },
+  {
+    index: 2,
+    title: "Khuyến mãi",
+  },
+];
