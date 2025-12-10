@@ -71,22 +71,15 @@ function Checkout() {
       console.log("Thanh toán thành công" + paymentStatus);
 
       if (bookingID) {
-       const bookingData= sessionStorage.getItem("bookingData")
-       if(bookingData){
-
-         const data = JSON.parse(bookingData)
-         const tickets = convertToTickets(data)
+        const bookingData = sessionStorage.getItem("bookingData");
+        if (bookingData) {
+          const data = JSON.parse(bookingData);
+          const tickets = convertToTickets(data);
           updateBooking(bookingID, tickets);
         }
-
-        
-       
-       
-       
       }
+    }
     setState((prev) => ({ ...prev, step: 3 }));
-      
-
   }, [paymentStatus]);
   useEffect(() => {
     if (status === "authenticated" && user) {
@@ -179,16 +172,18 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+            }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              state.step === 3 && "text-(--color-yellow)"
+            }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>
