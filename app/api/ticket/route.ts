@@ -13,16 +13,16 @@ export async function GET(req: Request) {
   try {
     const [rows] = await db.query(
       `SELECT t.ticket_id, t.qr_code, st.date as showtime_date, s.seat_row, s.seat_column, r.name, ms.start_time
-      , t.total_price, f.name as food_name, fo.quantity
+      , t.total_price, f.name as food_name, fo.quantity, t.booking_id
       FROM ticket t
       JOIN booking b ON b.booking_id = t.booking_id
       JOIN showtime st ON st.showtime_id = b.showtime_id
       JOIN rooms r ON st.room_id = r.room_id
       JOIN movie_screenings ms ON ms.movie_screen_id = st.movie_screen_id
       JOIN seats s ON s.seat_id = t.seat_id
-      JOIN food_order fo ON fo.ticket_id = t.ticket_id
-      JOIN foods f ON f.food_id = fo.food_id 
-      WHERE t.booking_id = ?`,
+      left JOIN food_order fo ON fo.ticket_id = t.ticket_id
+      left JOIN foods f ON f.food_id = fo.food_id 
+      WHERE t.booking_id =?`,
       [booking_id]
     );
 

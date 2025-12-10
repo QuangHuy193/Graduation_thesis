@@ -25,8 +25,8 @@ export async function GET(
       JOIN ticket t ON t.booking_id = b.booking_id
       JOIN seats se ON se.seat_id = t.seat_id
       JOIN movie_screenings ms ON ms.movie_screen_id = s.movie_screen_id
-      JOIN food_order fo ON fo.ticket_id = t.ticket_id
-      JOIN foods f ON f.food_id = fo.food_id
+      left JOIN food_order fo ON fo.ticket_id = t.ticket_id
+      left JOIN foods f ON f.food_id = fo.food_id
       WHERE u.user_id = ?`,
       [id]
     );

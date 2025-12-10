@@ -46,7 +46,6 @@ export default function ShowtimeTimetable({
   cinemasMap,
   initialDate = null,
   onCommit,
-  onSelect,
   externalMovies = [],
 }: Props) {
   const [state, setState] = useState<ShowtimeDay[]>(showtimes);
@@ -459,8 +458,8 @@ export default function ShowtimeTimetable({
             {Object.keys(pending).length > 0 && (
               <>
                 <span className="text-amber-600">{Object.keys(pending).length} thay đổi</span>
-                <button onClick={commit} className="bg-blue-600 text-white px-3 py-1 rounded">Lưu</button>
-                <button onClick={discard} className="border px-3 py-1 rounded">Hủy</button>
+                <button onClick={commit} className="bg-blue-600 text-white px-3 py-1 rounded cursor-pointer">Lưu</button>
+                <button onClick={discard} className="border px-3 py-1 rounded cursor-pointer">Hủy</button>
               </>
             )}
           </div>

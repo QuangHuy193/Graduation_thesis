@@ -26,7 +26,7 @@ function Checkout() {
   const { data: session, status } = useSession();
   const user = session?.user ?? null;
   const [bookingData, setBookingData] = useState<any>(null);
-  const [bookingID, setBookingID] = useState<any>(null);
+  // const [bookingID, setBookingID] = useState<any>(null);
   const [state, setState] = useState({
     step: 1,
   });
@@ -163,18 +163,16 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${
-              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+              }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${
-              state.step === 3 && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
+              }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>
