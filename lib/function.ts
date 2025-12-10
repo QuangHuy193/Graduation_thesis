@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
 import { weekdays } from "./constant";
+import { toPng } from "html-to-image";
 
 export function scrollToPosition(
   y?: number,
@@ -440,3 +441,56 @@ export function convertToTickets(booking) {
 
   return tickets;
 }
+
+// helper: chuyển HTML element thành PNG và tải về (dùng html-to-image)
+export async function downloadElementAsImage(
+  el: HTMLElement,
+  filename = "ticket.png"
+) {
+  try {
+    if (!el) throw new Error("Element không tồn tại!");
+
+    // chờ font load để tránh lỗi font fallback khi xuất ảnh
+    if (document.fonts && typeof document.fonts.ready?.then === "function") {
+      try {
+        await document.fonts.ready;
+      } catch {}
+    }
+
+    const rect = el.getBoundingClientRect();
+
+    const options: any = {
+      quality: 1,
+      width: Math.ceil(rect.width),
+      height: Math.ceil(rect.height),
+      style: {
+        "box-sizing": "border-box",
+        "-webkit-font-smoothing": "antialiased",
+        "-moz-osx-font-smoothing": "grayscale",
+      },
+      // nếu cần lọc node: filter: (node) => true
+    };
+
+    // toPng trả về dataURL
+    const dataUrl = await toPng(el, options);
+
+    // tạo link tải
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (err) {
+    console.error("html-to-image error:", err);
+    alert("Không thể tạo ảnh vé. Kiểm tra console để biết chi tiết.");
+  }
+}
+
+export const fmtCurrency = (value) => {
+  if (value == null) return "-";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(value);
+};

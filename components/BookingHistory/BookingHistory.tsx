@@ -1,7 +1,8 @@
 "use client";
+import { toPng } from "html-to-image";
 
 import { cancelBookingAPI } from "@/lib/axios/bookingAPI";
-import { getRefundPercent } from "@/lib/function";
+import { fmtCurrency, getRefundPercent } from "@/lib/function";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useSession } from "next-auth/react";
@@ -36,14 +37,6 @@ export default function BookingHistory({
     } catch {
       return iso;
     }
-  };
-
-  const fmtCurrency = (value) => {
-    if (value == null) return "-";
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(value);
   };
 
   const handleCancelBooking = async (
@@ -108,6 +101,81 @@ export default function BookingHistory({
         }
       }
     });
+  };
+
+  // tải vé
+  const downloadTicketImage = async (ticketId, label) => {
+    // try exact id first, else fallback to id prefix (ticket-<id>-...)
+    let node = document.getElementById(`ticket-${ticketId}`);
+    if (!node) {
+      node = document.querySelector(`[id^="ticket-${ticketId}-"]`);
+    }
+    if (!node) return;
+
+    try {
+      // 1) Blur active element (remove focus ring)
+      if (
+        document.activeElement &&
+        typeof document.activeElement.blur === "function"
+      ) {
+        document.activeElement.blur();
+      }
+
+      // 2) Remove any selection (text highlight)
+      const sel = window.getSelection?.();
+      if (sel && sel.rangeCount > 0) {
+        sel.removeAllRanges();
+      }
+
+      // 3) Also blur any focused descendants just in case
+      node.querySelectorAll("*:focus").forEach((el) => {
+        if (typeof el.blur === "function") el.blur();
+      });
+
+      // 4) Wait for fonts to be ready (avoid fallback font artifacts)
+      if (document.fonts && typeof document.fonts.ready?.then === "function") {
+        try {
+          await document.fonts.ready;
+        } catch (e) {
+          // ignore font loading errors, continue
+        }
+      }
+
+      // 5) Temporarily add a class to ensure no outlines / selection shown
+      node.classList.add("no-capture-selection");
+
+      // 6) Use html-to-image to capture. Provide width/height to preserve layout.
+      const rect = node.getBoundingClientRect();
+      const options = {
+        bgcolor: null, // or '#0f172a' if you want forced background
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height),
+        style: {
+          // ensure consistent box-sizing & font smoothing
+          "box-sizing": "border-box",
+          "-webkit-font-smoothing": "antialiased",
+          "-moz-osx-font-smoothing": "grayscale",
+        },
+        // filter: (n) => true, // default includes everything in node
+      };
+
+      const dataUrl = await toPng(node, options);
+
+      // 7) cleanup class
+      node.classList.remove("no-capture-selection");
+
+      // 8) trigger download
+      const link = document.createElement("a");
+      link.download = `ticket_${ticketId}_${label}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      // make sure we remove temp class on error too
+      try {
+        node.classList.remove("no-capture-selection");
+      } catch (e) {}
+      console.error("Lỗi chụp ảnh (html-to-image):", error);
+    }
   };
 
   return (
@@ -246,7 +314,9 @@ export default function BookingHistory({
                     {b.tickets.map((t) => (
                       <div
                         key={t.ticket_id}
-                        className="border border-gray-700 rounded-lg p-4 bg-[#0f172a]"
+                        id={`ticket-${t.ticket_id}`}
+                        className="border border-gray-700 rounded-lg p-4 bg-[#0f172a]
+                        no-capture-selection"
                       >
                         <div className="flex flex-col sm:flex-row sm:justify-between">
                           <div>
@@ -254,6 +324,13 @@ export default function BookingHistory({
                               Mã vé:{" "}
                               <span className="text-blue-300 font-semibold">
                                 {t.ticket_id}
+                              </span>
+                            </div>
+
+                            <div className="mt-2 text-gray-300 text-sm">
+                              Lịch chiếu:{" "}
+                              <span className="text-white font-semibold">
+                                {b.start_time} {b.showtime_date} {b.room}
                               </span>
                             </div>
 
@@ -275,6 +352,7 @@ export default function BookingHistory({
                                 </div>
                               ))}
                             </div>
+
                             <div className="mt-1 text-gray-300 text-sm">
                               Tổng tiền của vé:{" "}
                               <span className="text-yellow-300 font-bold">
@@ -295,9 +373,23 @@ export default function BookingHistory({
                               <Image
                                 src={t.qr_code}
                                 alt="Mã QR"
-                                height={80}
-                                width={80}
+                                height={100}
+                                width={100}
                               />
+                              <div>
+                                <button
+                                  className="px-2 py-1 bg-blue-400 rounded-sm mt-1
+                                cursor-pointer"
+                                  onClick={() =>
+                                    downloadTicketImage(
+                                      t.ticket_id,
+                                      t.seat.seat_row + t.seat.seat_column
+                                    )
+                                  }
+                                >
+                                  Tải về
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>

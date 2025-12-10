@@ -10,7 +10,7 @@ export async function GET(
   try {
     const [rows]: any = await db.execute(
       `SELECT 
-        b.booking_id, m.name AS movie, c.name AS cinema, b.booking_time, 
+        b.booking_id, m.name AS movie, c.name AS cinema, b.booking_time, r.name as room,
         b.total_price AS booking_total, b.status, 
         s.date AS showtime_date, ms.start_time,
         t.ticket_id, t.total_price AS ticket_total, t.qr_code, t.status as ticket_status,
@@ -43,6 +43,7 @@ export async function GET(
           booking_id: row.booking_id,
           movie: row.movie,
           cinema: row.cinema,
+          room: row.room,
           booking_time: row.booking_time,
           total_price: row.booking_total,
           status: row.status,

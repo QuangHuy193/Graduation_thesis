@@ -165,3 +165,17 @@ body {
 }
 
 /* end alert */
+
+.no-capture-selection,
+.no-capture-selection * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+
+  -webkit-tap-highlight-color: transparent !important;
+
+  outline: none !important;
+  box-shadow: none !important;
+  caret-color: transparent !important;
+}

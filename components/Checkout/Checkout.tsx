@@ -52,7 +52,6 @@ function Checkout() {
     const data = sessionStorage.getItem("bookingData");
     if (data) {
       setBookingData(JSON.parse(data));
-      console.log("getBookingdata", data);
     } else {
       // fallback khi user mở tab mới / reload mất data
       console.warn("Không tìm thấy bookingData");
@@ -65,6 +64,7 @@ function Checkout() {
     const updateBooking = async (bookingID, data) => {
       await updateBookingToPaid(bookingID, data); // ⬅ Gọi API /booking/[id]
     };
+
     if (paymentStatus === "PAID") {
       const bookingIDRaw = sessionStorage.getItem("booking_id");
       const bookingID = Number(bookingIDRaw);
@@ -127,7 +127,6 @@ function Checkout() {
       };
 
       const res = await createBookingNoAuth(payload);
-      console.log("Booking created (no-auth):", res.data.data.booking_id);
 
       // TODO: redirect sang Payment
       return res.data.data.booking_id;
@@ -146,17 +145,9 @@ function Checkout() {
 
     const res = await createBookingAuth(payload);
 
-    console.log("Booking created (auth):", res.data.data.booking_id);
     return res.data.data.booking_id;
     // TODO: redirect sang Payment
   }
-
-  useEffect(() => {
-    return () => {
-      // tránh trường hợp reload tạo vé liên tục
-      sessionStorage.removeItem("booking_id");
-    };
-  }, []);
 
   return (
     <div>
@@ -223,7 +214,11 @@ function Checkout() {
           </div>
         </div>
       )}
-      {state.step === 3 && <InfoTicket bookingId={36} />}
+      {state.step === 3 && (
+        <InfoTicket
+          bookingId={JSON.parse(sessionStorage.getItem("booking_id"))}
+        />
+      )}
     </div>
   );
 }

@@ -32,7 +32,6 @@ function InfoBooking() {
     if (data) {
       const dataString = JSON.parse(data);
       setBookingData(dataString);
-      console.log(dataString);
       lockSeat(dataString.seats, dataString.showtime_id);
     }
 
@@ -91,7 +90,7 @@ function InfoBooking() {
       );
       sessionStorage.removeItem("expireTime");
     };
-  }, [bookingData, router]);
+  }, []);
 
   if (bookingData === null) {
     return <Spinner />;

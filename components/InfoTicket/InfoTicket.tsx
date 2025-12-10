@@ -1,7 +1,9 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
-// import Image from "next/image"; // NOTE: dùng <img> thay vì Next/Image cho dom-to-image-more
 import { getTicketByBokingIdAPI } from "@/lib/axios/ticketAPI";
+import { downloadElementAsImage, fmtCurrency } from "@/lib/function";
+import Image from "next/image";
 
 type TicketItem = {
   showtime_date: string;
@@ -47,35 +49,6 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
     };
   }, [bookingId]);
 
-  // helper: chuyển HTML element thành PNG và tải về (dùng dom-to-image-more)
-  async function downloadElementAsImage(
-    el: HTMLElement,
-    filename = "ticket.png"
-  ) {
-    try {
-      const domtoimage = (await import("dom-to-image-more")).default;
-      const options: any = {
-        bgcolor: "#ffffff",
-        quality: 1,
-        // useCORS không phải option của dom-to-image-more, but it handles CORS internally.
-        // Nhưng cần đảm bảo <img crossOrigin="anonymous" /> và server ảnh có header CORS.
-      };
-
-      // toPng trả về dataURL
-      const dataUrl = await domtoimage.toPng(el, options);
-
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch (err) {
-      console.error("dom-to-image-more error:", err);
-      alert("Không thể tạo ảnh vé. Kiểm tra console để biết chi tiết.");
-    }
-  }
-
   const handleDownloadSingle = (index: number) => {
     const el = ticketRefs.current[index];
     if (!el) return alert("Không tìm thấy vé để tải.");
@@ -97,42 +70,51 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
     return (
       <div
         ref={(el) => (ticketRefs.current[idx] = el)}
-        className="bg-white rounded-xl shadow-md p-4 w-[600px] text-gray-900"
+        key={t.ticket_id}
+        id={`ticket-${t.ticket_id}`}
+        className="border border-gray-700 rounded-lg p-4 bg-[#0f172a]
+        no-capture-selection w-[500px]"
       >
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <div className="text-lg font-bold mb-1">{t.name}</div>
-            <div className="text-sm text-gray-600">
-              <div>
-                Ngày: <strong>{t.showtime_date}</strong>
-              </div>
-              <div>
-                Giờ: <strong>{t.start_time}</strong>
-              </div>
-              <div>
-                Ghế: <strong>{seat}</strong>
-              </div>
+        <div className="flex flex-col sm:flex-row sm:justify-between">
+          <div>
+            <div className="text-gray-300 text-sm">
+              Mã vé:{" "}
+              <span className="text-blue-300 font-semibold">{t.ticket_id}</span>
             </div>
-            <div className="mt-3 text-xs text-gray-500">
-              Vui lòng xuất trình mã QR hoặc ảnh này khi vào rạp.
+
+            <div className="mt-2 text-gray-300 text-sm">
+              Lịch chiếu:{" "}
+              <span className="text-white font-semibold">
+                {t.start_time} {t.showtime_date} {t.name}
+              </span>
+            </div>
+
+            <div className="mt-2 text-gray-300 text-sm">
+              Ghế: <span className="text-white font-semibold">{seat}</span>
+            </div>
+            <div className="mt-4 sm:mt-0">
+              <div className="text-gray-300 text-sm mb-1">
+                Danh sách đồ ăn, thức uống:
+              </div>
+
+              {t.foods?.map((f, idx) => (
+                <div key={idx} className="text-gray-400">
+                  • {f.food_name} x {f.quantity}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-1 text-gray-300 text-sm">
+              Tổng tiền của vé:{" "}
+              <span className="text-yellow-300 font-bold">
+                {fmtCurrency(t.total_price)}
+              </span>
             </div>
           </div>
 
-          <div className="w-[160px] h-[160px] flex items-center justify-center bg-gray-100 rounded">
-            {/* DÙNG <img> để dom-to-image-more hoạt động tốt */}
-            {/* Nếu qr_code là URL remote, đảm bảo server ảnh trả header CORS (Access-Control-Allow-Origin: *) */}
-            <img
-              src={t.qr_code}
-              alt={`qr-${idx}`}
-              width={120}
-              height={120}
-              className="w-36 h-36"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                // fallback: nếu ảnh lỗi, hide hoặc show placeholder
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
+          <div>
+            <div className="text-gray-300 text-sm mb-1">Mã QR:</div>
+            <Image src={t.qr_code} alt="Mã QR" height={100} width={100} />
           </div>
         </div>
       </div>
@@ -141,18 +123,6 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
 
   return (
     <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-2">
-          <button
-            onClick={handleDownloadAll}
-            className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-60"
-            disabled={tickets.length === 0}
-          >
-            Tải toàn bộ danh sách
-          </button>
-        </div>
-      </div>
-
       {loading && <div>Đang tải vé...</div>}
       {error && <div className="text-red-500">Lỗi: {error}</div>}
 
@@ -167,7 +137,8 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => handleDownloadSingle(idx)}
-                className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-3 py-2 bg-blue-600 text-white rounded cursor-pointer
+                 hover:bg-blue-700"
               >
                 Tải vé
               </button>
