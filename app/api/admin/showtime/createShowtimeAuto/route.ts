@@ -70,6 +70,18 @@ export async function POST(req: Request) {
                 [date, status, movie_id, room_id, movie_screen_id]
             );
             showtimeId = Number((ins as any).insertId);
+            const [seats] = await conn.query(`SELECT seat_id FROM seats WHERE room_id = ?`, [room_id]);
+            if (Array.isArray(seats) && seats.length > 0) {
+                const params: any[] = [];
+                const placeholders: string[] = [];
+                const defaultStatus = 0;
+                for (const s of seats) {
+                    placeholders.push("(?,?,?)");
+                    params.push(s.seat_id, showtimeId, defaultStatus);
+                }
+                const sql = `insert into showtime_seat (seat_id,showtime_id,status) value ${placeholders.join(",")}`;
+                await conn.query(sql, params);
+            }
         }
 
         // Conflict check: ensure no other showtime (different id) occupies same room + date + movie_screen_id
