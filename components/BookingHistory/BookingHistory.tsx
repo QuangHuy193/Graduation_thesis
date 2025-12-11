@@ -21,7 +21,7 @@ export default function BookingHistory({
   // lấy user
   const { data: session } = useSession();
   const user = session?.user;
-  console.log(user);
+  // console.log(user);
 
   const fmtDate = (iso) => {
     if (!iso) return "-";
@@ -173,7 +173,7 @@ export default function BookingHistory({
       // make sure we remove temp class on error too
       try {
         node.classList.remove("no-capture-selection");
-      } catch (e) {}
+      } catch (e) { }
       console.error("Lỗi chụp ảnh (html-to-image):", error);
     }
   };
@@ -263,11 +263,10 @@ export default function BookingHistory({
                       <FontAwesomeIcon
                         icon={faChevronDown}
                         className={`w-4 h-4 text-yellow-300 transition-transform
-                             duration-300 ${
-                               openId === b.booking_id
-                                 ? "rotate-180"
-                                 : "rotate-0"
-                             }`}
+                             duration-300 ${openId === b.booking_id
+                            ? "rotate-180"
+                            : "rotate-0"
+                          }`}
                       />
                     </div>
 

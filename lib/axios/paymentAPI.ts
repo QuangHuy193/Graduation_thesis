@@ -28,7 +28,7 @@ export async function createPayOSPayment(data: {
 
 export async function triggerRefund() {
     try {
-        const resp = await axiosInstance.post(`/api/payout-mock`,
+        const resp = await axiosInstance.post(`/api/payos/payout-mock`,
             {
                 payouts: [
                     {

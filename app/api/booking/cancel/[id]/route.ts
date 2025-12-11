@@ -40,17 +40,12 @@ export async function DELETE(req: Request, { params }: { params: string }) {
 
     // gọi api hoàn trả
     if (booking.payment_method === "payos") {
-      await db.query(
-        `INSERT into refund (percent, amount,time, reason,booking_id ) value (?,?,?,?,?)`,
-        [percent, totalRefund, getCurrentDateTime(), "Người dùng hủy", id]
-      );
-
       const result = await triggerRefund();
       if (result.ok && result.data.status === "SUCCESS") {
         console.log("Refund thành công!");
         await db.query(
-          `INSERT into refund (percent, amount,time,booking_id ) value (?,?,?,?)`,
-          [percent, totalRefund, getCurrentDateTime(), id]
+          `INSERT into refund (percent, amount,time, reason,booking_id ) value (?,?,?,?,?)`,
+          [percent, totalRefund, getCurrentDateTime(), "Người dùng hủy", id]
         );
         //  chuyển sang đã hủy
         await db.query(`UPDATE booking SET status = 4 WHERE booking_id = ?`, [
