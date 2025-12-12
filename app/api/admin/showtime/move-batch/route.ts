@@ -49,7 +49,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ ok: false, message: "Validation failed", errors: validationErrors }, { status: 400 });
         }
 
-        console.log("move-batch payload validated, count:", moves.length);
+        // console.log("move-batch payload validated, count:", moves.length);
 
         const conn = await db.getConnection();
         try {
