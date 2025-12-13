@@ -28,7 +28,7 @@ export async function GET(
 
   // Format YYYY-MM-DD
   const date = target.toISOString().split("T")[0];
-
+  console.log(date, id);
   try {
     const [rows] = await db.query(
       `SELECT s.showtime_id, s.date, s.movie_id,
@@ -66,7 +66,11 @@ export async function GET(
         startTimes = [];
       }
 
+      const today = new Date();
+      const isToday = today.toISOString().split("T")[0] === date;
+
       const futureTimes = startTimes.filter((t) => {
+        if (!isToday) return true;
         // "18:00" -> [18, 00]
         const [h, m] = t.split(":").map(Number);
         const minutes = h * 60 + m;
@@ -77,8 +81,7 @@ export async function GET(
         showtimeObj = {
           showtime_id: item.showtime_id,
           movie_id: item.movie_id,
-          start_date: item.start_date,
-          end_date: item.end_date,
+          date: item.date,
           start_times: futureTimes, // mảng giờ trong showtime (từ movie_screenings)
           room: {
             room_id: item.room_id,
