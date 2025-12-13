@@ -26,20 +26,30 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
 
   useEffect(() => {
     let mounted = true;
+    let retryCount = 0;
+    let MAX_RETRY = 5;
     async function fetchTickets() {
+      if (!mounted) return;
       setLoading(true);
       try {
         const res = await getTicketByBokingIdAPI(bookingId);
-        console.log(res);
+        // console.log(res);
         const data = res?.data ?? res;
-        if (mounted) {
-          setTickets(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length > 0) {
+          setTickets(data);
+          setLoading(false);
+          return;
         }
+        if (retryCount < MAX_RETRY) {
+          retryCount++;
+          setTimeout(fetchTickets, 1500);
+        } else {
+          setLoading(false);
+        }
+
       } catch (err: any) {
-        console.error(err);
+        // console.error(err);
         if (mounted) setError(err?.message ?? "Lỗi khi lấy vé");
-      } finally {
-        if (mounted) setLoading(false);
       }
     }
 
