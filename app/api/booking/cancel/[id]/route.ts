@@ -9,21 +9,12 @@ import {
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }) {
-  console.log("🔥 DELETE booking API hit");
+  // console.log("🔥 DELETE booking API hit");
   // return new Response("OK");
   try {
     // booking id
-    const { id } = params;
+    const { id } = await params;
     const { percent } = await req.json();
-    // let percent: any;
-    // try {
-    //   percent = await req.json();
-    // } catch (e) {
-    //   console.log("❌ req.json() failed");
-    //   return errorResponse("Body không hợp lệ", 400);
-    // }
-
-    // console.log("BODY:", percent);
 
     if (typeof percent !== "number" || percent < 0 || percent > 100) {
       return errorResponse("percent không hợp lệ", 400);
@@ -56,14 +47,6 @@ export async function DELETE(
     if (typeof percent !== "number") {
       return errorResponse("percent không hợp lệ", 400);
     }
-    // console.log("getCurrentDateTime: ", getCurrentDateTime());
-    console.log({
-      percent,
-      totalRefund,
-      time: getCurrentDateTime(),
-      booking_id: id
-    });
-    // gọi api hoàn trả
     if (booking.payment_method === "PAYOS") {
       const result = await triggerRefund();
       if (result.ok && result.data.status === "SUCCESS") {
