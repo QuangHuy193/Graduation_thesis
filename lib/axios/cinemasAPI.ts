@@ -19,3 +19,13 @@ export async function getCityAPI() {
     throw error.response?.data || error;
   }
 }
+
+export async function getTablePriceAPI(id: number) {
+  try {
+    const response = await axiosInstance.get(`/api/cinemas/${id}/table-price`);
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching table price:", error);
+    throw error.response?.data || error;
+  }
+}

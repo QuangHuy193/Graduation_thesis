@@ -8,7 +8,7 @@ export default function Login() {
   const [state, setState] = useState({
     chosseForm: "login",
     showPass: false,
-    saveLogin: false,
+    saveLogin: true,
     showConfirmPass: false,
     showPolicy: false,
     agreeClause: false,

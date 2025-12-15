@@ -494,3 +494,14 @@ export const fmtCurrency = (value) => {
     currency: "VND",
   }).format(value);
 };
+
+// lấy giá (hiển thị bảng)
+export const getPrice = (prices, time_from, is_holiday, ticket_type_id) => {
+  const item = prices.find(
+    (p) =>
+      p.time_from === time_from &&
+      p.is_holiday === is_holiday &&
+      p.ticket_type_id === ticket_type_id
+  );
+  return item ? Number(item.price).toLocaleString() : "-";
+};

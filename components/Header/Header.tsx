@@ -202,12 +202,12 @@ function Header() {
           >
             Khuyến mãi
           </LoadingLink>
-          <LoadingLink
+          {/* <LoadingLink
             href={"/about"}
             className={`${styles.hd_bottom_right_item}`}
           >
             Giới thiệu
-          </LoadingLink>
+          </LoadingLink> */}
         </div>
       </div>
     </header>
