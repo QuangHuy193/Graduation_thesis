@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -40,7 +39,9 @@ export default function FormLogin({
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       try {
-        const res = (await getEmailByPhone(identifier)) as GetEmailByPhoneResponse;
+        const res = (await getEmailByPhone(
+          identifier
+        )) as GetEmailByPhoneResponse;
         if (!res.success || !res.data?.email) {
           setMsg({
             type: "error",
@@ -150,7 +151,6 @@ export default function FormLogin({
         return;
       }
 
-
       setMsg({
         type: "success",
         text: "Đăng nhập thành công",
@@ -160,6 +160,8 @@ export default function FormLogin({
       const userRole: string = sessUser.role ?? "";
       if (userRole === "admin") {
         router.push("/admin");
+      } else if (userRole === "superadmin") {
+        router.push("/sadmin");
       } else {
         router.push("/");
       }
@@ -246,8 +248,9 @@ export default function FormLogin({
               onClick={() => handleToggleVisibility("saveLogin")}
             >
               <div
-                className={`w-3.5 h-3.5  rounded-xs border border-black relative ${state.saveLogin === true ? "bg-orange-300" : ""
-                  }`}
+                className={`w-3.5 h-3.5  rounded-xs border border-black relative ${
+                  state.saveLogin === true ? "bg-orange-300" : ""
+                }`}
               >
                 {state.saveLogin && (
                   <FontAwesomeIcon
@@ -277,7 +280,6 @@ export default function FormLogin({
           />
         </form>
       )}
-
     </div>
   );
 }

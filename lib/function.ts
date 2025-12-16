@@ -383,7 +383,11 @@ export function getDayOffset(dateString: Date) {
 }
 
 // tính toán % hoàn tiền
-export function getRefundPercent(date: Date, time: string, vip: number) {
+export function getRefundPercent(
+  date: Date,
+  time: string,
+  vip: number | string
+) {
   // Ghép date + time thành datetime chuẩn
   const [hour, minute] = time.split(":").map(Number);
   const showtime = new Date(date);
@@ -392,6 +396,9 @@ export function getRefundPercent(date: Date, time: string, vip: number) {
   const now = new Date();
   const diffMs = showtime.getTime() - now.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
+
+  console.log(date, time, vip);
+  console.log(now, diffHours);
 
   if (vip === 0) {
     if (diffHours >= 24) return 100;
