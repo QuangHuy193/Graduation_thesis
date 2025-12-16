@@ -1,6 +1,9 @@
 // app/api/showtimes/create-with-day/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getCinemaFromRoom } from "@/lib/axios/admin/roomAPI";
+import { DAY_TO_BINARY } from "@/lib/constant";
+import { checkIsHoliday } from "@/lib/axios/admin/promotion_ruleAPI";
 
 export async function POST(req: Request) {
     const body = await req.json().catch(() => null);
@@ -13,7 +16,6 @@ export async function POST(req: Request) {
         room_id = null,
         movie_screen_id = null,
         date, // expected 'YYYY-MM-DD'
-        reuse_showtime = true,
         _temp_client_id = null,
         status = 1, // default active
     } = body as {
@@ -40,50 +42,88 @@ export async function POST(req: Request) {
 
         let showtimeId: number | null = null;
 
-        // Try to reuse an existing showtime matching movie + room + screen + date
-        if (reuse_showtime) {
-            const [found] = await conn.query(
-                `SELECT showtime_id FROM showtime
-         WHERE movie_id = ? AND room_id <=> ? AND movie_screen_id <=> ? AND date = ?
-         LIMIT 1 FOR UPDATE`,
-                [movie_id, room_id, movie_screen_id, date]
-            );
-            const row = (found as any[])[0];
-            if (row && row.showtime_id) {
-                showtimeId = Number(row.showtime_id);
-            }
-        }
-
-        // If found -> update it (optional) else create new showtime row
-        if (showtimeId) {
-            // Update fields if needed
-            await conn.query(
-                `UPDATE showtime
-         SET status = ?, movie_id = ?, room_id = ?, movie_screen_id = ?, date = ?
-         WHERE showtime_id = ?`,
-                [status, movie_id, room_id, movie_screen_id, date, showtimeId]
-            );
-        } else {
-            const [ins] = await conn.query(
-                `INSERT INTO showtime (date, status, movie_id, room_id, movie_screen_id)
+        const [ins] = await conn.query(
+            `INSERT INTO showtime (date, status, movie_id, room_id, movie_screen_id)
          VALUES (?, ?, ?, ?, ?)`,
-                [date, status, movie_id, room_id, movie_screen_id]
-            );
-            showtimeId = Number((ins as any).insertId);
-            const [seats] = await conn.query(`SELECT seat_id FROM seats WHERE room_id = ?`, [room_id]);
-            if (Array.isArray(seats) && seats.length > 0) {
-                const params: any[] = [];
-                const placeholders: string[] = [];
-                const defaultStatus = 0;
-                for (const s of seats) {
-                    placeholders.push("(?,?,?)");
-                    params.push(s.seat_id, showtimeId, defaultStatus);
-                }
-                const sql = `insert into showtime_seat (seat_id,showtime_id,status) value ${placeholders.join(",")}`;
-                await conn.query(sql, params);
-            }
-        }
+            [date, status, movie_id, room_id, movie_screen_id]
+        );
+        showtimeId = Number((ins as any).insertId);
 
+        const [seats] = await conn.query(`SELECT seat_id FROM seats WHERE room_id = ?`, [room_id]);
+        if (Array.isArray(seats) && seats.length > 0) {
+            const params: any[] = [];
+            const placeholders: string[] = [];
+            const defaultStatus = 0;
+            for (const s of seats) {
+                placeholders.push("(?,?,?)");
+                params.push(s.seat_id, showtimeId, defaultStatus);
+            }
+            const sql = `insert into showtime_seat (seat_id,showtime_id,status) value ${placeholders.join(",")}`;
+            await conn.query(sql, params);
+        }
+        //Tạo giá
+        const cinemaIdraw = await getCinemaFromRoom(room_id);
+        console.log("cinemaID:", cinemaIdraw);
+        const cinemaId = cinemaIdraw?.data?.[0]?.cinema_id ?? null;
+        const today = new Date();
+        const dateStr = today.toISOString().slice(0, 10);
+        const checkHolidayraw = await checkIsHoliday(dateStr);
+        const isHoliday = checkHolidayraw?.data ? 1 : 0;
+        const dayBinary = DAY_TO_BINARY[today.getDay()];
+        const [normalRows] = await conn.query(`SELECT price FROM price_fixed 
+                WHERE
+                cinema_id = ?
+                AND ticket_type_id = ?
+                AND day_of_week = ?
+                AND is_blockbuster = ?
+                AND is_holiday = ?
+                AND (
+                    (time_from < time_to AND ? BETWEEN time_from AND time_to)
+                    OR
+                    (time_from > time_to AND ? NOT BETWEEN time_to AND time_from)
+                )
+                ORDER BY
+                is_holiday DESC,
+                is_blockbuster DESC,
+                day_of_week DESC,
+                time_from DESC
+                LIMIT 1;
+                `, [cinemaId, 1, dayBinary, 0, isHoliday, date, date]);
+        const priceNormal = normalRows?.[0]?.price;
+        const [studentRows] = await conn.query(`SELECT price FROM price_fixed 
+                WHERE
+                cinema_id = ?
+                AND ticket_type_id = ?
+                AND day_of_week = ?
+                AND is_blockbuster = ?
+                AND is_holiday = ?
+                AND (
+                    (time_from < time_to AND ? BETWEEN time_from AND time_to)
+                    OR
+                    (time_from > time_to AND ? NOT BETWEEN time_to AND time_from)
+                )
+                ORDER BY
+                is_holiday DESC,
+                is_blockbuster DESC,
+                day_of_week DESC,
+                time_from DESC
+                LIMIT 1;
+                `, [cinemaId, 2, dayBinary, 0, isHoliday, date, date]);
+        const priceStudent = studentRows?.[0]?.price;
+        await conn.query(`INSERT INTO price_reality (
+                price_promotion,
+                price_final,
+                ticket_type_id,
+                showtime_id )
+                VALUES (?,?,?,?);
+                `, [0.00, priceNormal, 1, showtimeId]);
+        await conn.query(`INSERT INTO price_reality (
+                price_promotion,
+                price_final,
+                ticket_type_id,
+                showtime_id )
+                VALUES (?,?,?,?);
+                `, [0.00, priceStudent, 2, showtimeId]);
         // Conflict check: ensure no other showtime (different id) occupies same room + date + movie_screen_id
         // Only meaningful when room_id and movie_screen_id are provided (not null)
         if (room_id != null && movie_screen_id != null) {

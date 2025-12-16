@@ -142,7 +142,19 @@ hiện tại so với thời gian chiếu, cụ thể như sau: Hủy trước 2
 Hủy từ 12 giờ - 24 giờ: Hoàn 90%, Hủy từ 6 giờ - 12 giờ: Hoàn 85%,
 Hủy từ 3 giờ - 6 giờ: Hoàn 70%, Dưới 3 giờ trước giờ chiếu: Không hỗ trợ hủy vé.
 Thành viên VIP được cộng thêm 5% trên mức hoàn ở mỗi mốc.`;
+const WEEKDAY = 30;
+const MONDAY = 1;
+const WEEKEND = 96;
 
+export const DAY_TO_BINARY: Record<number, number> = {
+  1: MONDAY,    // Thứ 2
+  2: WEEKDAY,   // Thứ 3
+  3: WEEKDAY,   // Thứ 4
+  4: WEEKDAY,   // Thứ 5
+  5: WEEKDAY,   // Thứ 6
+  6: WEEKEND,   // Thứ 7
+  0: WEEKEND,   // Chủ nhật
+};
 // menu sadmin
 export const MENUSUPERADMIN = [
   {

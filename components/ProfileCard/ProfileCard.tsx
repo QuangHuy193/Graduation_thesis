@@ -78,7 +78,7 @@ export default function ProfileCard({
 
                 <div className={styles.pointsText}>
                     <span className={styles.pointsNow}>{user.points ?? 0}</span>/
-                    <span className={styles.pointsGoal}>{user.pointsGoal ?? 10000}K</span>
+                    <span className={styles.pointsGoal}>{user.pointsGoal ?? 10000}</span>
                 </div>
             </div>
 

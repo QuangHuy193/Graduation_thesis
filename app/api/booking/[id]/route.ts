@@ -16,11 +16,17 @@ export async function PUT(
     // ticket [{seat_id, ticket_type_id, price (giá vé), total_price (có bắp nước), food [{food_id, quanity}]}]
     const { total_price, payment_method, voucher_id, ticket } = body;
     //Kiểm tra booking đã cập nhật chưa?
-    const [rows] = await db.query(`SELECT status from booking WHERE booking_id=?`, [id]);
-    let statusCheck;
-    if (rows.length > 0) {
-      statusCheck = rows[0].status;
+    const [rows] = await db.query(`SELECT status, user_id from booking WHERE booking_id=?`, [id]);
+    if (rows.length === 0) {
+      return errorResponse("Booking không tồn tại", 404);
     }
+
+    const { status, user_id } = rows[0];
+
+
+
+    // OK, an toàn dùng
+    const statusCheck = status;
     // cập nhật booking
     if (!statusCheck) {
       if (total_price !== undefined) {
@@ -59,6 +65,21 @@ export async function PUT(
             `INSERT INTO payment (payment_time, amount, booking_id) VALUE (?,?,?)`,
             [getCurrentDateTime(), currentTotal, id]
           );
+          if (user_id !== null) {
+            const [rows]: any = await db.query(`SELECT point from users where user_id=?`, [user_id]);
+            if (rows.length === 0) {
+              throw new Error("User không tồn tại");
+            }
+            const presentPoint = Number(rows[0].point) || 0;
+            // 1.000đ = 1 điểm, làm tròn xuống
+            const earnedPoint = Math.floor(currentTotal / 1000);
+            // giới hạn tối đa 10.000
+            const newPoint = Math.min(presentPoint + earnedPoint, 10000);
+            await db.query(
+              `UPDATE users SET point = ? WHERE user_id = ?`,
+              [newPoint, user_id]
+            );
+          }
         }
       }
 
