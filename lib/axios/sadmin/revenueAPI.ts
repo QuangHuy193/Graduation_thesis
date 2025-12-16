@@ -7,7 +7,19 @@ export async function getRevenueYearAPI(year: number) {
     );
     return response.data.data;
   } catch (error: any) {
-    console.error("Error fetching cinemas:", error);
+    console.error("Error fetching revenue:", error);
+    throw error.response?.data || error;
+  }
+}
+
+export async function getRevenueMonthYearAPI(month: number, year: number) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/sadmin/revenue/month?month=${month}&year=${year}`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching revenue:", error);
     throw error.response?.data || error;
   }
 }

@@ -1,5 +1,8 @@
 "use client";
-import { getRevenueYearAPI } from "@/lib/axios/sadmin/revenueAPI";
+import {
+  getRevenueMonthYearAPI,
+  getRevenueYearAPI,
+} from "@/lib/axios/sadmin/revenueAPI";
 import { Select } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -43,19 +46,32 @@ function RevenueChart({ selected, setSelected }) {
       }
     };
 
-    getRevenueYear();
-  }, [selected]);
+    const getRevenueMonth = async () => {
+      try {
+        const res = await getRevenueMonthYearAPI(selected.month, selected.year);
+        setState((prev) => ({ ...prev, revenue: res }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    if (state.chartType === "month") {
+      getRevenueMonth();
+    } else if (state.chartType === "year") {
+      getRevenueYear();
+    }
+  }, [selected, state.chartType]);
 
   // map dữ liệu cho recharts
   const chartData =
     state.revenue.length === 12
       ? state.revenue.map((v, i) => ({
           label: `Tháng ${i + 1}`,
-          value: v,
+          value: Number(v),
         }))
       : state.revenue.map((v, i) => ({
-          label: `Ngày ${i + 1}`,
-          value: v,
+          label: `${i + 1}`,
+          value: Number(v),
         }));
 
   return (
@@ -113,8 +129,28 @@ function RevenueChart({ selected, setSelected }) {
                 interval={0} // ép hiện TẤT CẢ nhãn, không bỏ bớt
                 tick={{ fontSize: 10 }}
               />
-              <YAxis />
-              <Tooltip />
+              <YAxis
+                tickFormatter={(v) =>
+                  v.toLocaleString("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  })
+                }
+                tick={{ fontSize: 11 }}
+              />
+              <Tooltip
+                labelFormatter={(label) => {
+                  return state.revenue.length === 12
+                    ? label // "Tháng 1"
+                    : `Ngày ${label}`; // "Ngày 5"
+                }}
+                formatter={(value: number) =>
+                  value.toLocaleString("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  })
+                }
+              />
               <Bar dataKey="value" fill="#4f46e5" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

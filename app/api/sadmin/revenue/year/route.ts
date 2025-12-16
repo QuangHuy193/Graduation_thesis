@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
 
-// lấy danh sách trống của phòng theo id
+// thống kê doanh thu theo năm
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
