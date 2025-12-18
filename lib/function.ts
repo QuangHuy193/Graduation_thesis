@@ -137,8 +137,9 @@ export function isSingleGap(
       });
     });
   }
-  // console.log("Sau rowSeats", seats);
-  // console.log("Sau col", col);
+  console.log("Sau rowSeats", seats);
+  console.log("Sau col", col);
+  console.log("aside", aside);
   const get = (c: number) => seats.find((s) => s.col === c);
 
   // chống ghế sát trái
@@ -160,6 +161,28 @@ export function isSingleGap(
   const right2 = get(col + 2);
   const left3 = get(col - 3);
   const right3 = get(col + 3);
+
+  // ===== CHỐNG TRỐNG GHẾ SÁT LỐI ĐI =====
+  for (const gap of aside) {
+    const leftOfAisle = gap.gap_index - 1 + gap.gap_width - 1;
+    const rightOfAisle = gap.gap_index - 1 + gap.gap_width + 1;
+    console.log("l", leftOfAisle);
+    console.log("r", rightOfAisle);
+    const leftSeat = get(leftOfAisle);
+    const rightSeat = get(rightOfAisle);
+
+    // chọn ghế làm trống ghế sát lối đi bên trái
+    if (col === leftOfAisle - 1 && leftSeat && !leftSeat.booked) {
+      console.log("TRỐNG GHẾ SÁT LỐI ĐI (BÊN TRÁI)");
+      return true;
+    }
+
+    // chọn ghế làm trống ghế sát lối đi bên phải
+    if (col === rightOfAisle + 1 && rightSeat && !rightSeat.booked) {
+      console.log("TRỐNG GHẾ SÁT LỐI ĐI (BÊN PHẢI)");
+      return true;
+    }
+  }
 
   // hàng còn đúng 3 ghế liên tiếp
   if (left && right && !right.booked && !left.booked && !left2 && !right2) {
