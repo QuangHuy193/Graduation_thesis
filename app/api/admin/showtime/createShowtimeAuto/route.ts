@@ -63,7 +63,6 @@ export async function POST(req: Request) {
         }
         //Tạo giá
         const cinemaIdraw = await getCinemaFromRoom(room_id);
-        console.log("cinemaID:", cinemaIdraw);
         const cinemaId = cinemaIdraw?.data?.[0]?.cinema_id ?? null;
         const today = new Date();
         const dateStr = today.toISOString().slice(0, 10);

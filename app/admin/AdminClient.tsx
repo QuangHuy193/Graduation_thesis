@@ -6,6 +6,7 @@ import { getAllMovies, callBulkApi, getAllMoviesEx } from "@/lib/axios/admin/mov
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
+import PromotionTable from "@/components/PromotionTable/PromotionTable";
 import Showtimestable, { CinemaEntry, RoomEntry, ShowtimeDay } from "@/components/ShowtimesTable/ShowtimesTable";
 import Button from "@/components/Button/Button";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
@@ -52,10 +53,6 @@ export default function AdminDashboard() {
         fetchRooms();
         fetchScreenings();
     }, []);
-    useEffect(() => {
-        console.log("DEBUG showtimes:", showtimes);
-        console.log("DEBUG movieScreenings:", screenings);
-    }, [showtimes, screenings]);
 
     async function fetchMovies() {
         try {
@@ -75,7 +72,7 @@ export default function AdminDashboard() {
             const data = await getScreenings();
             setScreenings(data);
         } catch (e) {
-            console.error(e);
+            // console.error(e);
             // fallback: mock
             setScreenings([]);
         }
@@ -163,7 +160,6 @@ export default function AdminDashboard() {
     }
 
     const handleDeleteFromChild = () => {
-        // simplest: fetch lại danh sách
         fetchMovies();
 
     };
@@ -321,7 +317,8 @@ export default function AdminDashboard() {
         dashboard: "Tổng quan",
         movies: "Phim",
         showtimes: "Suất chiếu",
-        bookings: "Vé"
+        bookings: "Vé",
+        promotions: "Sự kiện"
     };
 
     function handleOpenAdd() {
@@ -372,6 +369,12 @@ export default function AdminDashboard() {
                         className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "showtimes" ? "bg-slate-100" : "hover:bg-slate-50"}`}
                     >
                         Quản lý suất chiếu
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("promotions")}
+                        className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "promotions" ? "bg-slate-100" : "hover:bg-slate-50"}`}
+                    >
+                        Sự kiện & CTKM
                     </button>
                 </nav>
             </aside>
@@ -450,6 +453,12 @@ export default function AdminDashboard() {
                             />
                         </div>
                     )}
+                    {activeTab === "promotions" && (
+                        <div className="mt-4">
+                            <PromotionTable />
+                        </div>
+                    )}
+
                 </>
                 )}
             </main>
