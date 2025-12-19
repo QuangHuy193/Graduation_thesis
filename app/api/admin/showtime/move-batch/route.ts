@@ -71,6 +71,7 @@ export async function POST(request: Request) {
 
                 // If payload includes key "date" and it's explicitly null -> DELETE the showtime
                 if (Object.prototype.hasOwnProperty.call(m, "date") && m.date === null) {
+                    await conn.query(`UPDATE booking SET showtime_id = NULL WHERE showtime_id=?`, [m.showtime_id]);
                     await conn.query(`DELETE FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
                     results.push({ ok: true, action: "deleted", input: m });
                     continue;
