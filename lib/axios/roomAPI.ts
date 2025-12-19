@@ -40,3 +40,27 @@ export async function createRoomAPI(data: {
     throw error.response?.data || error;
   }
 }
+
+// xóa phòng
+export async function deleteRoomAPI(id: number) {
+  try {
+    const response = await axiosInstance.delete(`/api/admin/rooms/${id}`);
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching room:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// khôi phục phòng
+export async function recoverRoomAPI(id: number) {
+  try {
+    const response = await axiosInstance.put(`/api/admin/rooms/recover/${id}`);
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching room:", error);
+    throw error.response?.data || error;
+  }
+}

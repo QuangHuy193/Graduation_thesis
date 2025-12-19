@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
+
 export async function GET(req: Request, { params }: { params: string }) {
   try {
     const { id } = await params;

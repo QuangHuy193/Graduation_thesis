@@ -1,7 +1,11 @@
 "use client";
 
 import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
-import { getAllRoomInCinemaAPI } from "@/lib/axios/roomAPI";
+import {
+  deleteRoomAPI,
+  getAllRoomInCinemaAPI,
+  recoverRoomAPI,
+} from "@/lib/axios/roomAPI";
 import { useEffect, useState } from "react";
 import Spinner from "../Spinner/Spinner";
 
@@ -14,6 +18,7 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import Tippy from "@tippyjs/react";
+import Swal from "sweetalert2";
 
 function RoomList({
   // bật tắt thêm/sửa phòng
@@ -26,7 +31,11 @@ function RoomList({
   setToggleRoom: (path: string) => void;
 }) {
   const [state, setState] = useState({
-    isFetch: false,
+    isFetch: {
+      cinema: false,
+      status: -1,
+      room: false,
+    },
     // mở popup
     openPopup: -1,
     // ds cinema
@@ -42,7 +51,13 @@ function RoomList({
   useEffect(() => {
     const getCinemas = async () => {
       try {
-        setState((prev) => ({ ...prev, isFetch: true }));
+        setState((prev) => ({
+          ...prev,
+          isFetch: {
+            ...prev.isFetch,
+            cinema: true,
+          },
+        }));
         const res = await getCinemasWithCityAPI();
         setState((prev) => ({ ...prev, cinemaList: res }));
         setState((prev) => ({
@@ -52,7 +67,13 @@ function RoomList({
       } catch (error) {
         console.log(error);
       } finally {
-        setState((prev) => ({ ...prev, isFetch: false }));
+        setState((prev) => ({
+          ...prev,
+          isFetch: {
+            ...prev.isFetch,
+            cinema: false,
+          },
+        }));
       }
     };
     getCinemas();
@@ -65,17 +86,29 @@ function RoomList({
 
     const getRoomsIncinema = async (cinema_id) => {
       try {
-        setState((prev) => ({ ...prev, isFetch: true }));
+        setState((prev) => ({
+          ...prev,
+          isFetch: {
+            ...prev.isFetch,
+            room: true,
+          },
+        }));
         const res = await getAllRoomInCinemaAPI(cinema_id);
         setState((prev) => ({ ...prev, roomList: res }));
       } catch (error) {
         console.log(error);
       } finally {
-        setState((prev) => ({ ...prev, isFetch: false }));
+        setState((prev) => ({
+          ...prev,
+          isFetch: {
+            ...prev.isFetch,
+            room: false,
+          },
+        }));
       }
     };
     getRoomsIncinema(state.selected.cinema);
-  }, [state.selected.cinema]);
+  }, [state.selected.cinema, state.isFetch.room, state.isFetch.status]);
 
   return (
     <div className="bg-white rounded shadow">
@@ -118,7 +151,7 @@ function RoomList({
       </div>
 
       {state.roomList.length === 0 ? (
-        state.isFetch ? (
+        state.isFetch.room ? (
           <div className="py-7">
             <Spinner />
           </div>
@@ -156,7 +189,11 @@ function RoomList({
                   r.status === 1 ? "text-green-400" : "text-red-500"
                 }`}
               >
-                {r.status === 1 ? "Hoạt động" : "Không hoạt động"}
+                {state.isFetch.status === r.room_id
+                  ? "Đang chuyển trạng thái..."
+                  : r.status === 1
+                  ? "Hoạt động"
+                  : "Không hoạt động"}
               </div>
 
               <Tippy
@@ -203,7 +240,61 @@ function RoomList({
                         />
                         <span
                           onClick={() => {
-                            console.log("dừng");
+                            Swal.fire({
+                              icon: "warning",
+                              text: `Bạn chắc chắn muốn chuyển phòng này 
+                              sang trạng thái tạm dừng hoạt động?`,
+                              showCancelButton: true,
+                              confirmButtonText: "CHẮC CHẮN",
+                              cancelButtonText: "HỦY",
+                              customClass: {
+                                popup: "popup_alert",
+                                confirmButton: `btn_alert`,
+                                cancelButton: `btn_alert`,
+                              },
+                            }).then(async (result) => {
+                              if (result.isConfirmed) {
+                                try {
+                                  setState((prev) => ({
+                                    ...prev,
+                                    isFetch: {
+                                      ...prev.isFetch,
+                                      status: r.room_id,
+                                    },
+                                  }));
+                                  const res = await deleteRoomAPI(r.room_id);
+                                  if (res.success) {
+                                    Swal.fire({
+                                      toast: true,
+                                      position: "top-end",
+                                      icon: "success",
+                                      title: "Chuyển trạng thái thành công",
+                                      showConfirmButton: false,
+                                      timer: 2000,
+                                      timerProgressBar: true,
+                                    });
+                                  }
+                                } catch (error) {
+                                  Swal.fire({
+                                    toast: true,
+                                    position: "top-end",
+                                    icon: "error",
+                                    title: error?.message
+                                      ? error.message
+                                      : "Có lỗi xảy ra, vui lòng thử lại!",
+                                    showConfirmButton: false,
+                                    timer: 2000,
+                                    timerProgressBar: true,
+                                  });
+                                  console.log(error);
+                                } finally {
+                                  setState((prev) => ({
+                                    ...prev,
+                                    isFetch: { ...prev.isFetch, status: -1 },
+                                  }));
+                                }
+                              }
+                            });
                             setState((prev) => ({
                               ...prev,
                               openPopup: -1,
@@ -224,7 +315,61 @@ function RoomList({
                         />
                         <span
                           onClick={() => {
-                            console.log("hoạt động");
+                            Swal.fire({
+                              icon: "warning",
+                              text: `Bạn chắc chắn muốn chuyển phòng này 
+                              sang trạng thái hoạt động?`,
+                              showCancelButton: true,
+                              confirmButtonText: "CHẮC CHẮN",
+                              cancelButtonText: "HỦY",
+                              customClass: {
+                                popup: "popup_alert",
+                                confirmButton: `btn_alert`,
+                                cancelButton: `btn_alert`,
+                              },
+                            }).then(async (result) => {
+                              if (result.isConfirmed) {
+                                try {
+                                  setState((prev) => ({
+                                    ...prev,
+                                    isFetch: {
+                                      ...prev.isFetch,
+                                      status: r.room_id,
+                                    },
+                                  }));
+                                  const res = await recoverRoomAPI(r.room_id);
+                                  if (res.success) {
+                                    Swal.fire({
+                                      toast: true,
+                                      position: "top-end",
+                                      icon: "success",
+                                      title: "Chuyển trạng thái thành công",
+                                      showConfirmButton: false,
+                                      timer: 2000,
+                                      timerProgressBar: true,
+                                    });
+                                  }
+                                } catch (error) {
+                                  Swal.fire({
+                                    toast: true,
+                                    position: "top-end",
+                                    icon: "error",
+                                    title: error?.message
+                                      ? error.message
+                                      : "Có lỗi xảy ra, vui lòng thử lại!",
+                                    showConfirmButton: false,
+                                    timer: 2000,
+                                    timerProgressBar: true,
+                                  });
+                                  console.log(error);
+                                } finally {
+                                  setState((prev) => ({
+                                    ...prev,
+                                    isFetch: { ...prev.isFetch, status: -1 },
+                                  }));
+                                }
+                              }
+                            });
                             setState((prev) => ({
                               ...prev,
                               openPopup: -1,
