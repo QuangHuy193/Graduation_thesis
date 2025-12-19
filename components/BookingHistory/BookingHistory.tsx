@@ -9,6 +9,14 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
 import Swal from "sweetalert2";
+const BANKS = [
+  { name: "Vietcombank", bin: "970436" },
+  { name: "VietinBank", bin: "970415" },
+  { name: "BIDV", bin: "970418" },
+  { name: "ACB", bin: "970416" },
+  { name: "MB Bank", bin: "970422" },
+  { name: "Techcombank", bin: "970407" }
+];
 
 export default function BookingHistory({
   bookings = [],
@@ -43,64 +51,90 @@ export default function BookingHistory({
     date: Date,
     time: string
   ) => {
-    Swal.fire({
+    const { value: formData } = await Swal.fire({
       icon: "warning",
-      text: `Bạn có chắc muốn hủy đơn hàng? 
-      Việc hủy có thể làm bạn mất một phần giá trị vé theo quy định hoàn tiền, 
-      và thao tác này sẽ không thể hoàn tác.`,
+      title: "Xác nhận hủy vé",
+      html: `
+      <p style="margin-bottom:10px">
+        Việc hủy có thể làm bạn mất một phần giá trị vé theo quy định hoàn tiền.
+      </p>
+
+      <select id="bank" class="swal2-input">
+        <option value="">-- Chọn ngân hàng hoàn tiền --</option>
+        ${BANKS.map(
+        (b) => `<option value="${b.bin}">${b.name}</option>`
+      ).join("")}
+      </select>
+
+      <input 
+        id="accountNumber" 
+        class="swal2-input" 
+        placeholder="Nhập số tài khoản hoàn tiền"
+      />
+    `,
+      showCancelButton: true,
       confirmButtonText: "ĐỒNG Ý",
       cancelButtonText: "HỦY",
-      showCancelButton: true,
-      customClass: {
-        popup: "popup_alert",
-        confirmButton: `btn_alert`,
-        cancelButton: `btn_alert`,
-      },
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        // TODO thêm vip của user
-        console.log(user);
-        const refundPercent = getRefundPercent(date, time, user?.vip);
+      preConfirm: () => {
+        const bank = (document.getElementById("bank") as HTMLSelectElement).value;
+        const accountNumber = (document.getElementById("accountNumber") as HTMLInputElement).value;
 
-        if (refundPercent === 0) {
-          Swal.fire({
-            icon: "error",
-            text: "Suất chiếu còn dưới 3 giờ nên không thể hủy vé!",
-          });
+        if (!bank || !accountNumber) {
+          Swal.showValidationMessage("Vui lòng chọn ngân hàng và nhập số tài khoản");
           return;
         }
 
-        // gọi api
-        try {
-          setIsCancelBooking(booking_id);
-
-          const res = await cancelBookingAPI(booking_id, refundPercent);
-
-          console.log(res);
-
-          Swal.fire({
-            toast: true,
-            position: "top-end",
-            icon: res.success ? "success" : "error",
-            text: res.success ? "Đã hủy đơn hàng" : "Hủy đơn hàng thất bại",
-            showConfirmButton: false,
-            timer: 2000,
-          });
-        } catch (error) {
-          Swal.fire({
-            toast: true,
-            position: "top-end",
-            icon: "error",
-            text: "Hủy đơn hàng thất bại",
-            showConfirmButton: false,
-            timer: 2000,
-          });
-          console.log(error);
-        } finally {
-          setIsCancelBooking(-1);
+        if (!/^[0-9]{6,20}$/.test(accountNumber)) {
+          Swal.showValidationMessage("Số tài khoản không hợp lệ");
+          return;
         }
+
+        return { bank, accountNumber };
       }
     });
+
+    if (!formData) return;
+
+    // TODO thêm vip của user
+    const refundPercent = getRefundPercent(date, time, user?.vip);
+
+    if (refundPercent === 0) {
+      Swal.fire({
+        icon: "error",
+        text: "Suất chiếu còn dưới 3 giờ nên không thể hủy vé!",
+      });
+      return;
+    }
+
+    try {
+      setIsCancelBooking(booking_id);
+
+      const res = await cancelBookingAPI(booking_id, refundPercent, {
+        toBin: formData.bank,
+        toAccountNumber: formData.accountNumber
+      });
+
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: res.success ? "success" : "error",
+        text: res.success ? "Đã hủy đơn hàng" : "Hủy đơn hàng thất bại",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+    } catch (error) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        text: "Hủy đơn hàng thất bại",
+        showConfirmButton: false,
+        timer: 2000,
+      });
+      console.error(error);
+    } finally {
+      setIsCancelBooking(-1);
+    }
   };
 
   // tải vé

@@ -1,4 +1,4 @@
-import { triggerRefund } from "@/lib/axios/paymentAPI";
+import { refundPayOS, triggerRefund } from "@/lib/axios/paymentAPI";
 import { db } from "@/lib/db";
 import {
   errorResponse,
@@ -14,7 +14,7 @@ export async function DELETE(
   try {
     // booking id
     const { id } = await params;
-    const { percent } = await req.json();
+    const { percent, refundInfo } = await req.json();
 
     if (typeof percent !== "number" || percent < 0 || percent > 100) {
       return errorResponse("percent không hợp lệ", 400);
@@ -48,8 +48,23 @@ export async function DELETE(
       return errorResponse("percent không hợp lệ", 400);
     }
     if (booking.payment_method === "PAYOS") {
-      const result = await triggerRefund();
-      if (result.ok && result.data.status === "SUCCESS") {
+      const refundPayload = {
+        referenceId: `refund_${id}_${Date.now()}`,
+        amount: Math.round(totalRefund),
+        // amount: 10000,
+        description: `Hoàn tiền booking #${id}`,
+        toBin: refundInfo.toBin,
+        toAccountNumber: refundInfo.toAccountNumber
+      };
+      const result = await refundPayOS(refundPayload);
+      const payout = result?.data?.data;
+
+      const isRefundSuccess =
+        result?.success === true &&
+        result?.data?.code === "00" &&
+        payout?.approvalState === "COMPLETED" &&
+        payout?.transactions?.[0]?.state === "SUCCEEDED";
+      if (isRefundSuccess) {
         // console.log("Refund thành công!");
 
         await db.query(

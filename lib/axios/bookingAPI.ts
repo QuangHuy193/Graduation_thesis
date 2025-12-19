@@ -59,13 +59,17 @@ export async function getBookingHistory(userId) {
 }
 
 export async function cancelBookingAPI(
-  booking_id: number | number,
-  percent: number
+  booking_id: number | string,
+  percent: number,
+  refundInfo: {
+    toBin: string;
+    toAccountNumber: string;
+  }
 ) {
   try {
     const response = await axiosInstance.delete(
       `/api/booking/cancel/${booking_id}`,
-      { data: { percent } }
+      { data: { percent, refundInfo } }
     );
     return response.data;
   } catch (error: any) {

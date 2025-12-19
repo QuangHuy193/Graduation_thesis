@@ -49,3 +49,26 @@ export async function triggerRefund() {
         throw err;
     }
 }
+
+export interface RefundPayload {
+    referenceId: string;
+    amount: number;
+    description: string;
+    toBin: string;
+    toAccountNumber: string;
+}
+
+export async function refundPayOS(payload: RefundPayload) {
+    try {
+        const resp = await axiosInstance.post("/api/payos/payout", payload, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        return resp.data;
+    } catch (err: any) {
+        console.error("Refund PayOS error:", err.response?.data || err.message);
+        throw err.response?.data || err;
+    }
+}

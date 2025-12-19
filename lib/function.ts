@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
 import { weekdays } from "./constant";
 import { toPng } from "html-to-image";
+import crypto from "crypto";
+
 
 export function scrollToPosition(
   y?: number,
@@ -484,7 +486,7 @@ export async function downloadElementAsImage(
     if (document.fonts && typeof document.fonts.ready?.then === "function") {
       try {
         await document.fonts.ready;
-      } catch {}
+      } catch { }
     }
 
     const rect = el.getBoundingClientRect();
@@ -535,3 +537,30 @@ export const getPrice = (prices, time_from, is_holiday, ticket_type_id) => {
   );
   return item ? Number(item.price).toLocaleString() : "-";
 };
+export function generatePayOSSignature(payload: any, checksumKey: string) {
+  const sortedKeys = Object.keys(payload).sort();
+
+  const queryString = sortedKeys
+    .map((key) => {
+      const value = payload[key];
+
+      if (Array.isArray(value)) {
+        return value
+          .map(
+            (item, i) =>
+              `${key}[${i}]=${encodeURIComponent(item)}`
+          )
+          .join("&");
+      }
+
+      return `${key}=${encodeURIComponent(value ?? "")}`;
+    })
+    .join("&");
+
+  // console.log("SIGN STRING:", queryString); // BẮT BUỘC LOG
+
+  return crypto
+    .createHmac("sha256", checksumKey)
+    .update(queryString)
+    .digest("hex");
+}
