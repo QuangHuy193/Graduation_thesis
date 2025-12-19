@@ -11,15 +11,29 @@ import {
   faCirclePlay,
   faEllipsisVertical,
   faMap,
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import Tippy from "@tippyjs/react";
 
-function RoomList() {
+function RoomList({
+  // bật tắt thêm/sửa phòng
+  setToggleRoom,
+  // để cập nhật
+  setRoom,
+  // lưu cinemaid cho diagram
+  setCinemaId,
+}: {
+  setToggleRoom: (path: string) => void;
+}) {
   const [state, setState] = useState({
     isFetch: false,
+    // mở popup
     openPopup: -1,
+    // ds cinema
     cinemaList: [],
+    // ds room
     roomList: [],
+    // các giá trị chọn
     selected: {
       cinema: -1,
     },
@@ -47,6 +61,8 @@ function RoomList() {
   useEffect(() => {
     if (state.selected.cinema === -1) return;
 
+    setCinemaId(state.selected.cinema);
+
     const getRoomsIncinema = async (cinema_id) => {
       try {
         setState((prev) => ({ ...prev, isFetch: true }));
@@ -63,27 +79,42 @@ function RoomList() {
 
   return (
     <div className="bg-white rounded shadow">
-      <div className="py-2">
-        <label className="px-2">Rạp:</label>
-        <select
-          className="border rounded px-2 py-2 text-sm focus:outline-0 hover:cursor-pointer"
-          value={state.selected.cinema}
-          onChange={(e) =>
-            setState((prev) => ({
-              ...prev,
-              selected: {
-                ...prev.selected,
-                cinema: e.target.value,
-              },
-            }))
-          }
-        >
-          {state.cinemaList.map((c) => (
-            <option key={c.cinema_id} value={c.cinema_id}>
-              {c.name + " (" + c.province + ")"}
-            </option>
-          ))}
-        </select>
+      <div className="py-2 flex justify-between px-3">
+        <div>
+          <label className="px-2">Rạp:</label>
+          <select
+            className="border rounded py-2 text-sm focus:outline-0 hover:cursor-pointer"
+            value={state.selected.cinema}
+            onChange={(e) =>
+              setState((prev) => ({
+                ...prev,
+                selected: {
+                  ...prev.selected,
+                  cinema: e.target.value,
+                },
+              }))
+            }
+          >
+            {state.cinemaList.map((c) => (
+              <option key={c.cinema_id} value={c.cinema_id}>
+                {c.name + " (" + c.province + ")"}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <button
+            className="px-2 py-1 border border-gray-400 rounded-lg cursor-pointer
+            flex gap-1 items-center"
+            onClick={() => {
+              setToggleRoom("aside");
+              setRoom({});
+            }}
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            Thêm phòng
+          </button>
+        </div>
       </div>
 
       {state.roomList.length === 0 ? (
@@ -146,7 +177,8 @@ function RoomList() {
                       <span
                         className="text-gray-700"
                         onClick={() => {
-                          console.log("sơ đồ");
+                          setToggleRoom("aside");
+                          setRoom(r);
                           setState((prev) => ({
                             ...prev,
                             openPopup: -1,

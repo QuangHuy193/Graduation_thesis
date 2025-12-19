@@ -21,3 +21,22 @@ export async function getAllRoomInCinemaAPI(id: number) {
     throw error.response?.data || error;
   }
 }
+
+//tạo phòng
+export async function createRoomAPI(data: {
+  name: string;
+  width: string | number;
+  height: string | number;
+  capacity: number;
+  cinemaId: number;
+  aside_gap: [];
+}) {
+  try {
+    const response = await axiosInstance.post(`/api/admin/rooms`, { ...data });
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching room:", error);
+    throw error.response?.data || error;
+  }
+}

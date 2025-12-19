@@ -30,6 +30,7 @@ import { getScreenings } from "@/lib/axios/admin/movie_screenAPI";
 import ExcelImportMovies from "@/components/ExcelImportMovies/ExcelImportMovies";
 import Spinner from "@/components/Spinner/Spinner";
 import RoomList from "@/components/RoomList/RoomList";
+import DiagramRoom from "@/components/RoomList/DiagramRoom";
 
 type PendingSlotUpdate = {
   showtime_day_id: number;
@@ -51,6 +52,9 @@ export default function AdminDashboard() {
     Record<number, CinemaEntry>
   >({});
   const [roomsList, setRoomsList] = React.useState<RoomEntry[]>([]);
+  // sửa thêm phòng
+  const [room, setRoom] = useState();
+  const [cinemaId, setCinemaId] = useState(-1);
   // modal
   const [editOpen, setEditOpen] = useState(false);
   const [editingMovie, setEditingMovie] = useState<MovieFullITF | null>(null);
@@ -379,7 +383,8 @@ export default function AdminDashboard() {
     showtimes: "Suất chiếu",
     bookings: "Vé",
     promotions: "Sự kiện",
-    rooms: "Rạp",
+    rooms: "Danh sách phòng",
+    aside: "Danh sách phòng - Sơ đồ phòng",
   };
 
   function handleOpenAdd() {
@@ -510,7 +515,21 @@ export default function AdminDashboard() {
 
             {activeTab === "rooms" && (
               <div className="mt-4">
-                <RoomList />
+                <RoomList
+                  setToggleRoom={(path) => setActiveTab(path)}
+                  setRoom={(r) => setRoom(r)}
+                  setCinemaId={setCinemaId}
+                />
+              </div>
+            )}
+
+            {activeTab === "aside" && (
+              <div className="mt-4">
+                <DiagramRoom
+                  cinemaId={cinemaId}
+                  room={room}
+                  setToggleRoom={(path) => setActiveTab(path)}
+                />
               </div>
             )}
 
