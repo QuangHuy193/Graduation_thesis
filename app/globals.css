@@ -182,3 +182,12 @@ body {
   box-shadow: none !important;
   caret-color: transparent !important;
 }
+
+/* tippy in room admin */
+.tippy-box[data-theme~="room"] {
+  padding: 0;
+  border-radius: 16px;
+}
+.tippy-box[data-theme~="room"] .tippy-content {
+  padding: 0;
+}
