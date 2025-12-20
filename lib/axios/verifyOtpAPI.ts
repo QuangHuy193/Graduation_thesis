@@ -33,7 +33,7 @@ export async function verifyOtp(data: VerifyOtpPayload) {
         // Axios error handling: trả về payload từ server nếu có, nếu không trả về object mặc định
         if (error?.isAxiosError) {
             // network / timeout / no response
-            return { success: false, message: "Không thể kết nối đến máy chủ. Vui lòng thử lại." };
+            return { success: false, message: "Otp đã hết hạn." };
         }
         return { success: false, message: "Đã xảy ra lỗi không xác định." };
     }

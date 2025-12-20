@@ -131,7 +131,7 @@ export async function POST(req: Request) {
                 body.name ?? null,
                 body.phone_number ?? null,
                 email,
-                hashedPassword, // có thể null nếu client không gửi password
+                hashedPassword,
                 body.birthday ?? null,
                 ageToSave,
                 body.role ?? "user",

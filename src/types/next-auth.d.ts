@@ -8,6 +8,7 @@ declare module "next-auth" {
     email?: string;
     role?: string;
     vip?: string;
+    status?: string;
   }
 
   interface Session {
@@ -17,6 +18,7 @@ declare module "next-auth" {
       email?: string;
       role?: string;
       vip?: string;
+      status?: string;
     } & DefaultSession["user"];
   }
 }
@@ -28,5 +30,6 @@ declare module "next-auth/jwt" {
     email?: string;
     role?: string;
     vip?: string;
+    status?: string;
   }
 }

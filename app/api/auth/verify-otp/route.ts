@@ -28,23 +28,10 @@ export async function POST(req: Request) {
 
         if (!rows || rows.length === 0) {
             await conn.commit();
-            return NextResponse.json({ success: false, message: "Không tìm thấy OTP hợp lệ hoặc OTP đã hết hạn" }, { status: 400 });
+            return NextResponse.json({ success: false, message: "OTP đã hết hạn" }, { status: 400 });
         }
 
         const record = rows[0];
-
-        // debug
-        console.log("[verify-otp] record:", {
-            id: record.id,
-            user_id: record.user_id,
-            created_at: record.created_at,
-            expires_at: record.expires_at,
-            mysql_now: record.mysql_now,
-            consumed: record.consumed,
-            consumed_at: record.consumed_at,
-            attempts: record.attempts,
-            email
-        });
 
         // So sánh OTP
         const match = await bcrypt.compare(otp, record.otp);

@@ -12,7 +12,7 @@ export async function verifyCredentials(identifier: string, password: string) {
 
     // Tìm user bằng email hoặc phone_number
     const [rows]: any = await db.execute(
-        `SELECT user_id, name, email, phone_number, role, vip, password AS hashedPassword, status
+        `SELECT user_id, name, email, phone_number, role, vip, status,password as hashedPassword
        FROM users
        WHERE email = ? OR phone_number = ?
        LIMIT 1`,
@@ -35,6 +35,7 @@ export async function verifyCredentials(identifier: string, password: string) {
         email: user.email,
         role: user.role,
         vip: user.vip,
+        status: user.status,
     };
 }
 

@@ -20,7 +20,9 @@ export const authOptions: NextAuthOptions = {
                     credentials.password
                 );
                 if (!user) throw new Error("Sai tài khoản hoặc mật khẩu");
-
+                if (user.status === 2) {
+                    throw new Error("Tài khoản đã bị khóa. Vui lòng liên hệ CSKH để biết thêm chi tiết.");
+                }
                 // NextAuth expects a User-like object
                 return {
                     id: user.user_id,
@@ -28,6 +30,7 @@ export const authOptions: NextAuthOptions = {
                     email: user.email,
                     role: user.role,
                     vip: user.vip,
+                    status: user.status
                 } as unknown as NextAuthUser;
             },
         }),
@@ -52,6 +55,7 @@ export const authOptions: NextAuthOptions = {
                 token.name = (user as any).name;
                 token.user_id = (user as any).id ?? (user as any).user_id;
                 token.vip = (user as any).vip;
+                token.status = (user as any).status;
             }
             return token;
         },
@@ -69,6 +73,7 @@ export const authOptions: NextAuthOptions = {
             (session.user as any).vip = token.vip;
             (session.user as any).user_id = token.user_id;
             (session.user as any).name = token.name ?? session.user.name;
+            (session.user as any).status = token.status;
             return session;
         },
     },
