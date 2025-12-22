@@ -264,7 +264,12 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
                 } else {
                   return {
                     ...prev,
-                    selected: { width: 0, height: 0, capacity: 0 },
+                    selected: {
+                      ...prev.selected,
+                      width: 0,
+                      height: 0,
+                      capacity: 0,
+                    },
                   };
                 }
               });

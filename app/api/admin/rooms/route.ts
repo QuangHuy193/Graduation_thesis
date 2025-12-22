@@ -7,7 +7,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { name, width, height, capacity, cinemaId, aside_gap } = body;
-
     await connection.beginTransaction();
 
     // kiểm tra trùng tên phòng trong cùng rạp
