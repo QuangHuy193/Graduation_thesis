@@ -28,8 +28,23 @@ function Header() {
   const [cinema, setCinema] = useState(-1);
 
   const { data: session } = useSession();
-  const user = session?.user;
+  const [user, setUser] = useState<any>(null);
+  useEffect(() => {
+    if (session?.user) {
+      setUser(session.user);
+    }
+  }, [session]);
+  useEffect(() => {
+    const syncUser = () => {
+      const userStr = sessionStorage.getItem("user");
+      setUser(userStr ? JSON.parse(userStr) : null);
+    };
 
+    syncUser();
+
+    window.addEventListener("auth-changed", syncUser);
+    return () => window.removeEventListener("auth-changed", syncUser);
+  }, []);
   // ✅ Lấy danh sách rạp
   useEffect(() => {
     const getCinemas = async () => {
@@ -41,7 +56,12 @@ function Header() {
 
   // ✅ Logout handler
   const handleLogout = () => {
-    signOut({ callbackUrl: "/" });
+    if (session?.user) {
+      signOut({ callbackUrl: "/" });
+    } else {
+      sessionStorage.removeItem("user");
+      window.location.href = "/";
+    }
   };
 
   // chuyển trang rạp
@@ -126,11 +146,11 @@ function Header() {
               options={
                 cinemas?.length > 0
                   ? cinemas.map((c: CinemaOnlyCity) => {
-                      return {
-                        value: c.cinema_id,
-                        label: c.name + " (" + c.province + ")",
-                      };
-                    })
+                    return {
+                      value: c.cinema_id,
+                      label: c.name + " (" + c.province + ")",
+                    };
+                  })
                   : []
               }
             />

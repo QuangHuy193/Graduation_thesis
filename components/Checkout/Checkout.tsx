@@ -20,11 +20,25 @@ type UserInfo = {
   checkAge?: boolean;
   checkPolicy?: boolean;
 };
-
+type UserSession = {
+  id?: number | string;
+  name?: string;
+  email?: string;
+  role?: string;
+  vip?: string;
+  status?: string;
+} | null;
 function Checkout() {
   // const { user, setUser } = useAuth();
   const { data: session, status } = useSession();
   const user = session?.user ?? null;
+  let userSes: UserSession = null;
+
+  if (typeof window !== "undefined") {
+    const userStr = sessionStorage.getItem("user");
+    userSes = userStr ? JSON.parse(userStr) : null;
+  }
+
   const [bookingData, setBookingData] = useState<any>(null);
   // const [bookingID, setBookingID] = useState<any>(null);
   const [state, setState] = useState({
@@ -68,7 +82,7 @@ function Checkout() {
     if (paymentStatus === "PAID") {
       const bookingIDRaw = sessionStorage.getItem("booking_id");
       const bookingID = Number(bookingIDRaw);
-      console.log("Thanh toán thành công" + paymentStatus);
+      // console.log("Thanh toán thành công" + paymentStatus);
 
       if (bookingID) {
         const bookingData = sessionStorage.getItem("bookingData");
@@ -82,7 +96,7 @@ function Checkout() {
     setState((prev) => ({ ...prev, step: 3 }));
   }, [paymentStatus]);
   useEffect(() => {
-    if (status === "authenticated" && user) {
+    if ((status === "authenticated" && user) || userSes) {
       setAuth(true);
       // chỉ nâng step khi step hiện tại < 2
       setState((prev) => {
@@ -90,10 +104,10 @@ function Checkout() {
         if (prev.step < 2) return { ...prev, step: 2 };
         return prev; // nếu đã >=2 thì không giảm lại
       });
-    } else if (status === "unauthenticated") {
+    } else if ((status === "unauthenticated") || !userSes) {
       setAuth(false);
     }
-  }, [status, user]);
+  }, [status, user, userSes]);
 
   async function handleCreateBooking() {
     if (!bookingData) {
@@ -131,16 +145,23 @@ function Checkout() {
       // TODO: redirect sang Payment
       return res.data.data.booking_id;
     }
-    if (!user?.user_id) {
+    const currentUserId =
+      user?.user_id
+        ? Number(user.user_id)
+        : userSes?.id
+          ? Number(userSes.id)
+          : null;
+
+    if (!currentUserId) {
       console.error("Không có user_id");
       return;
     }
-    const userId = Number(user.user_id);
+
     // ✔ Trường hợp user đã đăng nhập (auth = true)
     payload = {
       total_price: bookingData.total_price,
       showtime_id: bookingData.showtime_id,
-      user_id: userId,
+      user_id: currentUserId,
     };
 
     const res = await createBookingAuth(payload);

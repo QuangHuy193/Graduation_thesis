@@ -16,8 +16,9 @@ import { checkUserStatus } from "@/lib/axios/checkUserStatusAPI";
 import { useRouter } from "next/navigation";
 import styles from "./FormLogin.module.scss";
 import LoadingLink from "../Link/LinkLoading";
-
+import { jwtDecode } from "jwt-decode";
 import Spinner from "../Spinner/Spinner";
+import { signInForm } from "@/lib/axios/signinForm";
 
 export default function FormLogin({
   state,
@@ -97,34 +98,71 @@ export default function FormLogin({
 
     setLoading(true);
     try {
-      // signIn bằng NextAuth Credentials provider
-      const signInResult = await signIn("credentials", {
-        redirect: false,
-        identifier: idTrim,
-        password,
-      });
+      let sessUser;
+      if (state.saveLogin === true) {
+        //Gọi hàm đăng nhập
+        const signInResult = await signIn("credentials", {
+          redirect: false,
+          identifier: idTrim,
+          password,
+        });
 
-      // signIn trả về object khi redirect: false
-      // { error?: string, ok?: boolean, status?: number, url?: string }
-      if (!signInResult || (signInResult as any).error) {
-        const errMsg = (signInResult as any)?.error ?? "Đăng nhập thất bại";
-        setMsg({ type: "error", text: errMsg });
-        setLoading(false);
-        return;
-      }
+        // signIn trả về object khi redirect: false
+        // { error?: string, ok?: boolean, status?: number, url?: string }
+        if (!signInResult || (signInResult as any).error) {
+          const errMsg = (signInResult as any)?.error ?? "Đăng nhập thất bại";
+          setMsg({ type: "error", text: errMsg });
+          setLoading(false);
+          return;
+        }
 
-      // Lấy session mới (NextAuth đã set cookie HttpOnly) để có user info
-      const session = await getSession();
-      const sessUser: any = session?.user ?? null;
-      if (!sessUser) {
-        // trường hợp hiếm: session chưa ready
-        setMsg({ type: "error", text: "Không thể lấy thông tin người dùng." });
-        setLoading(false);
-        return;
+        // Lấy session mới (NextAuth đã set cookie HttpOnly) để có user info
+        const session = await getSession();
+        sessUser = session?.user ?? null;
+        if (!sessUser) {
+          // trường hợp hiếm: session chưa ready
+          setMsg({ type: "error", text: "Không thể lấy thông tin người dùng." });
+          setLoading(false);
+          return;
+        }
+      } else {
+        type JwtPayload = {
+          id?: number | string;
+          name?: string;
+          email?: string;
+          role?: string;
+          vip?: string;
+          status?: string;
+        };
+        const signInSession = await signInForm({
+          identifier: idTrim,
+          password
+        });
+        if (signInSession?.success === false && signInSession.data) {
+          const errMsg = "Đăng nhập thất bại";
+          setMsg({ type: "error", text: errMsg });
+          setLoading(false);
+          return;
+        }
+        const token = signInSession.data;
+
+        const decoded = jwtDecode<JwtPayload>(token);
+
+        sessUser = {
+          id: decoded.id,
+          name: decoded.name,
+          email: decoded.email,
+          role: decoded.role,
+          vip: decoded.vip,
+          status: decoded.status,
+        };
+        sessionStorage.setItem("user", JSON.stringify(sessUser));
+        window.dispatchEvent(new Event("auth-changed"));
       }
 
       // user_id có thể ở session.user.user_id (theo callback bạn đã cấu hình)
       const userIdRaw = sessUser?.user_id ?? sessUser?.id ?? null;
+      // console.log("userIdRaw: ", userIdRaw);
       const userId = Number(userIdRaw);
       if (!userId || Number.isNaN(userId)) {
         // nếu không lấy được user_id từ session, vẫn có thể lấy từ loginData nếu bạn thay đổi authorize để return user_id
@@ -248,9 +286,8 @@ export default function FormLogin({
               onClick={() => handleToggleVisibility("saveLogin")}
             >
               <div
-                className={`w-3.5 h-3.5  rounded-xs border border-black relative ${
-                  state.saveLogin === true ? "bg-orange-300" : ""
-                }`}
+                className={`w-3.5 h-3.5  rounded-xs border border-black relative ${state.saveLogin === true ? "bg-orange-300" : ""
+                  }`}
               >
                 {state.saveLogin && (
                   <FontAwesomeIcon

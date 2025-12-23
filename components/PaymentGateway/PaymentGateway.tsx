@@ -38,6 +38,14 @@ type PaymentGatewayProps = {
   onPay?: (method: PaymentMethodId | null, payload: any) => void;
   onApplyCoupon?: (id: number) => Promise<ApplyCouponResult>;
 };
+type UserSession = {
+  id?: number | string;
+  name?: string;
+  email?: string;
+  role?: string;
+  vip?: string;
+  status?: string;
+} | null;
 
 export default function PaymentGateway({
   initialMethod = "domestic_card",
@@ -54,6 +62,13 @@ export default function PaymentGateway({
   // user
   const { data: session } = useSession();
   const user = session?.user;
+  let userSes: UserSession = null;
+
+  if (typeof window !== "undefined") {
+    const userStr = sessionStorage.getItem("user");
+    userSes = userStr ? JSON.parse(userStr) : null;
+  }
+
   // danh sách voucher của user đang có
   const [couponListOption, setCouponListOption] = useState({
     couponList: [],
@@ -66,7 +81,12 @@ export default function PaymentGateway({
 
   const [loadingPay, setLoadingPay] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
-
+  const currentUserId =
+    user?.user_id
+      ? Number(user.user_id)
+      : userSes?.id
+        ? Number(userSes.id)
+        : null;
   useEffect(() => {
     const getCoupon = async (user_id) => {
       try {
@@ -76,8 +96,8 @@ export default function PaymentGateway({
         console.log(error);
       }
     };
-    getCoupon(user.user_id);
-  }, [user]);
+    getCoupon(currentUserId);
+  }, [user, userSes]);
 
   useEffect(() => {
     setSelected(initialMethod);

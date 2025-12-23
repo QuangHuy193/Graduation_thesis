@@ -137,15 +137,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ success: false, error: "Không thể tạo movie" }, { status: 500 });
             }
 
-            // --- handle image field ---
-            // If you have an `image` column in movies, uncomment and run update:
-            // await connection.execute("UPDATE movies SET image = ? WHERE movie_id = ?", [image, movie_id]);
 
-            // --- handle genres/actors linking tables (optional) ---
-            // This block assumes you have the following tables:
-            //   genres(genre_id, name), actors(actor_id, name),
-            //   movie_genres(movie_id, genre_id), movie_actors(movie_id, actor_id)
-            // If you don't have them, these queries will fail — adjust or remove as needed.
             if (genres.length > 0) {
                 for (const gName of genres) {
                     // find or create genre

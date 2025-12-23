@@ -11,10 +11,18 @@ import { useSession, signOut } from "next-auth/react";
 import Spinner from "@/components/Spinner/Spinner";
 import Swal from "sweetalert2";
 import BookingHistory from "@/components/BookingHistory/BookingHistory";
-
+type UserSession = {
+  id?: number | string;
+  name?: string;
+  email?: string;
+  role?: string;
+  vip?: string;
+  status?: string;
+} | null;
 export default function verifyOtp() {
   const { data: session, status } = useSession();
   const [userData, setUserData] = useState<any | null>(null);
+  const [userSes, setUserSes] = useState<UserSession>(null);
   // đang hủy vé reset lại booking
   const [isCancelBooking, setIsCancelBooking] = useState(false);
   const [bookingHis, setBookingHis] = useState<any | null>(null);
@@ -25,38 +33,50 @@ export default function verifyOtp() {
   const [showHistoryBooking, setShowHitoryBooking] = useState(false);
   const [userID, setUserID] = useState<number | string>();
   useEffect(() => {
-    // chỉ gọi khi session đã load và tồn tại user.id
-    if (status === "authenticated") {
-      // session.user.id phải tồn tại — xem phần callback trên
-      const id = (session as any).user?.user_id;
-      if (!id) {
-        setError(
-          "User id not found in session. Make sure you include id in session callback."
-        );
-        return;
-      }
-      setUserID(id);
-      setLoading(true);
-      getUserInfo(id)
-        .then((res) => {
-          setUserData(res);
-        })
-        .catch((err) => {
-          console.error(err);
-          setError(String(err?.message || err));
-        })
-        .finally(() => setLoading(false));
-      getBookingHistory(id)
-        .then((res) => {
-          setBookingHis(res);
-        })
-        .catch((err) => {
-          console.error(err);
-          setError(String(err?.message || err));
-        })
-        .finally(() => setLoading(false));
+    const userStr = sessionStorage.getItem("user");
+    if (userStr) {
+      setUserSes(JSON.parse(userStr));
     }
-  }, [session, status]);
+  }, []);
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    const id =
+      (session as any)?.user?.user_id
+        ? Number((session as any).user.user_id)
+        : userSes?.id
+          ? Number(userSes.id)
+          : null;
+
+    if (!id) {
+      setError("User id not found");
+      return;
+    }
+
+    setUserID(id);
+  }, [session, status, userSes]);
+  useEffect(() => {
+    if (!userID) return;
+
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      getUserInfo(userID),
+      getBookingHistory(userID),
+    ])
+      .then(([userInfo, bookingHistory]) => {
+        setUserData(userInfo);
+        setBookingHis(bookingHistory);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(String(err?.message || err));
+      })
+      .finally(() => setLoading(false));
+  }, [userID]);
+
 
   useEffect(() => {
     getBookingHistory(userID)

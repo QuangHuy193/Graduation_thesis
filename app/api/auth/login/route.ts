@@ -4,9 +4,9 @@ import { db } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt, { Secret } from "jsonwebtoken";
 import type { ApiResponse } from "@/lib/interface/apiInterface";
-import { successResponse, errorResponse } from "@/lib/function";
+import { successResponse, errorResponse } from "@/lib/function";;
 
-const JWT_EXPIRES_IN = "7d"; // hoặc "1h" tuỳ nhu cầu
+const JWT_EXPIRES_IN = "7d" // hoặc "1h" tuỳ nhu cầu
 
 type LoginReq = {
     identifier: string; // email hoặc phone
@@ -42,10 +42,11 @@ export async function POST(req: Request) {
         let sql = "";
         let params: any[] = [];
         if (isEmail(identifier)) {
-            sql = `SELECT user_id, name, email, password, phone_number, role FROM users WHERE email = ? LIMIT 1`;
+            sql = `SELECT user_id, name, email, phone_number, role, vip, status, password FROM users
+       WHERE email = ? LIMIT 1`;
             params = [identifier.toLowerCase()];
         } else if (isPhone(identifier)) {
-            sql = `SELECT user_id, name, email, password, phone_number, role FROM users WHERE phone_number = ? LIMIT 1`;
+            sql = `SELECT user_id, name, email, phone_number, role, vip, status, password FROM users WHERE phone_number = ? LIMIT 1`;
             params = [identifier];
         } else {
             const res: ApiResponse<null> = { success: false, message: "Invalid identifier format" };
@@ -69,10 +70,12 @@ export async function POST(req: Request) {
 
         // Build token payload (avoid sensitive fields)
         const payload = {
-            user_id: user.user_id?.toString?.() ?? String(user.user_id),
+            id: user.user_id,
             name: user.name,
             email: user.email,
-            role: user.role ?? "user",
+            role: user.role,
+            vip: user.vip,
+            status: user.status
         };
 
         // --- ENSURE JWT_SECRET EXISTS ---
@@ -87,18 +90,10 @@ export async function POST(req: Request) {
         // Sign JWT
         const token = jwt.sign(payload, jwtSecret, { expiresIn: JWT_EXPIRES_IN });
 
-        // Response (you may also set HttpOnly cookie here)
-        const responseBody: ApiResponse<{ user: typeof payload }> = {
-            success: true,
-            message: "Login successful",
-            data: { user: payload },
-            token,
-        };
 
-        return NextResponse.json(responseBody, { status: 200 });
+        return successResponse(token, "true", 200);
     } catch (err) {
         console.error("POST /api/auth/login error:", err);
-        const res: ApiResponse<null> = { success: false, message: "Server error", error: String(err) };
-        return NextResponse.json(res, { status: 500 });
+        return errorResponse("false", 500);
     }
 }
