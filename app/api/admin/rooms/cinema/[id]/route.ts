@@ -12,6 +12,7 @@ export async function GET(req: Request, { params }: { params: string }) {
     );
     return successResponse(row, "true", 201);
   } catch (error) {
+    console.log(error);
     return errorResponse("false", 400);
   }
 }

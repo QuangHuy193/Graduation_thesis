@@ -29,6 +29,8 @@ function RoomList({
   setRoom,
   // lưu cinemaid cho diagram
   setCinemaId,
+  // chuyển tab
+  setActiviTab,
 }: {
   setToggleRoom: (path: string) => void;
 }) {
@@ -116,19 +118,14 @@ function RoomList({
   }, [state.selected.cinema, state.reload]);
 
   // gọi api xóa (tách do có xác nhận nhiều lần)
-  const callApiDeleteRoom = async (
-    room_id,
-    type,
-    fromDate = "",
-    toDate = ""
-  ) => {
+  const callApiDeleteRoom = async (room_id, type) => {
     setState((prev) => ({
       ...prev,
       isFetch: { ...prev.isFetch, status: room_id },
     }));
 
     try {
-      const res = await deleteRoomAPI(room_id, type, fromDate, toDate);
+      const res = await deleteRoomAPI(room_id, type);
 
       if (res.success) {
         showToast("success", "Phòng đã ngừng hoạt động");
@@ -149,6 +146,7 @@ function RoomList({
     }
   };
 
+  // xóa phòng
   const handleDeleteRoom = async (room_id) => {
     setState((prev) => ({ ...prev, openPopup: -1 }));
 
@@ -168,37 +166,104 @@ function RoomList({
     if (!confirm.isConfirmed) return;
 
     try {
-      const check = await checkBeforeDeleteRoomAPI(
-        room_id,
-        "2025-12-24",
-        "2025-12-25"
-      );
+      const check = await checkBeforeDeleteRoomAPI(room_id);
 
       // có thể ngừng ngay
-      if (check.data.canDeactivate) {
+      if (check.data.case === "delete") {
         await callApiDeleteRoom(room_id, 0);
         return;
       }
+      // có lịch chiếu
+      else {
+        // có phòng có booking
+        if (check.data.case === "change_room_booking") {
+          const confirm = await Swal.fire({
+            icon: "warning",
+            text: check.message,
+            showCancelButton: true,
+            confirmButtonText: "ĐẾN TRANG QUẢN TRỊ",
+            cancelButtonText: "TIẾP TỤC XÓA",
+            customClass: {
+              popup: "popup_alert",
+              confirmButton: "btn_alert",
+              cancelButton: "btn_alert",
+            },
+          });
 
-      // cần xác nhận thêm
-      const confirm2 = await Swal.fire({
-        icon: "warning",
-        text: check.message,
-        showCancelButton: true,
-        confirmButtonText: "XÁC NHẬN",
-        cancelButtonText: "HỦY",
-        customClass: {
-          popup: "popup_alert",
-          confirmButton: "btn_alert",
-          cancelButton: "btn_alert",
-        },
-      });
+          if (confirm.isConfirmed) {
+            // chuyển trang
+            setActiviTab("showtimes");
+          } else {
+            // xóa, hủy suất, hoàn tiền
+            await callApiDeleteRoom(room_id, 2);
+          }
+        }
+        // có phòng không có booking
+        if (check.data.case === "change_room") {
+          const confirm = await Swal.fire({
+            icon: "warning",
+            text: check.message,
+            showCancelButton: true,
+            confirmButtonText: "ĐẾN TRANG QUẢN TRỊ",
+            cancelButtonText: "TIẾP TỤC XÓA",
+            customClass: {
+              popup: "popup_alert",
+              confirmButton: "btn_alert",
+              cancelButton: "btn_alert",
+            },
+          });
 
-      if (confirm2.isConfirmed) {
-        await callApiDeleteRoom(room_id, 1, "2025-12-24", "2025-12-25");
+          if (confirm.isConfirmed) {
+            // chuyển trang
+            setActiviTab("showtimes");
+          } else {
+            // xóa, hủy suất
+            await callApiDeleteRoom(room_id, 1);
+          }
+        }
+        // không có phòng không có booking
+        if (check.data.case === "cancel_showtime") {
+          const confirm = await Swal.fire({
+            icon: "warning",
+            text: check.message,
+            showCancelButton: true,
+            confirmButtonText: "XÁC NHẬN",
+            cancelButtonText: "HỦY",
+            customClass: {
+              popup: "popup_alert",
+              confirmButton: "btn_alert",
+              cancelButton: "btn_alert",
+            },
+          });
+
+          if (confirm.isConfirmed) {
+            // xóa, hủy suất
+            await callApiDeleteRoom(room_id, 1);
+          }
+        }
+        // không có phòng có booking
+        if (check.data.case === "refund") {
+          const confirm = await Swal.fire({
+            icon: "warning",
+            text: check.message,
+            showCancelButton: true,
+            confirmButtonText: "XÁC NHẬN",
+            cancelButtonText: "HỦY",
+            customClass: {
+              popup: "popup_alert",
+              confirmButton: "btn_alert",
+              cancelButton: "btn_alert",
+            },
+          });
+
+          if (confirm.isConfirmed) {
+            // xóa, hủy suất, hoàn tiền
+            await callApiDeleteRoom(room_id, 2);
+          }
+        }
       }
     } catch (error) {
-      showToast("error", error?.message || "Có lỗi xảy ra, vui lòng thử lại!");
+      showToast("error", "Có lỗi xảy ra, vui lòng thử lại!");
       console.log(error);
     }
   };

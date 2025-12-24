@@ -9,7 +9,7 @@ export async function DELETE(req: Request, { params }: { params: string }) {
     // type = 0: xóa bình thường (mặc định)
     // type = 1: xóa hủy lịch chiếu
     // type = 2: xóa hủy lịch hoàn tiền
-    const { type, start_date, end_date } = body;
+    const { type } = body;
 
     if (type === undefined) {
       console.log("Thiếu type");
@@ -19,10 +19,9 @@ export async function DELETE(req: Request, { params }: { params: string }) {
     // có lịch chiếu chưa có booking
     if (type === 1) {
       await db.execute(`UPDATE rooms SET status = 0 WHERE room_id = ?`, [id]);
-      await db.execute(
-        `UPDATE showtime SET status = 0 WHERE room_id = ? AND date >= ? AND date <= ?`,
-        [id, start_date, end_date]
-      );
+      await db.execute(`UPDATE showtime SET status = 0 WHERE room_id = ?`, [
+        id,
+      ]);
       return successResponse([], "Chuyển trạng thái phòng thành công", 200);
     }
 

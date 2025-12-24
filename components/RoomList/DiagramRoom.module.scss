@@ -39,11 +39,11 @@
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  cursor: pointer;
 }
 
 /* Ghế */
 .seat {
+  user-select: none;
   background: var(--color-yellow);
   color: #000;
   font-size: 12px;
@@ -51,15 +51,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-
-  &:hover {
-    background: #eab308;
-  }
 }
 
 /* Lối đi / aside */
 .aside {
+  user-select: none;
   background: #d1d5db; // xám
 }
 
@@ -129,4 +125,53 @@
 
 .btnSubmit svg {
   font-size: 14px;
+}
+
+.selected {
+  outline: 2px dashed #3b82f6;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.action_bar_item {
+  display: flex;
+  gap: 10px;
+}
+
+.action_bar_btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 12px;
+  border-radius: 6px;
+
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* đang được chọn */
+.action_bar_btn_select {
+  background-color: #0d9488; /* teal-600 */
+  border-color: #0d9488;
+  color: #fff;
+}
+
+/* icon khi selected */
+.action_bar_btn_select svg {
+  color: #fff !important;
+}
+
+/* hiệu ứng nhấn */
+.action_bar_btn:active {
+  transform: scale(0.97);
+}
+
+.cursorPointer {
+  cursor: pointer;
 }

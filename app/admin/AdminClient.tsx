@@ -519,6 +519,7 @@ export default function AdminDashboard() {
                   setToggleRoom={(path) => setActiveTab(path)}
                   setRoom={(r) => setRoom(r)}
                   setCinemaId={setCinemaId}
+                  setActiviTab={(name) => setActiveTab(name)}
                 />
               </div>
             )}
