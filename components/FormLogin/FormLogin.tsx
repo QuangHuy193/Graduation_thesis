@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Button from "../Button/Button";
-import { signIn, getSession } from "next-auth/react";
+import { signIn, getSession, signOut } from "next-auth/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { FormAuthProps } from "@/lib/interface/formAuthStateInterface";
@@ -19,6 +19,8 @@ import LoadingLink from "../Link/LinkLoading";
 import { jwtDecode } from "jwt-decode";
 import Spinner from "../Spinner/Spinner";
 import { signInForm } from "@/lib/axios/signinForm";
+import Swal from "sweetalert2";
+import { icon } from "@fortawesome/fontawesome-svg-core";
 
 export default function FormLogin({
   state,
@@ -197,7 +199,20 @@ export default function FormLogin({
       // Redirect theo role
       const userRole: string = sessUser.role ?? "";
       if (userRole === "admin") {
-        router.push("/admin");
+        if (!state.saveLogin) {
+          await Swal.fire({
+            title: "Thông báo",
+            text: "Admin vui lòng lưu đăng nhập",
+            icon: "warning",
+            confirmButtonText: "OK",
+          });
+
+          sessionStorage.removeItem("user");
+          window.location.href = "/login";
+        } else {
+          router.push("/admin");
+        }
+
       } else if (userRole === "superadmin") {
         router.push("/sadmin");
       } else {

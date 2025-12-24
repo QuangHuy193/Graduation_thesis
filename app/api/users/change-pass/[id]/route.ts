@@ -16,43 +16,57 @@ export async function POST(
         if (!body || typeof body !== "object")
             return errorResponse("Missing or invalid body", 400);
 
-        const { oldPassword, newPassword } = body as {
+        const { oldPassword, newPassword, forget } = body as {
             oldPassword?: string;
             newPassword?: string;
+            forget?: boolean;
         };
 
-        if (!oldPassword || !newPassword)
-            return errorResponse("oldPassword and newPassword are required", 400);
+        if (!newPassword)
+            return errorResponse("newPassword is required", 400);
 
-        // Basic validation for new password
+        // Validate new password
         if (typeof newPassword !== "string" || newPassword.length < 8) {
-            return errorResponse("newPassword must be at least 8 characters", 400);
+            return errorResponse(
+                "newPassword must be at least 8 characters",
+                400
+            );
         }
 
-        // Get existing password hash from DB
+        // Lấy mật khẩu hiện tại
         const [rows] = await db.execute(
             "SELECT password FROM users WHERE user_id = ? LIMIT 1",
             [id]
         );
 
-        const userRow = Array.isArray(rows) ? (rows as any[])[0] : undefined;
-        const currentHash = userRow?.password;
-
-        if (!currentHash) {
-            // user not found or no password stored
-            return errorResponse("User not found or password not set", 404);
+        if (rows.length === 0) {
+            return errorResponse("User not found", 404);
         }
 
-        // Compare old password with stored hash
-        const match = await bcrypt.compare(oldPassword, currentHash);
-        if (!match) {
-            return errorResponse("Old password is incorrect", 401);
+        const currentHash = rows[0].password;
+
+        /**
+         * 🔐 TRƯỜNG HỢP ĐỔI MẬT KHẨU BÌNH THƯỜNG
+         * → phải kiểm tra oldPassword
+         */
+        if (!forget) {
+            if (!oldPassword) {
+                return errorResponse("oldPassword is required", 400);
+            }
+
+            const match = await bcrypt.compare(oldPassword, currentHash);
+            if (!match) {
+                return errorResponse("Old password is incorrect", 401);
+            }
         }
 
-        // Hash new password
+        /**
+         * 🔐 TRƯỜNG HỢP QUÊN MẬT KHẨU
+         * → bỏ qua oldPassword
+         */
+
         const newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
-        // Update in DB
         const [result] = await db.execute(
             "UPDATE users SET password = ? WHERE user_id = ?",
             [newHash, id]
@@ -63,7 +77,11 @@ export async function POST(
             return errorResponse("Failed to update password", 500);
         }
 
-        return successResponse({ updated: true }, "Password updated", 200);
+        return successResponse(
+            { updated: true, forget: !!forget },
+            "Password updated successfully",
+            200
+        );
     } catch (err) {
         console.error("Change password error:", err);
         return errorResponse(String(err ?? "Unknown error"), 500);

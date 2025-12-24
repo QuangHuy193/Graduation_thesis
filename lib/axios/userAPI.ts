@@ -37,3 +37,17 @@ export async function changePassword(
         throw error.response?.data || error;
     }
 }
+
+
+export async function forgotPassword(email: string) {
+    try {
+        const res = await axiosInstance.post("/api/users/forget-pass", {
+            email,
+        });
+
+        return res.data;
+    } catch (error: any) {
+        console.error("Forgot password error:", error);
+        throw error.response?.data || error;
+    }
+}

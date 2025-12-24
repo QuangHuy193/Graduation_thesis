@@ -486,7 +486,7 @@ export async function downloadElementAsImage(
     if (document.fonts && typeof document.fonts.ready?.then === "function") {
       try {
         await document.fonts.ready;
-      } catch {}
+      } catch { }
     }
 
     const rect = el.getBoundingClientRect();
@@ -590,3 +590,15 @@ export const showToast = (icon: string, title: string, time: number = 2000) => {
     timerProgressBar: true,
   });
 };
+//Tạo mật khẩu 6 ký tự ngẫu nhiên
+export function generatePass(length = 6) {
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return result;
+}
