@@ -41,10 +41,35 @@ export async function createRoomAPI(data: {
   }
 }
 
-// xóa phòng
-export async function deleteRoomAPI(id: number) {
+// kiểm tra trước khi xóa phòng
+export async function checkBeforeDeleteRoomAPI(
+  id: number,
+  start_date,
+  end_date
+) {
   try {
-    const response = await axiosInstance.delete(`/api/admin/rooms/${id}`);
+    const response = await axiosInstance.get(
+      `/api/admin/rooms/${id}/check_before_del?start_date=${start_date}&end_date=${end_date}`
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching room:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// xóa phòng
+export async function deleteRoomAPI(
+  id: number,
+  type: number = 0,
+  start_date,
+  end_date
+) {
+  try {
+    const response = await axiosInstance.delete(`/api/admin/rooms/${id}`, {
+      data: { type, start_date, end_date },
+    });
 
     return response.data;
   } catch (error: any) {

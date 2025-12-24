@@ -2,6 +2,7 @@
 
 import { getCinemasWithCityAPI } from "@/lib/axios/cinemasAPI";
 import {
+  checkBeforeDeleteRoomAPI,
   deleteRoomAPI,
   getAllRoomInCinemaAPI,
   recoverRoomAPI,
@@ -19,6 +20,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Tippy from "@tippyjs/react";
 import Swal from "sweetalert2";
+import { showToast } from "@/lib/function";
 
 function RoomList({
   // bật tắt thêm/sửa phòng
@@ -36,6 +38,7 @@ function RoomList({
       status: -1,
       room: false,
     },
+    reload: false,
     // mở popup
     openPopup: -1,
     // ds cinema
@@ -85,6 +88,7 @@ function RoomList({
     setCinemaId(state.selected.cinema);
 
     const getRoomsIncinema = async (cinema_id) => {
+      console.log("errrr");
       try {
         setState((prev) => ({
           ...prev,
@@ -107,8 +111,97 @@ function RoomList({
         }));
       }
     };
+
     getRoomsIncinema(state.selected.cinema);
-  }, [state.selected.cinema, state.isFetch.room, state.isFetch.status]);
+  }, [state.selected.cinema, state.reload]);
+
+  // gọi api xóa (tách do có xác nhận nhiều lần)
+  const callApiDeleteRoom = async (
+    room_id,
+    type,
+    fromDate = "",
+    toDate = ""
+  ) => {
+    setState((prev) => ({
+      ...prev,
+      isFetch: { ...prev.isFetch, status: room_id },
+    }));
+
+    try {
+      const res = await deleteRoomAPI(room_id, type, fromDate, toDate);
+
+      if (res.success) {
+        showToast("success", "Phòng đã ngừng hoạt động");
+        setState((prev) => ({
+          ...prev,
+          reload: !prev.reload,
+        }));
+      }
+    } catch (error) {
+      showToast("error", error?.message || "Có lỗi xảy ra, vui lòng thử lại!");
+      console.log(error);
+    } finally {
+      setState((prev) => ({
+        ...prev,
+        isFetch: { ...prev.isFetch, status: -1 },
+        reload: !prev.reload,
+      }));
+    }
+  };
+
+  const handleDeleteRoom = async (room_id) => {
+    setState((prev) => ({ ...prev, openPopup: -1 }));
+
+    const confirm = await Swal.fire({
+      icon: "warning",
+      text: "Bạn chắc chắn muốn chuyển phòng này sang trạng thái tạm dừng hoạt động?",
+      showCancelButton: true,
+      confirmButtonText: "CHẮC CHẮN",
+      cancelButtonText: "HỦY",
+      customClass: {
+        popup: "popup_alert",
+        confirmButton: "btn_alert",
+        cancelButton: "btn_alert",
+      },
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      const check = await checkBeforeDeleteRoomAPI(
+        room_id,
+        "2025-12-24",
+        "2025-12-25"
+      );
+
+      // có thể ngừng ngay
+      if (check.data.canDeactivate) {
+        await callApiDeleteRoom(room_id, 0);
+        return;
+      }
+
+      // cần xác nhận thêm
+      const confirm2 = await Swal.fire({
+        icon: "warning",
+        text: check.message,
+        showCancelButton: true,
+        confirmButtonText: "XÁC NHẬN",
+        cancelButtonText: "HỦY",
+        customClass: {
+          popup: "popup_alert",
+          confirmButton: "btn_alert",
+          cancelButton: "btn_alert",
+        },
+      });
+
+      if (confirm2.isConfirmed) {
+        await callApiDeleteRoom(room_id, 1, "2025-12-24", "2025-12-25");
+      }
+    } catch (error) {
+      showToast("error", error?.message || "Có lỗi xảy ra, vui lòng thử lại!");
+      console.log(error);
+    }
+  };
 
   return (
     <div className="bg-white rounded shadow">
@@ -197,6 +290,12 @@ function RoomList({
               </div>
 
               <Tippy
+                onClickOutside={() => {
+                  setState((prev) => ({
+                    ...prev,
+                    openPopup: -1,
+                  }));
+                }}
                 visible={state.openPopup === r.room_id ? true : false}
                 interactive
                 theme="room"
@@ -238,69 +337,7 @@ function RoomList({
                           icon={faCirclePause}
                           className="text-red-500"
                         />
-                        <span
-                          onClick={() => {
-                            Swal.fire({
-                              icon: "warning",
-                              text: `Bạn chắc chắn muốn chuyển phòng này 
-                              sang trạng thái tạm dừng hoạt động?`,
-                              showCancelButton: true,
-                              confirmButtonText: "CHẮC CHẮN",
-                              cancelButtonText: "HỦY",
-                              customClass: {
-                                popup: "popup_alert",
-                                confirmButton: `btn_alert`,
-                                cancelButton: `btn_alert`,
-                              },
-                            }).then(async (result) => {
-                              if (result.isConfirmed) {
-                                try {
-                                  setState((prev) => ({
-                                    ...prev,
-                                    isFetch: {
-                                      ...prev.isFetch,
-                                      status: r.room_id,
-                                    },
-                                  }));
-                                  const res = await deleteRoomAPI(r.room_id);
-                                  if (res.success) {
-                                    Swal.fire({
-                                      toast: true,
-                                      position: "top-end",
-                                      icon: "success",
-                                      title: "Chuyển trạng thái thành công",
-                                      showConfirmButton: false,
-                                      timer: 2000,
-                                      timerProgressBar: true,
-                                    });
-                                  }
-                                } catch (error) {
-                                  Swal.fire({
-                                    toast: true,
-                                    position: "top-end",
-                                    icon: "error",
-                                    title: error?.message
-                                      ? error.message
-                                      : "Có lỗi xảy ra, vui lòng thử lại!",
-                                    showConfirmButton: false,
-                                    timer: 2000,
-                                    timerProgressBar: true,
-                                  });
-                                  console.log(error);
-                                } finally {
-                                  setState((prev) => ({
-                                    ...prev,
-                                    isFetch: { ...prev.isFetch, status: -1 },
-                                  }));
-                                }
-                              }
-                            });
-                            setState((prev) => ({
-                              ...prev,
-                              openPopup: -1,
-                            }));
-                          }}
-                        >
+                        <span onClick={() => handleDeleteRoom(r.room_id)}>
                           Tạm dừng hoạt động
                         </span>
                       </div>
@@ -366,6 +403,7 @@ function RoomList({
                                   setState((prev) => ({
                                     ...prev,
                                     isFetch: { ...prev.isFetch, status: -1 },
+                                    reload: !prev.reload,
                                   }));
                                 }
                               }

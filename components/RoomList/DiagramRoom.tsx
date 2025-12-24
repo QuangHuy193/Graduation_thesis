@@ -243,6 +243,36 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
     }));
   }, [cinemaId]);
 
+  // kiểm tra nhập kích thước
+  const handleSelectSize = (
+    number: string,
+    name: string,
+    maxSeat: number = 15
+  ) => {
+    // Chỉ cho nhập số
+    if (!/^\d*$/.test(number)) return;
+
+    const num = Number(number);
+
+    // Giới hạn ghế tối đa
+    if (num > maxSeat) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: `Số ghế tối đa là ${maxSeat}`,
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      selected: { ...prev.selected, [name]: num },
+    }));
+  };
   return (
     <div className="bg-white p-2 rounded-sm shadow">
       <div className="flex justify-between">
@@ -264,6 +294,7 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
                 } else {
                   return {
                     ...prev,
+                    asideRoom: [],
                     selected: {
                       ...prev.selected,
                       width: 0,
@@ -324,24 +355,14 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
           <label>Chiều dài (ghế)</label>
           <input
             value={state.selected.width}
-            onChange={(e) => {
-              setState((prev) => ({
-                ...prev,
-                selected: { ...prev.selected, width: e.target.value },
-              }));
-            }}
+            onChange={(e) => handleSelectSize(e.target.value, "width", 20)}
           />
         </div>
         <div className={`${styles.int_group}`}>
           <label>Chiều rộng (ghế)</label>
           <input
             value={state.selected.height}
-            onChange={(e) => {
-              setState((prev) => ({
-                ...prev,
-                selected: { ...prev.selected, height: e.target.value },
-              }));
-            }}
+            onChange={(e) => handleSelectSize(e.target.value, "height", 15)}
           />
         </div>
       </div>

@@ -3,7 +3,7 @@ import type { ApiResponse } from "@/lib/interface/apiInterface";
 import { weekdays } from "./constant";
 import { toPng } from "html-to-image";
 import crypto from "crypto";
-
+import Swal from "sweetalert2";
 
 export function scrollToPosition(
   y?: number,
@@ -486,7 +486,7 @@ export async function downloadElementAsImage(
     if (document.fonts && typeof document.fonts.ready?.then === "function") {
       try {
         await document.fonts.ready;
-      } catch { }
+      } catch {}
     }
 
     const rect = el.getBoundingClientRect();
@@ -546,10 +546,7 @@ export function generatePayOSSignature(payload: any, checksumKey: string) {
 
       if (Array.isArray(value)) {
         return value
-          .map(
-            (item, i) =>
-              `${key}[${i}]=${encodeURIComponent(item)}`
-          )
+          .map((item, i) => `${key}[${i}]=${encodeURIComponent(item)}`)
           .join("&");
       }
 
@@ -564,3 +561,32 @@ export function generatePayOSSignature(payload: any, checksumKey: string) {
     .update(queryString)
     .digest("hex");
 }
+
+// so sánh khỏang trống 2 phòng trước cho kiểm tra trước khi  xóa phòng
+export function isSameGapStructure(
+  baseGaps: any[],
+  compareGaps: any[]
+): boolean {
+  if (baseGaps.length !== compareGaps.length) return false;
+
+  const normalize = (gaps: any[]) =>
+    gaps.map((g) => `${g.row}-${g.index}-${g.width}`).sort();
+
+  const base = normalize(baseGaps);
+  const compare = normalize(compareGaps);
+
+  return base.every((v, i) => v === compare[i]);
+}
+
+// show thông báo góc phải
+export const showToast = (icon: string, title: string, time: number = 2000) => {
+  Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon,
+    title,
+    showConfirmButton: false,
+    timer: time,
+    timerProgressBar: true,
+  });
+};

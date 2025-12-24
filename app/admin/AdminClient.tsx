@@ -383,7 +383,7 @@ export default function AdminDashboard() {
     showtimes: "Suất chiếu",
     bookings: "Vé",
     promotions: "Sự kiện",
-    rooms: "Danh sách phòng",
+    rooms: "Danh sách phòng theo rạp",
     aside: "Danh sách phòng - Sơ đồ phòng",
   };
 
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
               activeTab === "rooms" ? "bg-slate-100" : "hover:bg-slate-50"
             }`}
           >
-            Quản lý rạp, phòng
+            Quản lý phòng
           </button>
           <button
             onClick={() => setActiveTab("promotions")}

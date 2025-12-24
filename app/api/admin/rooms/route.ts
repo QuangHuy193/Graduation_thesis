@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { successResponse, errorResponse, numberToLetter } from "@/lib/function";
 
+// thêm phòng
 export async function POST(req: Request) {
   const connection = await db.getConnection();
 
