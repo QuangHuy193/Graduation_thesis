@@ -50,120 +50,123 @@ function PromotionTable({ promotion, onEdit }: Props) {
         }
     }
     const renderTable = (data: PromotionRule[]) => (
-        <table className="w-full border border-gray-200 rounded-lg overflow-hidden text-sm">
-            <thead className="bg-gray-50">
-                <tr>
-                    <th className="px-3 py-2 text-left font-semibold text-gray-700">
-                        Tên
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold text-gray-700">
-                        Thời gian
-                    </th>
-                    <th className="px-3 py-2 text-center font-semibold text-gray-700">
-                        Độ ưu tiên
-                    </th>
-                    <th className="px-3 py-2 text-center font-semibold text-gray-700">
-                        Trạng thái
-                    </th>
-                    <th className="px-3 py-2 text-center font-semibold text-gray-700">
-                        Hiển thị
-                    </th>
-                    <th className="px-3 py-2 text-left font-semibold text-gray-700">
-                        Mô tả
-                    </th>
-                    <th className="px-3 py-2 text-center font-semibold text-gray-700">
-                        Hành động
-                    </th>
-                </tr>
-            </thead>
-
-            <tbody className="divide-y divide-gray-100">
-                {data.length === 0 && (
+        <div className="rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+                <thead className="bg-gray-50">
                     <tr>
-                        <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
-                            Không có dữ liệu
-                        </td>
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700">
+                            Tên
+                        </th>
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700">
+                            Thời gian
+                        </th>
+                        <th className="px-3 py-2 text-center font-semibold text-gray-700">
+                            Độ ưu tiên
+                        </th>
+                        <th className="px-3 py-2 text-center font-semibold text-gray-700">
+                            Trạng thái
+                        </th>
+                        <th className="px-3 py-2 text-center font-semibold text-gray-700">
+                            Hiển thị
+                        </th>
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700">
+                            Mô tả
+                        </th>
+                        <th className="px-3 py-2 text-center font-semibold text-gray-700">
+                            Hành động
+                        </th>
                     </tr>
-                )}
+                </thead>
 
-                {data.map((item) => (
-                    <tr
-                        key={item.rule_id}
-                        className="hover:bg-gray-50 transition"
-                    >
-                        {/* Tên */}
-                        <td className="px-3 py-2 font-medium text-gray-800">
-                            {item.name}
-                        </td>
+                <tbody className="divide-y divide-gray-100">
+                    {data.length === 0 && (
+                        <tr>
+                            <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
+                                Không có dữ liệu
+                            </td>
+                        </tr>
+                    )}
 
-                        {/* Thời gian */}
-                        <td className="px-3 py-2 text-gray-600">
-                            <div>{item.start_time || "Không thời hạn"}</div>
-                            <div className="text-xs text-gray-400">
-                                {item.end_time}
-                            </div>
-                        </td>
+                    {data.map((item) => (
+                        <tr
+                            key={item.rule_id}
+                            className="border-t border-b border-gray-700 hover:bg-gray-50 transition"
+                        >
+                            {/* Tên */}
+                            <td className="px-3 py-2 font-medium text-gray-800">
+                                {item.name}
+                            </td>
 
-                        {/* Priority */}
-                        <td className="px-3 py-2 text-center">
-                            <span className="inline-block min-w-[28px] rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold">
-                                {item.priority}
-                            </span>
-                        </td>
+                            {/* Thời gian */}
+                            <td className="px-3 py-2 text-gray-600">
+                                <div>{item.start_time || "Không thời hạn"}</div>
+                                <div className="text-xs text-gray-400">
+                                    {item.end_time}
+                                </div>
+                            </td>
 
-                        {/* Enable */}
-                        <td className="px-3 py-2 text-center">
-                            {item.enable ? (
-                                <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
-                                    Bật
+                            {/* Priority */}
+                            <td className="px-3 py-2 text-center">
+                                <span className="inline-block min-w-[28px] rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold">
+                                    {item.priority}
                                 </span>
-                            ) : (
-                                <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-                                    Tắt
-                                </span>
-                            )}
-                        </td>
+                            </td>
 
-                        {/* Display */}
-                        <td className="px-3 py-2 text-center">
-                            {item.display ? (
-                                <span className="text-green-600 font-medium">Có</span>
-                            ) : (
-                                <span className="text-gray-400">Không</span>
-                            )}
-                        </td>
+                            {/* Enable */}
+                            <td className="px-3 py-2 text-center">
+                                {item.enable ? (
+                                    <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                                        Bật
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                                        Tắt
+                                    </span>
+                                )}
+                            </td>
 
-                        {/* Description */}
-                        <td className="px-3 py-2 text-gray-600 max-w-[260px] truncate">
-                            {item.description || "—"}
-                        </td>
+                            {/* Display */}
+                            <td className="px-3 py-2 text-center">
+                                {item.display ? (
+                                    <span className="text-green-600 font-medium">Có</span>
+                                ) : (
+                                    <span className="text-gray-400">Không</span>
+                                )}
+                            </td>
 
-                        {/* Actions */}
-                        <td className="px-3 py-2 text-center whitespace-nowrap">
-                            <button className="mr-2 rounded border px-3 py-1 text-xs font-medium hover:bg-gray-100">
-                                Sửa
-                            </button>
+                            {/* Description */}
+                            <td className="px-3 py-2 text-gray-600 max-w-[260px] truncate">
+                                {item.description || "—"}
+                            </td>
 
-                            {item.enable ? (
-                                <button
-                                    onClick={() => handleDisable(item.rule_id)}
-                                    className="rounded border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                                >
-                                    Vô hiệu
+                            {/* Actions */}
+                            <td className="px-3 py-2 text-center whitespace-nowrap">
+                                <button className="mr-2 rounded border px-3 py-1 text-xs font-medium hover:bg-gray-100">
+                                    Sửa
                                 </button>
-                            ) : (
-                                <button
-                                    onClick={() => handleDisable(item.rule_id)}
-                                    className="rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-600 hover:bg-green-50"
-                                >
-                                    Kích hoạt
-                                </button>
-                            )}
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
+
+                                {item.enable ? (
+                                    <button
+                                        onClick={() => handleDisable(item.rule_id)}
+                                        className="rounded border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                                    >
+                                        Vô hiệu
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleDisable(item.rule_id)}
+                                        className="rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-600 hover:bg-green-50"
+                                    >
+                                        Kích hoạt
+                                    </button>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+
 
     );
 

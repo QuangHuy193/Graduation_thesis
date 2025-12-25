@@ -53,6 +53,8 @@ export default function ShowtimeTimetable({
   const [activeDate, setActiveDate] = useState<string | null>(initialDate);
   const originalRef = useRef<ShowtimeDay[] | null>(null);
   const [trashHover, setTrashHover] = useState(false);
+  const [activeCinema, setActiveCinema] = useState<number | "all">("all");
+
   // animation states
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [hoverSlot, setHoverSlot] = useState<string | null>(null);
@@ -91,6 +93,7 @@ export default function ShowtimeTimetable({
     }
     return m;
   }, [state]);
+
   const clearDragState = () => {
     setHoverSlot(null);
     setDraggingId?.(null);        // nếu bạn có draggingId state
@@ -123,7 +126,13 @@ export default function ShowtimeTimetable({
     Object.values(out).forEach(arr => arr.sort((a, b) => a.room_id - b.room_id));
     return out;
   }, [roomsList]);
+  const filteredRoomsByCinema = useMemo(() => {
+    if (activeCinema === "all") return roomsByCinema;
 
+    return {
+      [activeCinema]: roomsByCinema[activeCinema] ?? []
+    };
+  }, [roomsByCinema, activeCinema]);
   const handleSelectDate = (date: string) => { if (date === activeDate) return; setActiveDate(date); };
   function readDragPayload(e?: React.DragEvent<HTMLDivElement>) {
     try {
@@ -184,16 +193,9 @@ export default function ShowtimeTimetable({
       return out;
     });
 
-    // Optionally show small feedback
-    // Swal.fire({ icon: 'success', title: 'Đã đưa vào thùng rác', timer: 900, showConfirmButton: false });
-  }
-  // existing drag start: also setData for browser compatibility
-  // const handleDragStart = (e: React.DragEvent, st: ShowtimeDay) => {
-  //   e.dataTransfer.effectAllowed = "move";
-  //   try { e.dataTransfer.setData("text/plain", String(st.showtime_id)); } catch (_) { }
-  //   dragData.current = { type: "existing", id: st.showtime_id };
 
-  // };
+  }
+
   const handleDragStart = (e: React.DragEvent, st: ShowtimeDay) => {
     setDraggingId(st.showtime_id);
     e.dataTransfer.effectAllowed = "move";
@@ -247,13 +249,6 @@ export default function ShowtimeTimetable({
       dragData.current = null;
       return;
     }
-
-    // Nếu thả movie vào slot có movie khác
-    // if (currentOccupant && currentOccupant.showtime_id !== (d.type === "existing" ? d.id : undefined)) {
-    //   // Slot đã bị chiếm bởi show khác -> block drop
-    //   dragData.current = null;
-    //   return;
-    // }
 
     //trường hợp movie đã có showtime
     if (d.type === "existing") {
@@ -444,6 +439,24 @@ export default function ShowtimeTimetable({
             <select value={activeDate ?? ""} onChange={(e) => void handleSelectDate(e.target.value)} className="border px-2 py-1 rounded">
               {dateKeys.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
+            <label>Rạp:</label>
+            <select
+              value={activeCinema}
+              onChange={(e) =>
+                setActiveCinema(
+                  e.target.value === "all" ? "all" : Number(e.target.value)
+                )
+              }
+              className="border px-2 py-1 rounded"
+            >
+              <option value="all">Tất cả rạp</option>
+              {Object.values(cinemasMap).map(c => (
+                <option key={c.cinema_id} value={c.cinema_id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
             {Object.keys(pending).length > 0 && (
               <>
                 <span className="text-amber-600">{Object.keys(pending).length} thay đổi</span>
@@ -454,74 +467,81 @@ export default function ShowtimeTimetable({
           </div>
 
           <div className="space-y-6">
-            {Object.entries(roomsByCinema).map(([cinemaKey, rooms]) => {
+            {Object.entries(filteredRoomsByCinema).map(([cinemaKey, rooms]) => {
               const cinemaId = cinemaKey === "no-cinema" ? null : Number(cinemaKey);
               const cinemaName = (cinemaId && cinemasMap?.[cinemaId]?.name) || `Rạp ${cinemaId ?? ""}`;
               return (
                 <div key={cinemaKey} className="border rounded p-3">
                   <div className="font-medium mb-3">{cinemaName}</div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {rooms.map(room => {
-                      const roomShow = grouped[activeDate]?.[room.room_id] || {};
-                      return (
-                        <div key={room.room_id} className="border p-3 rounded">
-                          <div className="font-medium mb-2">{room.name}</div>
-                          <div className="space-y-2">
-                            {movieScreenings.map(slot => {
-                              const existing = roomShow[slot.movie_screen_id] || null;
-                              return (
-                                <div
-                                  key={slot.movie_screen_id}
-                                  className={`border rounded p-2 bg-gray-50 transition-all
+
+                  {rooms.length === 0 ? (
+                    <div className="col-span-full text-sm text-gray-500 italic text-center py-6">
+                      Không có phòng
+                    </div>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {rooms.map(room => {
+                        const roomShow = grouped[activeDate]?.[room.room_id] || {};
+                        return (
+                          <div key={room.room_id} className="border p-3 rounded">
+                            <div className="font-medium mb-2">{room.name}</div>
+                            <div className="space-y-2">
+                              {movieScreenings.map(slot => {
+                                const existing = roomShow[slot.movie_screen_id] || null;
+                                return (
+                                  <div
+                                    key={slot.movie_screen_id}
+                                    className={`border rounded p-2 bg-gray-50 transition-all
     ${hoverSlot === `${room.room_id}-${slot.movie_screen_id}` ? styles.slotHover : ""}
     ${justInserted === `${room.room_id}-${slot.movie_screen_id}` ? styles.insertFlash : ""}
   `}
-                                  onDragOver={(e) => {
-                                    e.preventDefault();
-                                    setHoverSlot(`${room.room_id}-${slot.movie_screen_id}`);
-                                  }}
-                                  onDragLeave={() => setHoverSlot(null)}
-                                  onDrop={(e) => {
-                                    setHoverSlot(null);
-                                    setJustInserted(`${room.room_id}-${slot.movie_screen_id}`);
-                                    setTimeout(() => setJustInserted(null), 400);
-                                    void handleDropSlot(room.room_id, slot.movie_screen_id, e);
-                                  }}
-                                >
-                                  <div className="text-xs text-gray-600 mb-1">{slot.start_time} – {slot.end_time}</div>
-                                  {existing ? (
-                                    <div
-                                      className={`p-2 bg-white border rounded cursor-move ${styles.dragItem}
+                                    onDragOver={(e) => {
+                                      e.preventDefault();
+                                      setHoverSlot(`${room.room_id}-${slot.movie_screen_id}`);
+                                    }}
+                                    onDragLeave={() => setHoverSlot(null)}
+                                    onDrop={(e) => {
+                                      setHoverSlot(null);
+                                      setJustInserted(`${room.room_id}-${slot.movie_screen_id}`);
+                                      setTimeout(() => setJustInserted(null), 400);
+                                      void handleDropSlot(room.room_id, slot.movie_screen_id, e);
+                                    }}
+                                  >
+                                    <div className="text-xs text-gray-600 mb-1">{slot.start_time} – {slot.end_time}</div>
+                                    {existing ? (
+                                      <div
+                                        className={`p-2 bg-white border rounded cursor-move ${styles.dragItem}
     ${draggingId === existing.showtime_id ? styles.dragging : ""}
     ${justInserted === `${room.room_id}-${slot.movie_screen_id}` ? styles.fadeIn : ""}
   `}
-                                      draggable
-                                      onDragStart={(e) => handleDragStart(e, existing)}
-                                      onDragEnd={handleDragEndLocal}
-                                    >
-                                      <div className="font-medium">{existing.movie_title}</div>
-                                    </div>
-                                  ) : (
-                                    <div className="text-xs text-gray-400 italic">(Trống)</div>
-                                  )}
-                                </div>
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, existing)}
+                                        onDragEnd={handleDragEndLocal}
+                                      >
+                                        <div className="font-medium">{existing.movie_title}</div>
+                                      </div>
+                                    ) : (
+                                      <div className="text-xs text-gray-400 italic">(Trống)</div>
+                                    )}
+                                  </div>
 
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="w-72 border-l pl-4">
+        <div className="w-72 border-l pl-4 sticky top-50 self-start">
           <div className="font-medium mb-2 ">Danh sách phim đang chiếu</div>
-          <div className="space-y-2 max-h-[60vh] overflow-auto pr-2 ">
+          <div className="space-y-2 max-h-[70vh] overflow-auto pr-2 ">
             {externalMovies.length === 0 && <div className="text-sm text-gray-500 italic">Không có phim.</div>}
             {externalMovies.map(mv => {
               // normalize display name & id for robustness
