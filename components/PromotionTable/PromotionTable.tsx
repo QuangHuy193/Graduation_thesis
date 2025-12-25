@@ -141,21 +141,21 @@ function PromotionTable({ promotion, onEdit }: Props) {
 
                             {/* Actions */}
                             <td className="px-3 py-2 text-center whitespace-nowrap">
-                                <button className="mr-2 rounded border px-3 py-1 text-xs font-medium hover:bg-gray-100">
+                                <button className="mr-2 rounded border px-3 py-1 text-xs font-medium hover:bg-gray-100 cursor-pointer">
                                     Sửa
                                 </button>
 
                                 {item.enable ? (
                                     <button
                                         onClick={() => handleDisable(item.rule_id)}
-                                        className="rounded border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                                        className="w-[90px] rounded border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 cursor-pointer"
                                     >
                                         Vô hiệu
                                     </button>
                                 ) : (
                                     <button
                                         onClick={() => handleDisable(item.rule_id)}
-                                        className="rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-600 hover:bg-green-50"
+                                        className="w-[90px] rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-600 hover:bg-green-50 cursor-pointer"
                                     >
                                         Kích hoạt
                                     </button>

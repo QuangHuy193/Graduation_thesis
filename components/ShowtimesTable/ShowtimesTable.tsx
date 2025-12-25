@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import styles from "./ShowtimesTable.module.scss"
+import { PendingSlotUpdate } from "@/app/admin/AdminClient";
 export type MovieScreenSlot = { movie_screen_id: number; start_time: string; end_time: string };
 export type ShowtimeDay = {
   showtime_id: number;
@@ -14,7 +15,7 @@ export type ShowtimeDay = {
   cinema_id?: number | null;
   cinema_name?: string | null;
 };
-type PendingSlotUpdate = { showtime_id: number; from_slot: number | null; to_slot: number | null; updated: ShowtimeDay };
+// type PendingSlotUpdate = { showtime_id: number; from_slot: number | null; to_slot: number | null; updated: ShowtimeDay };
 export type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null };
 export type CinemaEntry = { cinema_id: number; name?: string };
 type ExternalMovie = { movie_id?: number; id?: number; movieId?: number; name?: string | null; title?: string | null };

@@ -17,60 +17,92 @@ export default function Home() {
   const [bannerMovieShowng, setBannerMovieShowng] = useState([]);
   const [bannerMovieUpcoming, setBannerMovieUpcoming] = useState([]);
   const [promotionList, setPromotionList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [show, setShow] = useState(false);
 
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     setShow(window.scrollY > 0);
+  //   };
+
+  //   window.addEventListener("scroll", handleScroll);
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, []);
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      setShow(window.scrollY > 0);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShow(window.scrollY > 100);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // useEffect(() => {
+  //   const getMovieShowingBaner = async () => {
+  //     try {
+  //       const res = await getMovieShowingBanerAPI();
+  //       setBannerMovieShowng(res);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+
+  //   const getMovieUpcomingBanner = async () => {
+  //     try {
+  //       const res = await getMovieUpcommingBanerAPI();
+  //       setBannerMovieUpcoming(res);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+
+  //   const getPromotionList = async () => {
+  //     try {
+  //       const res = await getPromotionsAPI();
+  //       setPromotionList(res);
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
+
+  //   getMovieShowingBaner();
+  //   getMovieUpcomingBanner();
+  //   getPromotionList();
+  // }, []);
   useEffect(() => {
-    const getMovieShowingBaner = async () => {
+    const fetchHomeData = async () => {
       try {
-        const res = await getMovieShowingBanerAPI();
-        setBannerMovieShowng(res);
+        setLoading(true);
+        const [showing, upcoming, promotions] = await Promise.all([
+          getMovieShowingBanerAPI(),
+          getMovieUpcommingBanerAPI(),
+          getPromotionsAPI(),
+        ]);
+
+        setBannerMovieShowng(showing);
+        setBannerMovieUpcoming(upcoming);
+        setPromotionList(promotions);
       } catch (error) {
-        console.log(error);
+        console.error("Home fetch error:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    const getMovieUpcomingBanner = async () => {
-      try {
-        const res = await getMovieUpcommingBanerAPI();
-        setBannerMovieUpcoming(res);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    const getPromotionList = async () => {
-      try {
-        const res = await getPromotionsAPI();
-        setPromotionList(res);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    getMovieShowingBaner();
-    getMovieUpcomingBanner();
-    getPromotionList();
+    fetchHomeData();
   }, []);
 
-  if (
-    bannerMovieShowng.length === 0 ||
-    bannerMovieUpcoming.length === 0 ||
-    promotionList.length === 0
-  ) {
-    return (
-      <div>
-        <LoadingPage />
-      </div>
-    );
+  if (loading) {
+    return <LoadingPage />;
   }
 
   return (

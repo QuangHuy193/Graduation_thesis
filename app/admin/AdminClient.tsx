@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   getAllMovies,
   callBulkApi,
@@ -28,18 +28,63 @@ import {
 import { getAllRooms } from "@/lib/axios/admin/roomAPI";
 import { getAllCinemas } from "@/lib/axios/admin/cinemaAPI";
 import { getScreenings } from "@/lib/axios/admin/movie_screenAPI";
+import { getAllUsers } from "@/lib/axios/admin/userAPI";
 import ExcelImportMovies from "@/components/ExcelImportMovies/ExcelImportMovies";
 import Spinner from "@/components/Spinner/Spinner";
 import RoomList from "@/components/RoomList/RoomList";
 import DiagramRoom from "@/components/RoomList/DiagramRoom";
-
-type PendingSlotUpdate = {
+import UserTable from "@/components/UserTable/UserTable";
+import { UserITF } from "@/lib/interface/userInterface";
+export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
   to_slot: number;
   updated: ShowtimeDay;
 };
-
+export const MOCK_USERS: UserITF[] = [
+  {
+    user_id: 1,
+    name: "Nguyễn Văn A",
+    phone_number: "0912345678",
+    email: "user1@gmail.com",
+    birthday: "2000-05-12",
+    age: 25,
+    vip: true,
+    point: 1200,
+    status: 1,
+    role: "user",
+    created_at: "2024-01-10 09:12:00",
+    updated_at: null,
+  },
+  {
+    user_id: 2,
+    name: "Trần Thị B",
+    phone_number: "0987654321",
+    email: "admin@gmail.com",
+    birthday: "1998-03-20",
+    age: 27,
+    vip: false,
+    point: 300,
+    status: 1,
+    role: "admin",
+    created_at: "2023-11-01 14:30:00",
+    updated_at: "2024-08-01 10:00:00",
+  },
+  {
+    user_id: 3,
+    name: "Lê Văn C",
+    phone_number: "0901122334",
+    email: "locked@gmail.com",
+    birthday: "2001-12-01",
+    age: 24,
+    vip: false,
+    point: 0,
+    status: 0,
+    role: "user",
+    created_at: "2024-06-15 08:20:00",
+    updated_at: null,
+  },
+];
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [movies, setMovies] = useState<MovieFullITF[]>([]);
@@ -48,7 +93,9 @@ export default function AdminDashboard() {
   const [promotions, setPromotions] = useState<PromotionRule[]>([]);
   const [screenings, setScreenings] = useState([]);
   const [showtimes, setShowtimes] = useState<ShowtimeDay[]>([]);
+  const [users, setUsers] = useState<UserITF[]>([]);
   const [openImport, setOpenImport] = useState(false);
+
   const [cinemasMap, setCinemasMap] = React.useState<
     Record<number, CinemaEntry>
   >({});
@@ -62,15 +109,61 @@ export default function AdminDashboard() {
   // loading
   const [loading, setLoading] = useState(false);
 
+  const loaded = useRef({
+    movies: false,
+    promotions: false,
+    bookings: false,
+    showtimes: false,
+    rooms: false,
+    users: false,
+  });
+  async function fetchShowtimeBundle() {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchShowtimes(),
+        fetchCinemas(),
+        fetchRooms(),
+        fetchScreenings(),
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
   useEffect(() => {
-    fetchMovies();
-    fetchBookings();
-    fetchShowtimes();
-    fetchCinemas();
-    fetchRooms();
-    fetchScreenings();
-    fetchPromotion();
-  }, []);
+    if (activeTab === "movies" && !loaded.current.movies) {
+      fetchMovies();
+      loaded.current.movies = true;
+    }
+
+    if (activeTab === "bookings" && !loaded.current.bookings) {
+      fetchBookings();
+      loaded.current.bookings = true;
+    }
+    if (activeTab === "showtimes" && !loaded.current.showtimes) {
+      fetchShowtimeBundle();
+      loaded.current.showtimes = true;
+    }
+
+    if (activeTab === "promotions" && !loaded.current.promotions) {
+      fetchPromotion();
+      loaded.current.promotions = true;
+    }
+    if (activeTab === "users" && !loaded.current.users) {
+      fetchUser();
+      loaded.current.users = true;
+    }
+  }, [activeTab]);
+
+  async function fetchUser() {
+    try {
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch (error) {
+      console.log(error);
+      setUsers([]);
+    }
+  }
   async function fetchPromotion() {
     try {
       const data = await getAllPromotions();
@@ -150,7 +243,6 @@ export default function AdminDashboard() {
       setBookings(payload);
     } catch (e) {
       console.error(e);
-      // fallback: mock
       setBookings([]);
     }
   }
@@ -395,6 +487,7 @@ export default function AdminDashboard() {
     promotions: "Sự kiện",
     rooms: "Danh sách phòng theo rạp",
     aside: "Danh sách phòng - Sơ đồ phòng",
+    users: "Người dùng",
   };
 
   function handleOpenAdd() {
@@ -427,6 +520,13 @@ export default function AdminDashboard() {
               }`}
           >
             Tổng quan
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "users" ? "bg-slate-100" : "hover:bg-slate-50"
+              }`}
+          >
+            Quản lý thành viên
           </button>
           <button
             onClick={() => setActiveTab("movies")}
@@ -570,6 +670,11 @@ export default function AdminDashboard() {
             {activeTab === "promotions" && (
               <div className="mt-4">
                 <PromotionTable promotion={promotions} onEdit={handleEditPromotion} />
+              </div>
+            )}
+            {activeTab === "users" && (
+              <div className="mt-4">
+                <UserTable users={users} />
               </div>
             )}
           </>
