@@ -420,18 +420,7 @@ export default function ShowtimeTimetable({
     dragData.current = null;
   };
 
-  // --- replacement applyServerResults + commit (handles {ok, action, row} shape) ---
 
-  // helper to normalize server result item -> plain row object
-  // const normalizeServerItem = (item: any) => {
-  //   if (!item) return null;
-  //   // if wrapper { ok, action, row }
-  //   if (typeof item === "object" && "row" in item) return item.row;
-  //   // else assume it's already a row
-  //   return item;
-  // };
-
-  // helper: merge server results into local state (synchronous merge using current `state`)
   const commit = async () => {
     const changes = Object.values(pending);
     if (!changes.length) return;

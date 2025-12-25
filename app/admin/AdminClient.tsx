@@ -9,7 +9,8 @@ import {
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
-import PromotionTable from "@/components/PromotionTable/PromotionTable";
+import PromotionTable, { PromotionRule } from "@/components/PromotionTable/PromotionTable";
+import { getAllPromotions } from "@/lib/axios/admin/promotion_ruleAPI";
 import Showtimestable, {
   CinemaEntry,
   RoomEntry,
@@ -44,7 +45,7 @@ export default function AdminDashboard() {
   const [movies, setMovies] = useState<MovieFullITF[]>([]);
   const [moviesEx, setMoviesEx] = useState<MovieFullITF[]>([]);
   const [bookings, setBookings] = useState([]);
-
+  const [promotions, setPromotions] = useState<PromotionRule[]>([]);
   const [screenings, setScreenings] = useState([]);
   const [showtimes, setShowtimes] = useState<ShowtimeDay[]>([]);
   const [openImport, setOpenImport] = useState(false);
@@ -68,8 +69,17 @@ export default function AdminDashboard() {
     fetchCinemas();
     fetchRooms();
     fetchScreenings();
+    fetchPromotion();
   }, []);
-
+  async function fetchPromotion() {
+    try {
+      const data = await getAllPromotions();
+      setPromotions(data);
+    } catch (error) {
+      console.error(error);
+      setPromotions([]);
+    }
+  }
   async function fetchMovies() {
     try {
       const data = await getAllMovies();
@@ -171,10 +181,12 @@ export default function AdminDashboard() {
     }
   }
 
-  function handleEdit() {
+  function handleEditMovie() {
     fetchMovies();
   }
-
+  function handleEditPromotion() {
+    fetchPromotion();
+  }
   const handleDeleteFromChild = () => {
     fetchMovies();
   };
@@ -227,8 +239,8 @@ export default function AdminDashboard() {
               typeof u.status === "number"
                 ? u.status
                 : u.status === "active"
-                ? 1
-                : 1,
+                  ? 1
+                  : 1,
           };
 
           const res = await createShowtimeWithDay(createPayload);
@@ -299,8 +311,8 @@ export default function AdminDashboard() {
           typeof u.showtime_id === "number" && u.showtime_id > 0
             ? u.showtime_id
             : typeof u.id === "number" && u.id > 0
-            ? u.id
-            : null;
+              ? u.id
+              : null;
 
         const date = u.date ?? u.show_date ?? u.showDate ?? null;
 
@@ -356,11 +368,9 @@ export default function AdminDashboard() {
       if (err.response?.status === 409 || api?.status === 409) {
         const conflict = api?.conflict;
         const msg = conflict
-          ? `Xung đột: phòng ${
-              conflict.target_room
-            } có suất chồng giờ (showtime ${
-              conflict.conflicting?.showtime_id ?? conflict.conflicting?.id
-            }).`
+          ? `Xung đột: phòng ${conflict.target_room
+          } có suất chồng giờ (showtime ${conflict.conflicting?.showtime_id ?? conflict.conflicting?.id
+          }).`
           : "Xung đột khi lưu — có suất chồng giờ.";
         Swal.fire({ icon: "error", title: "Commit thất bại", text: msg });
       } else {
@@ -413,49 +423,44 @@ export default function AdminDashboard() {
         <nav className="space-y-2">
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
-              activeTab === "dashboard" ? "bg-slate-100" : "hover:bg-slate-50"
-            }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "dashboard" ? "bg-slate-100" : "hover:bg-slate-50"
+              }`}
           >
             Tổng quan
           </button>
           <button
             onClick={() => setActiveTab("movies")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
-              activeTab === "movies" ? "bg-slate-100" : "hover:bg-slate-50"
-            }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "movies" ? "bg-slate-100" : "hover:bg-slate-50"
+              }`}
           >
             Quản lý phim
           </button>
-          <button
+          {/* <button
             onClick={() => setActiveTab("bookings")}
             className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
               activeTab === "bookings" ? "bg-slate-100" : "hover:bg-slate-50"
             }`}
           >
             Quản lý vé
-          </button>
+          </button> */}
           <button
             onClick={() => setActiveTab("showtimes")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
-              activeTab === "showtimes" ? "bg-slate-100" : "hover:bg-slate-50"
-            }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "showtimes" ? "bg-slate-100" : "hover:bg-slate-50"
+              }`}
           >
             Quản lý suất chiếu
           </button>
           <button
             onClick={() => setActiveTab("rooms")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
-              activeTab === "rooms" ? "bg-slate-100" : "hover:bg-slate-50"
-            }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "rooms" ? "bg-slate-100" : "hover:bg-slate-50"
+              }`}
           >
             Quản lý phòng
           </button>
           <button
             onClick={() => setActiveTab("promotions")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
-              activeTab === "promotions" ? "bg-slate-100" : "hover:bg-slate-50"
-            }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "promotions" ? "bg-slate-100" : "hover:bg-slate-50"
+              }`}
           >
             Sự kiện & CTKM
           </button>
@@ -539,7 +544,7 @@ export default function AdminDashboard() {
                 <MovieTable
                   movies={movies}
                   onDelete={handleDeleteFromChild}
-                  onEdit={handleEdit}
+                  onEdit={handleEditMovie}
                 />
               </div>
             )}
@@ -559,18 +564,12 @@ export default function AdminDashboard() {
                   roomsList={roomsList}
                   movieScreenings={screenings}
                   externalMovies={moviesEx}
-                  // onAdd={async (payload) => {
-                  //     // payload should include _temp_client_id when con gọi; forward it
-                  //     const result = await createShowtimeWithDay(payload);
-                  //     if (!result?.ok) throw new Error(result?.message ?? "create failed");
-                  //     return result.row; // row nên chứa id (server id) và có thể _temp_client_id nếu server echo
-                  // }}
                 />
               </div>
             )}
             {activeTab === "promotions" && (
               <div className="mt-4">
-                <PromotionTable />
+                <PromotionTable promotion={promotions} onEdit={handleEditPromotion} />
               </div>
             )}
           </>
