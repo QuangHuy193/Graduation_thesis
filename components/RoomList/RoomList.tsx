@@ -90,7 +90,6 @@ function RoomList({
     setCinemaId(state.selected.cinema);
 
     const getRoomsIncinema = async (cinema_id) => {
-      console.log("errrr");
       try {
         setState((prev) => ({
           ...prev,

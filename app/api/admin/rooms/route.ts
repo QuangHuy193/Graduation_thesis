@@ -7,16 +7,17 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { name, width, height, capacity, cinemaId, aside_gap } = body;
+    const { name, width, height, capacity, cinema_id, aside_gap } = body;
     await connection.beginTransaction();
 
+    console.log("data", name, width, height, capacity, cinema_id, aside_gap);
     // kiểm tra trùng tên phòng trong cùng rạp
     const [exist]: any = await connection.execute(
       `SELECT room_id 
       FROM rooms 
       WHERE name = ? AND cinema_id = ?
       LIMIT 1`,
-      [name, cinemaId]
+      [name, cinema_id]
     );
 
     if (exist.length > 0) {
@@ -28,11 +29,10 @@ export async function POST(req: Request) {
     const [insertRoom]: any = await connection.execute(
       `INSERT INTO rooms (name, width, height, capacity, status, cinema_id)
        VALUES (?,?,?,?,?,?)`,
-      [name, width, height, capacity, 1, cinemaId]
+      [name, width, height, capacity, 1, cinema_id]
     );
 
     const roomId = insertRoom.insertId;
-
     // ===== Chuẩn hóa aside theo từng hàng =====
     const asideMap: Record<number, any[]> = {};
     aside_gap?.forEach((row: any) => {

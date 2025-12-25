@@ -1,7 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import styles from "./DiagramRoom.module.scss";
-import { createRoomAPI, getRoomAsileWithIdAPI } from "@/lib/axios/roomAPI";
+import {
+  checkBeforeUpdateRoomAPI,
+  createRoomAPI,
+  getRoomAsileWithIdAPI,
+  updateRoomAPI,
+} from "@/lib/axios/roomAPI";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -11,24 +16,29 @@ import {
   faPenToSquare,
   faPlus,
   faRotateRight,
-  faTrash,
+  faX,
 } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
-import { numberToLetter } from "@/lib/function";
+import { numberToLetter, showToast } from "@/lib/function";
 
 function DiagramRoom({ room, setToggleRoom, cinemaId }) {
   const [state, setState] = useState({
-    isFetch: false,
+    isFetch: {
+      addRoom: false,
+      updateRoom: false,
+    },
     room: {},
     selected: {
       name: "",
       width: 0,
       height: 0,
       capacity: 0,
-      cinemaId: -1,
+      cinema_id: -1,
     },
     asideRoom: [],
+    asideRoomSelectd: [],
     resetAside: false,
+    isChangeAside: false,
     mode: null, // "add-seat" | "add-gap" | null
     isSelecting: false,
     selectedCells: new Set(), // lưu key dạng "row-col"
@@ -36,7 +46,7 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
 
   // chuẩn hóa aside
   const asideMap = {};
-  state.asideRoom?.aside_gap?.forEach((row) => {
+  state.asideRoomSelectd?.aside_gap?.forEach((row) => {
     asideMap[row.gap_row] = row.aside;
   });
 
@@ -84,7 +94,7 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
     if (!state.mode || state.selectedCells.size === 0) return;
 
     setState((prev) => {
-      let aside_gap = [...(prev.asideRoom.aside_gap || [])];
+      let aside_gap = [...(prev.asideRoomSelectd.aside_gap || [])];
 
       prev.selectedCells.forEach((key) => {
         const [rowNumber, colNumber] = key.split("-").map(Number);
@@ -148,8 +158,8 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
 
       return {
         ...prev,
-        asideRoom: {
-          ...prev.asideRoom,
+        asideRoomSelectd: {
+          ...prev.asideRoomSelectd,
           aside_gap,
         },
         selectedCells: new Set(), // clear chọn
@@ -164,7 +174,7 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
 
     let totalGap = 0;
 
-    state.asideRoom?.aside_gap?.forEach((row) => {
+    state.asideRoomSelectd?.aside_gap?.forEach((row) => {
       row.aside.forEach((g) => {
         totalGap += g.gap_width;
       });
@@ -173,10 +183,91 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
     return totalCells - totalGap;
   };
 
+  // call api update
+  const callApiUpdateRoom = async (data) => {
+    try {
+      setState((prev) => ({
+        ...prev,
+        isFetch: { ...prev.isFetch, updateRoom: true },
+      }));
+      const res = await updateRoomAPI(data);
+      console.log("res", res);
+      if (res.success) {
+        showToast("success", "Cập nhật thành công");
+        setToggleRoom("rooms");
+      } else {
+        showToast("error", res.message);
+      }
+    } catch (error) {
+      console.log(error);
+      showToast("error", "Có lỗi xảy ra, vui lòng thử lại");
+    } finally {
+      setState((prev) => ({
+        ...prev,
+        isFetch: { ...prev.isFetch, updateRoom: false },
+      }));
+    }
+  };
+
+  // kiểm tra -> call api cập nhật
+  const handleUpdateRoom = async (data) => {
+    try {
+      const check = await checkBeforeUpdateRoomAPI(data.room_id);
+      if (check.data.case === "update") {
+        // không có lịch chiếu
+        await callApiUpdateRoom(data);
+      }
+      // có lịch chiếu
+      else if (check.data.case === "update_showtime") {
+        const confirm = await Swal.fire({
+          icon: "warning",
+          text: check.message,
+          showCancelButton: true,
+          confirmButtonText: "TIẾP TỤC",
+          cancelButtonText: "HỦY",
+          customClass: {
+            popup: "popup_alert",
+            confirmButton: "btn_alert",
+            cancelButton: "btn_alert",
+          },
+        });
+
+        if (confirm.isConfirmed) {
+          //  TODO
+        }
+      }
+      // có lịch chiếu có booking
+      else if (check.data.case === "update_showtime_booking") {
+        const confirm = await Swal.fire({
+          icon: "warning",
+          text: check.message,
+          showCancelButton: true,
+          confirmButtonText: "TIẾP TỤC",
+          cancelButtonText: "HỦY",
+          customClass: {
+            popup: "popup_alert",
+            confirmButton: "btn_alert",
+            cancelButton: "btn_alert",
+          },
+        });
+
+        if (confirm.isConfirmed) {
+          //  TODO
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      showToast("error", "Có lỗi xảy ra, vui lòng thử lại!");
+    }
+  };
+
   // submit
   const submitData = async () => {
     try {
-      setState((prev) => ({ ...prev, isFetch: true }));
+      setState((prev) => ({
+        ...prev,
+        isFetch: { ...prev.isFetch, addRoom: true },
+      }));
       if (state.selected.name === "") {
         Swal.fire({
           toast: true,
@@ -203,11 +294,11 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
         return;
       }
 
-      //   thêm
+      // thêm
       if (state.room && Object.keys(state.room).length === 0) {
         const res = await createRoomAPI({
           ...state.selected,
-          aside_gap: state.asideRoom.aside_gap,
+          aside_gap: state.asideRoomSelectd.aside_gap,
         });
 
         if (res.success) {
@@ -225,6 +316,42 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
       }
       //   cập nhật
       else {
+        const { name: roomName, room_id, status, ...dataRoom } = state.room;
+        const { name: selectedName, ...dataSelect } = state.selected;
+        // kiểm tra chỉ đổi mỗi name thì không sao
+        const normalize = (obj) => ({
+          ...obj,
+          cinema_id: Number(obj.cinema_id),
+        });
+        const a = normalize(dataRoom);
+        const b = normalize(dataSelect);
+        const isEqual = Object.keys(a).every((key) => a[key] === b[key]);
+        const isEqualAside =
+          JSON.stringify(state.asideRoom.aside_gap) ===
+          JSON.stringify(state.asideRoomSelectd.aside_gap);
+
+        // không đổi gì cả
+        if (roomName === selectedName && isEqual && isEqualAside) {
+          showToast("info", "Bạn chưa thay đổi bất kì dữ liệu nào của phòng.");
+          return;
+        }
+
+        if (roomName !== selectedName && isEqual && isEqualAside) {
+          // chỉ đổi mỗi tên
+          callApiUpdateRoom({
+            ...state.selected,
+            aside_gap: state.asideRoomSelectd.aside_gap,
+            type: 0,
+            room_id: state.room.room_id,
+          });
+        } else {
+          handleUpdateRoom({
+            ...state.selected,
+            aside_gap: state.asideRoomSelectd.aside_gap,
+            type: 0,
+            room_id: state.room.room_id,
+          });
+        }
       }
     } catch (error) {
       Swal.fire({
@@ -240,24 +367,31 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
       });
       console.log(error);
     } finally {
-      setState((prev) => ({ ...prev, isFetch: false }));
+      setState((prev) => ({
+        ...prev,
+        isFetch: { ...prev.isFetch, addRoom: false },
+      }));
     }
   };
 
   // lấy thông tin phòng nếu có
   useEffect(() => {
-    const getasideRoom = async (room_id) => {
+    const getasideRoomSelectd = async (room_id) => {
       try {
         const res = await getRoomAsileWithIdAPI(room_id);
 
-        setState((prev) => ({ ...prev, asideRoom: res }));
+        setState((prev) => ({
+          ...prev,
+          asideRoomSelectd: res,
+          asideRoom: res,
+        }));
       } catch (error) {
         console.log(error);
       }
     };
 
     if (room && Object.keys(room).length > 0) {
-      getasideRoom(room.room_id);
+      getasideRoomSelectd(room.room_id);
       setState((prev) => ({
         ...prev,
         room: room,
@@ -266,6 +400,7 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
           width: room.width,
           height: room.height,
           capacity: room.capacity,
+          cinema_id: room.cinema_id,
         },
       }));
     }
@@ -282,13 +417,13 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
         capacity: Number.isNaN(capacity) ? 0 : capacity,
       },
     }));
-  }, [state.selected.width, state.selected.height, state.asideRoom]);
+  }, [state.selected.width, state.selected.height, state.asideRoomSelectd]);
 
   // lưu cinemaid
   useEffect(() => {
     setState((prev) => ({
       ...prev,
-      selected: { ...prev.selected, cinemaId: cinemaId },
+      selected: { ...prev.selected, cinema_id: cinemaId },
     }));
   }, [cinemaId]);
 
@@ -322,6 +457,7 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
       selected: { ...prev.selected, [name]: num },
     }));
   };
+
   return (
     <div className="bg-white p-2 rounded-sm shadow">
       <div className="flex justify-between">
@@ -341,7 +477,13 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
                 if (prev.room && Object.keys(prev.room).length > 0) {
                   return {
                     ...prev,
-                    selected: prev.room,
+                    selected: {
+                      ...prev.selected,
+                      name: prev.room.name,
+                      width: prev.room.width,
+                      height: prev.room.height,
+                      capacity: prev.room.capacity,
+                    },
                     resetAside: !prev.resetAside,
                     selectedCells: new Set(),
                     mode: "",
@@ -350,7 +492,7 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
                 } else {
                   return {
                     ...prev,
-                    asideRoom: [],
+                    asideRoomSelectd: [],
                     selected: {
                       ...prev.selected,
                       width: 0,
@@ -366,30 +508,36 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
             }}
           >
             <FontAwesomeIcon icon={faRotateRight} />
-            <span>Làm mới tất cả</span>
+            <span>Làm mới kích thước</span>
           </button>
         </div>
 
         <div>
-          <button className={styles.btnSubmit} onClick={() => submitData()}>
-            {!state.isFetch && (
-              <FontAwesomeIcon
-                icon={
-                  state.room && Object.keys(state.room).length > 0
-                    ? faPenToSquare // cập nhật
-                    : faPlus // tạo mới
-                }
-              />
-            )}
+          {state.room && Object.keys(state.room).length > 0 ? (
+            <button className={styles.btnSubmit} onClick={() => submitData()}>
+              {!state.isFetch.updateRoom && (
+                <FontAwesomeIcon icon={faPenToSquare} />
+              )}
 
-            <span>
-              {state.isFetch
-                ? "Đang xử lý..."
-                : state.room && Object.keys(state.room).length > 0
-                ? "Cập nhật phòng"
-                : "Tạo mới phòng"}
-            </span>
-          </button>
+              <span>
+                {state.isFetch.updateRoom ? "Đang xử lý..." : "Cập nhật phòng"}
+              </span>
+            </button>
+          ) : (
+            <button className={styles.btnSubmit} onClick={() => submitData()}>
+              {!state.isFetch.addRoom && (
+                <FontAwesomeIcon
+                  icon={
+                    faPlus // cập nhật
+                  }
+                />
+              )}
+
+              <span>
+                {state.isFetch.addRoom ? "Đang xử lý..." : "Tạo mới phòng"}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -426,78 +574,69 @@ function DiagramRoom({ room, setToggleRoom, cinemaId }) {
         </div>
       </div>
 
-      {state.asideRoom?.aside_gap?.length > 0 && (
-        <>
-          {/* hướng dẫn */}
-          <div
-            className="my-2 px-2 py-3 text-[#475569] bg-[#f8fafc] text-[13px] border 
+      {/* hướng dẫn */}
+      <div
+        className="my-2 px-2 py-3 text-[#475569] bg-[#f8fafc] text-[13px] border 
         border-dashed border-[#cbd5e1] rounded-lg flex justify-center"
+      >
+        <span style={{ fontWeight: 600, color: "#334155" }}>Hướng dẫn: </span>
+        <span className="ml-1">
+          Chọn chế độ → Click & di chuyển để chọn ô → Click lần nữa để dừng →
+          Nhấn <b className="text-green-500">Áp dụng</b> để thay đổi hoặc{" "}
+          <b className="text-red-500">Hủy</b> để bỏ các ô đã chọn.
+        </span>
+      </div>
+
+      {/* thanh action */}
+      <div className={`flex justify-between px-2 py-1`}>
+        <div className={`${styles.action_bar_item}`}>
+          <button
+            className={`${styles.action_bar_btn} ${
+              state.mode === "add-seat" ? styles.action_bar_btn_select : ""
+            }`}
+            onClick={() => setState((s) => ({ ...s, mode: "add-seat" }))}
           >
-            <span style={{ fontWeight: 600, color: "#334155" }}>
-              Hướng dẫn:{" "}
-            </span>
-            <span className="ml-1">
-              Chọn chế độ → Click & di chuyển để chọn ô → Click lần nữa để dừng
-              → Nhấn <b className="text-green-500">Áp dụng</b> để thay đổi hoặc{" "}
-              <b className="text-red-500">Hủy</b> để bỏ các ô đã chọn.
-            </span>
-          </div>
+            <FontAwesomeIcon
+              icon={faChair}
+              className={`text-(--color-yellow)`}
+            />
+            <span>Thêm ghế</span>
+          </button>
 
-          {/* thanh action */}
-          <div className={`flex justify-between px-2 py-1`}>
-            <div className={`${styles.action_bar_item}`}>
-              <button
-                className={`${styles.action_bar_btn} ${
-                  state.mode === "add-seat" ? styles.action_bar_btn_select : ""
-                }`}
-                onClick={() => setState((s) => ({ ...s, mode: "add-seat" }))}
-              >
-                <FontAwesomeIcon
-                  icon={faChair}
-                  className={`text-(--color-yellow)`}
-                />
-                <span>Thêm ghế</span>
-              </button>
+          <button
+            className={`${styles.action_bar_btn} ${
+              state.mode === "add-gap" ? styles.action_bar_btn_select : ""
+            }`}
+            onClick={() => setState((s) => ({ ...s, mode: "add-gap" }))}
+          >
+            <FontAwesomeIcon
+              icon={faArrowsLeftRightToLine}
+              className={`text-gray-500`}
+            />
+            <span> Thêm khoảng trống</span>
+          </button>
+        </div>
 
-              <button
-                className={`${styles.action_bar_btn} ${
-                  state.mode === "add-gap" ? styles.action_bar_btn_select : ""
-                }`}
-                onClick={() => setState((s) => ({ ...s, mode: "add-gap" }))}
-              >
-                <FontAwesomeIcon
-                  icon={faArrowsLeftRightToLine}
-                  className={`text-gray-500`}
-                />
-                <span> Thêm khoảng trống</span>
-              </button>
-            </div>
-
-            <div className={`${styles.action_bar_item}`}>
-              <button
-                className={`${styles.action_bar_btn}`}
-                onClick={() => {
-                  setState((prev) => ({
-                    ...prev,
-                    selectedCells: new Set(),
-                    isSelecting: false,
-                  }));
-                }}
-              >
-                <FontAwesomeIcon icon={faTrash} className={`text-red-500`} />
-                <span>Hủy</span>
-              </button>
-              <button
-                className={`${styles.action_bar_btn}`}
-                onClick={applyChange}
-              >
-                <FontAwesomeIcon icon={faCheck} className={`text-green-500`} />
-                <span>Áp dụng</span>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+        <div className={`${styles.action_bar_item}`}>
+          <button
+            className={`${styles.action_bar_btn}`}
+            onClick={() => {
+              setState((prev) => ({
+                ...prev,
+                selectedCells: new Set(),
+                isSelecting: false,
+              }));
+            }}
+          >
+            <FontAwesomeIcon icon={faX} className={`text-red-500`} />
+            <span>Hủy</span>
+          </button>
+          <button className={`${styles.action_bar_btn}`} onClick={applyChange}>
+            <FontAwesomeIcon icon={faCheck} className={`text-green-500`} />
+            <span>Áp dụng</span>
+          </button>
+        </div>
+      </div>
 
       {/* render sơ đồ */}
       <div className="flex justify-center">

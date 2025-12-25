@@ -28,10 +28,11 @@ export async function createRoomAPI(data: {
   width: string | number;
   height: string | number;
   capacity: number;
-  cinemaId: number;
+  cinema_id: number;
   aside_gap: [];
 }) {
   try {
+    console.log(data);
     const response = await axiosInstance.post(`/api/admin/rooms`, { ...data });
 
     return response.data;
@@ -73,6 +74,45 @@ export async function deleteRoomAPI(id: number, type: number = 0) {
 export async function recoverRoomAPI(id: number) {
   try {
     const response = await axiosInstance.put(`/api/admin/rooms/recover/${id}`);
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching room:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// kiểm tra trước khi cập nhật phòng
+export async function checkBeforeUpdateRoomAPI(id: number) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/admin/rooms/${id}/check_before_upd`
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching room:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// cập nhật phòng
+export async function updateRoomAPI(data: {
+  room_id: string | number;
+  name: string;
+  width: string | number;
+  height: string | number;
+  capacity: number;
+  aside_gap: [];
+  type: number;
+}) {
+  try {
+    const response = await axiosInstance.put(
+      `/api/admin/rooms/${data.room_id}`,
+      {
+        ...data,
+      }
+    );
 
     return response.data;
   } catch (error: any) {

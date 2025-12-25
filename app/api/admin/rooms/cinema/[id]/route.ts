@@ -5,7 +5,7 @@ export async function GET(req: Request, { params }: { params: string }) {
   try {
     const { id } = await params;
     const [row] = await db.execute(
-      `SELECT room_id, name, capacity, width, height, status 
+      `SELECT room_id, name, capacity, width, height, status, cinema_id 
       FROM rooms 
       WHERE cinema_id = ?`,
       [id]
