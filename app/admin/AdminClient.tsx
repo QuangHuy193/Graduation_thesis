@@ -272,7 +272,9 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   }
-
+  function handleEditUser() {
+    fetchUser();
+  }
   function handleEditMovie() {
     fetchMovies();
   }
@@ -674,7 +676,7 @@ export default function AdminDashboard() {
             )}
             {activeTab === "users" && (
               <div className="mt-4">
-                <UserTable users={users} />
+                <UserTable users={users} onEdit={handleEditUser} />
               </div>
             )}
           </>

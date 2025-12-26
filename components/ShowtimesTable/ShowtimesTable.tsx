@@ -437,7 +437,7 @@ export default function ShowtimeTimetable({
         <div className="flex-1">
           <div className="flex items-center gap-4 mb-4">
             <label>Ngày:</label>
-            <select value={activeDate ?? ""} onChange={(e) => void handleSelectDate(e.target.value)} className="border px-2 py-1 rounded">
+            <select value={activeDate ?? ""} onChange={(e) => void handleSelectDate(e.target.value)} className="border px-2 py-1 rounded cursor-pointer">
               {dateKeys.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
             <label>Rạp:</label>
@@ -448,7 +448,7 @@ export default function ShowtimeTimetable({
                   e.target.value === "all" ? "all" : Number(e.target.value)
                 )
               }
-              className="border px-2 py-1 rounded"
+              className="border px-2 py-1 rounded cursor-pointer"
             >
               <option value="all">Tất cả rạp</option>
               {Object.values(cinemasMap).map(c => (

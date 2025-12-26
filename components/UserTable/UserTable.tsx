@@ -1,11 +1,13 @@
 "use client";
 
-import { UserITF } from "@/lib/interface/userInterface";
 import React from "react";
 
+import { UserITF } from "@/lib/interface/userInterface";
+import { toggleUserStatus } from "@/lib/axios/admin/userAPI";
 import Swal from "sweetalert2";
 type Props = {
-    users: UserITF[];
+    users: UserITF[],
+    onEdit: () => void,
 };
 const STATUS_CONFIG = {
     1: {
@@ -24,8 +26,19 @@ const STATUS_CONFIG = {
         action: "Mở khóa",
     },
 };
-
-export default function UserTable({ users }: Props) {
+const ROLE_CONFIG = {
+    admin: {
+        label: "Admin",
+        className: "bg-blue-100 text-blue-700",
+        action: "▼",
+    },
+    user: {
+        label: "Người dùng",
+        className: "bg-gray-100 text-gray-700",
+        action: "▲",
+    },
+};
+export default function UserTable({ users, onEdit }: Props) {
     const handleToggleStatus = (user: UserITF) => {
         let nextStatus: number;
         let title: string;
@@ -53,12 +66,12 @@ export default function UserTable({ users }: Props) {
 
             try {
                 // 👉 GỌI API Ở ĐÂY
-                // await updateUserStatus(user.user_id, nextStatus);
+                await toggleUserStatus(user.user_id);
 
-                console.log("Update user:", {
-                    user_id: user.user_id,
-                    status: nextStatus,
-                });
+                // console.log("Update user:", {
+                //     user_id: user.user_id,
+                //     status: nextStatus,
+                // });
 
                 Swal.fire({
                     icon: "success",
@@ -68,7 +81,7 @@ export default function UserTable({ users }: Props) {
                 });
 
                 // 👉 reload lại danh sách user
-                // fetchUsers();
+                onEdit();
             } catch (error) {
                 console.error(error);
                 Swal.fire({
@@ -79,6 +92,59 @@ export default function UserTable({ users }: Props) {
             }
         });
     };
+    const handleToggleRole = (user: UserITF) => {
+        // ❌ Không cho đụng tới superadmin
+        if (user.role === "superadmin") return;
+
+        let nextRole: "user" | "admin";
+        let title: string;
+
+        if (user.role === "user") {
+            nextRole = "admin";
+            title = "Thăng chức người dùng?";
+        } else {
+            // admin
+            nextRole = "user";
+            title = "Giáng chức Admin?";
+        }
+
+        Swal.fire({
+            title,
+            text: user.email,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Xác nhận",
+            cancelButtonText: "Hủy",
+        }).then(async (res) => {
+            if (!res.isConfirmed) return;
+
+            try {
+                // 👉 GỌI API ĐỔI ROLE
+                // await updateUserRole({
+                //     user_id: user.user_id,
+                //     role: nextRole,
+                // });
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Thành công",
+                    timer: 1200,
+                    showConfirmButton: false,
+                });
+
+                // 👉 báo parent reload
+                onEdit();
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi",
+                    text: "Không thể cập nhật quyền người dùng",
+                });
+            }
+        });
+    };
+
 
 
     const roleBadge = (role: string) => {
@@ -123,7 +189,15 @@ export default function UserTable({ users }: Props) {
                             <td className="px-3 py-2 font-medium">{u.name}</td>
                             <td className="px-3 py-2">{u.email}</td>
                             <td className="px-3 py-2">{u.phone_number}</td>
-                            <td className="px-3 py-2">{roleBadge(u.role)}</td>
+                            {/* <td className="px-3 py-2">{roleBadge(u.role)}</td> */}
+                            <td className="px-3 py-2">
+                                <span
+                                    className={`px-2 py-1 rounded text-xs font-medium inline-block ${ROLE_CONFIG[u.role]?.className}`}
+                                >
+                                    {ROLE_CONFIG[u.role]?.label}
+                                </span>
+                            </td>
+
                             <td className="px-3 py-2">
                                 {u.vip ? "⭐ VIP" : "-"}
                             </td>
@@ -135,14 +209,41 @@ export default function UserTable({ users }: Props) {
                                     {STATUS_CONFIG[u.status]?.label}
                                 </span>
                             </td>
-                            <td className="px-3 py-2 text-center">
-                                <button
-                                    onClick={() => handleToggleStatus(u)}
-                                    className="w-[90px] px-3 py-1 text-xs rounded bg-slate-200 hover:bg-slate-300 text-center"
-                                >
-                                    {STATUS_CONFIG[u.status]?.action}
-                                </button>
+                            <td className="px-3 py-2">
+                                <div className="flex justify-center gap-2">
+                                    {/* Button trạng thái */}
+                                    <button
+                                        onClick={() => handleToggleStatus(u)}
+                                        className={`
+        w-[90px] px-3 py-1 text-xs rounded font-medium
+        transition
+        bg-gray-100 text-gray-700
+        border-1
+        hover:opacity-80
+        cursor-pointer
+      `}
+                                    >
+                                        {STATUS_CONFIG[u.status]?.action}
+                                    </button>
+
+                                    {/* Button role */}
+                                    <button
+                                        onClick={() => handleToggleRole(u)}
+                                        className={`
+        w-[90px] px-3 py-1 text-xs rounded font-medium
+        transition
+       bg-gray-100 text-gray-700
+       border-1
+        hover:opacity-80
+        cursor-pointer
+      `}
+                                    >
+                                        {ROLE_CONFIG[u.role]?.action}
+                                    </button>
+                                </div>
                             </td>
+
+
                         </tr>
                     ))}
 
