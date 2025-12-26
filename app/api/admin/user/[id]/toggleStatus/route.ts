@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db"; // mysql2/promise pool
 import { errorResponse, successResponse } from "@/lib/function";
 

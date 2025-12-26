@@ -5,6 +5,7 @@ import React from "react";
 import { UserITF } from "@/lib/interface/userInterface";
 import { toggleUserStatus } from "@/lib/axios/admin/userAPI";
 import Swal from "sweetalert2";
+import { toggleUserRole } from "@/lib/axios/userAPI";
 type Props = {
     users: UserITF[],
     onEdit: () => void,
@@ -101,11 +102,11 @@ export default function UserTable({ users, onEdit }: Props) {
 
         if (user.role === "user") {
             nextRole = "admin";
-            title = "Thăng chức người dùng?";
+            title = "Thăng chức người dùng này ?";
         } else {
             // admin
             nextRole = "user";
-            title = "Giáng chức Admin?";
+            title = "Giáng chức quản trị viên này ?";
         }
 
         Swal.fire({
@@ -120,10 +121,7 @@ export default function UserTable({ users, onEdit }: Props) {
 
             try {
                 // 👉 GỌI API ĐỔI ROLE
-                // await updateUserRole({
-                //     user_id: user.user_id,
-                //     role: nextRole,
-                // });
+                await toggleUserRole(user.user_id);
 
                 Swal.fire({
                     icon: "success",
@@ -228,6 +226,7 @@ export default function UserTable({ users, onEdit }: Props) {
 
                                     {/* Button role */}
                                     <button
+                                        disabled={u.role === "superadmin"}
                                         onClick={() => handleToggleRole(u)}
                                         className={`
         w-[90px] px-3 py-1 text-xs rounded font-medium

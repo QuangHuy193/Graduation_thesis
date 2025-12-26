@@ -51,3 +51,6 @@ export async function forgotPassword(email: string) {
         throw error.response?.data || error;
     }
 }
+export const toggleUserRole = (user_id: number) => {
+    return axiosInstance.patch(`/api/admin/user/${user_id}/toggleRole`);
+};

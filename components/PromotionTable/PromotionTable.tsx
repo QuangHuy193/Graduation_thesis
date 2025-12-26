@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { togglePromotionEnable } from "@/lib/axios/admin/promotion_ruleAPI";
 import Spinner from "../Spinner/Spinner";
+import PromotionFormEdit from "../PromotionFormEdit/PromotionFormEdit";
 export type PromotionRule = {
     rule_id: number;
     name: string;
@@ -24,6 +25,7 @@ function PromotionTable({ promotion, onEdit }: Props) {
     const [activeTab, setActiveTab] = useState<"holiday" | "promotion">("promotion");
     const [dataList, setDatalist] = useState<PromotionRule[]>([]);
     const [loading, setLoading] = useState(false);
+    const [editingPromotion, setEditingPromotion] = useState<PromotionRule | null>(null);
     const holidayList = dataList.filter((p) => p.isHoliday === 1);
     const promotionList = dataList.filter((p) => !p.isHoliday);
 
@@ -141,7 +143,9 @@ function PromotionTable({ promotion, onEdit }: Props) {
 
                             {/* Actions */}
                             <td className="px-3 py-2 text-center whitespace-nowrap">
-                                <button className="mr-2 rounded border px-3 py-1 text-xs font-medium hover:bg-gray-100 cursor-pointer">
+                                <button className="mr-2 rounded border px-3 py-1 text-xs font-medium hover:bg-gray-100 cursor-pointer"
+                                    onClick={() => setEditingPromotion(item)}
+                                >
                                     Sửa
                                 </button>
 
@@ -165,6 +169,8 @@ function PromotionTable({ promotion, onEdit }: Props) {
                     ))}
                 </tbody>
             </table>
+
+
         </div>
 
 
@@ -206,6 +212,20 @@ function PromotionTable({ promotion, onEdit }: Props) {
                 </>
             }
 
+            {editingPromotion && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                    <div className="w-full max-w-xl rounded bg-white p-4">
+                        <PromotionFormEdit
+                            promotion={editingPromotion}
+                            onSaved={() => {
+                                setEditingPromotion(null);
+                                onEdit();
+                            }}
+                            onCancel={() => setEditingPromotion(null)}
+                        />
+                    </div>
+                </div>
+            )}
 
         </div>
     );

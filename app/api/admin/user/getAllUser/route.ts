@@ -1,5 +1,3 @@
-// app/api/admin/users/route.ts
-// import { NextResponse } from "next/server";
 import { db } from "@/lib/db"; // mysql2 / prisma / pool bạn đang dùng
 import { successResponse, errorResponse } from "@/lib/function";
 export async function GET() {
@@ -20,7 +18,7 @@ export async function GET() {
         created_at,
         updated_at
       FROM users
-      ORDER BY created_at DESC
+      ORDER BY role asc
       `
         );
 

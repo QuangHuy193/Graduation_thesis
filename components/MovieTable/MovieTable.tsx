@@ -35,7 +35,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(8);
-    const [sortBy, setSortBy] = useState<"release_date" | "name" | "duration">("release_date");
+    const [sortBy, setSortBy] = useState<"release_date" | "name" | "duration" | "created_at">("created_at");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
     const [selectedTrailer, setSelectedTrailer] = useState<string | null>(null);
     const [editing, setEditing] = useState<MovieFullITF | null>(null);
@@ -159,22 +159,68 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                 const genresList = toList(m.genres);
                 const actorsList = toList(m.actors);
 
-                const matchGenres = genresList.some((g) => g.toLowerCase().includes(q));
-                const matchActors = actorsList.some((a) => a.toLowerCase().includes(q));
+                const matchGenres = genresList.some((g) =>
+                    g.toLowerCase().includes(q)
+                );
+                const matchActors = actorsList.some((a) =>
+                    a.toLowerCase().includes(q)
+                );
 
-                return nameMatch || descMatch || matchGenres || matchActors;
+                // ✅ THÊM LỌC created_at
+                const createdAtMatch = m.created_at
+                    ? new Date(m.created_at)
+                        .toISOString()
+                        .toLowerCase()
+                        .includes(q)
+                    : false;
+
+                return (
+                    nameMatch ||
+                    descMatch ||
+                    matchGenres ||
+                    matchActors ||
+                    createdAtMatch
+                );
             });
         }
 
         list.sort((a, b) => {
             const dir = sortDir === "asc" ? 1 : -1;
-            if (sortBy === "name") return dir * a.name.localeCompare(b.name);
-            if (sortBy === "duration") return dir * ((a.duration ?? 0) - (b.duration ?? 0));
-            return dir * (new Date(a.release_date).getTime() - new Date(b.release_date).getTime());
+
+            if (sortBy === "name") {
+                return dir * a.name.localeCompare(b.name);
+            }
+
+            if (sortBy === "duration") {
+                return dir * ((a.duration ?? 0) - (b.duration ?? 0));
+            }
+
+            // if (sortBy === "created_at") {
+            //     return (
+            //         dir *
+            //         (new Date(a.created_at ?? 0).getTime() -
+            //             new Date(b.created_at ?? 0).getTime())
+            //     );
+            // }
+            if (sortBy === "release_date") {
+                return (
+                    dir *
+                    (new Date(a.release_date).getTime() -
+                        new Date(b.release_date).getTime())
+                );
+            }
+            // mặc định
+            return (
+                dir *
+                (new Date(a.created_at ?? 0).getTime() -
+                    new Date(b.created_at ?? 0).getTime())
+            );
         });
+
 
         return list;
     }, [localMovies, query, sortBy, sortDir]);
+
 
     const total = filtered.length;
     const pages = Math.max(1, Math.ceil(total / perPage));
@@ -232,9 +278,11 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                         onChange={(e) => setSortBy(e.target.value as any)}
                         className="border rounded px-2 py-2 text-sm cursor-pointer"
                     >
+                        <option value="created_at">Ngày tạo</option>
                         <option value="release_date">Ngày công chiếu</option>
                         <option value="name">Tiêu đề</option>
                         <option value="duration">Thời lượng</option>
+
                     </select>
                     <button
                         onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
@@ -290,12 +338,12 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                         <div className="text-xs text-slate-500">Trailer: {m.trailer_url ? (
                                             <button
                                                 onClick={() => setSelectedTrailer(m.trailer_url.trim())}
-                                                className="underline text-sm"
+                                                className="text-xs underline bold cursor-pointer"
                                             >
                                                 Xem
                                             </button>
                                         ) : (
-                                            "-"
+                                            "Chưa có trailer"
                                         )}</div>
                                     </td>
 
@@ -390,7 +438,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                     <div className="bg-white rounded shadow max-w-3xl w-full overflow-hidden">
                         <div className="p-3 flex justify-between items-center border-b">
                             <div className="font-medium">Trailer</div>
-                            <button onClick={() => setSelectedTrailer(null)} className="px-3 py-1 rounded border">Đóng</button>
+                            <button onClick={() => setSelectedTrailer(null)} className="px-3 py-1 rounded border cursor-pointer">Đóng</button>
                         </div>
                         <div className="p-4">
                             <div className="aspect-video w-full">

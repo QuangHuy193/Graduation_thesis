@@ -9,7 +9,7 @@ export async function GET() {
             const [rows] = await conn.execute(
                 `SELECT 
       m.movie_id, m.name, m.description, m.duration, m.trailer_url, 
-      m.release_date, m.status, m.age_require,
+      m.release_date, m.status, m.age_require, m.created_at,
       c1.name AS country,
       c2.language AS subtitle,
       MAX(i.url) as image,
