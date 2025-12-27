@@ -35,12 +35,25 @@ import RoomList from "@/components/RoomList/RoomList";
 import DiagramRoom from "@/components/RoomList/DiagramRoom";
 import UserTable from "@/components/UserTable/UserTable";
 import { UserITF } from "@/lib/interface/userInterface";
+import Dashboard from "@/components/Dashboard/Dashboard";
+import { getAdminDashboardStats } from "@/lib/axios/admin/dashboardAPI";
+import { DashboardStats } from "@/lib/interface/dashboardInterface";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
   to_slot: number;
   updated: ShowtimeDay;
 };
+
+type AdminTab =
+  | "dashboard"
+  | "users"
+  | "movies"
+  | "bookings"
+  | "showtimes"
+  | "rooms"
+  | "promotions"
+  | "aside";
 export const MOCK_USERS: UserITF[] = [
   {
     user_id: 1,
@@ -86,19 +99,35 @@ export const MOCK_USERS: UserITF[] = [
   },
 ];
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  //Chọn tab quản lý
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("admin_active_tab") as AdminTab || "dashboard";
+    }
+    return "dashboard";
+  });
+  //Lấy toàn bộ phim
   const [movies, setMovies] = useState<MovieFullITF[]>([]);
+  //Lấy phim đang chiếu
   const [moviesEx, setMoviesEx] = useState<MovieFullITF[]>([]);
+  //Lấy đặt vé
   const [bookings, setBookings] = useState([]);
+  //Lấy khuyến mãi
   const [promotions, setPromotions] = useState<PromotionRule[]>([]);
+  //Lấy khung giờ chiếu
   const [screenings, setScreenings] = useState([]);
+  //Lấy suất chiếu
   const [showtimes, setShowtimes] = useState<ShowtimeDay[]>([]);
+  //Lấy người dùng
   const [users, setUsers] = useState<UserITF[]>([]);
+  //Mở excel
   const [openImport, setOpenImport] = useState(false);
-
+  //Lấy danh sách rạp
   const [cinemasMap, setCinemasMap] = React.useState<
     Record<number, CinemaEntry>
   >({});
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+
   const [roomsList, setRoomsList] = React.useState<RoomEntry[]>([]);
   // sửa thêm phòng
   const [room, setRoom] = useState();
@@ -110,6 +139,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
 
   const loaded = useRef({
+    dashboard: false,
     movies: false,
     promotions: false,
     bookings: false,
@@ -131,6 +161,13 @@ export default function AdminDashboard() {
     }
   }
   useEffect(() => {
+    sessionStorage.setItem("admin_active_tab", activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "dashboard") {
+      fetchDashboardStats();
+    }
     if (activeTab === "movies" && !loaded.current.movies) {
       fetchMovies();
       loaded.current.movies = true;
@@ -215,6 +252,12 @@ export default function AdminDashboard() {
       setCinemasMap({});
     }
   }
+  const fetchDashboardStats = async () => {
+    // if (dashboardStats) return;
+
+    const res = await getAdminDashboardStats();
+    setDashboardStats(res.data.data);
+  };
 
   async function fetchRooms() {
     try {
@@ -612,11 +655,12 @@ export default function AdminDashboard() {
             </header>
 
             {activeTab === "dashboard" && (
-              <div className="grid grid-cols-3 gap-6">
-                <div className="col-span-3 mt-4 bg-white p-4 rounded shadow">
+              <div className="mt-4">
+                {/* <div className="col-span-3 mt-4 bg-white p-4 rounded shadow">
                   <h3 className="font-semibold mb-2">Gần đây</h3>
-                  <p>Danh sách đặt vé mới nhất và thông tin nhanh.</p>
-                </div>
+                  <p>Tổng quan trạng thái và thống kê doanh thu tuần qua.</p>
+                </div> */}
+                <Dashboard stats={dashboardStats} />
               </div>
             )}
 

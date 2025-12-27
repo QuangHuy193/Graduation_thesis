@@ -18,6 +18,7 @@ export async function GET() {
         created_at,
         updated_at
       FROM users
+      WHERE role IN ('admin', 'user')
       ORDER BY role asc
       `
         );

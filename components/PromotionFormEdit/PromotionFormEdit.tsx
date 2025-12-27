@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Swal from "sweetalert2";
 import { PromotionRule } from "../PromotionTable/PromotionTable";
+import { updatePromotion } from "@/lib/axios/admin/promotion_ruleAPI";
 // import { updatePromotion } from "@/lib/axios/promotionAPI";
 
 type Props = {
@@ -12,6 +13,9 @@ type Props = {
 export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
     const [form, setForm] = useState<PromotionRule>({ ...promotion });
     const [loading, setLoading] = useState(false);
+    const [isUnlimited, setIsUnlimited] = useState(
+        !form.start_time && !form.end_time
+    );
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -34,17 +38,18 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
         try {
             setLoading(true);
             //Gọi api update
-            // await updatePromotion(form.rule_id, {
-            //     name: form.name,
-            //     image: form.image,
-            //     start_time: form.start_time,
-            //     end_time: form.end_time,
-            //     priority: Number(form.priority),
-            //     enable: Number(form.enable),
-            //     display: Number(form.display),
-            //     description: form.description,
-            //     isHoliday: Number(form.isHoliday),
-            // });
+            await updatePromotion(form.rule_id, {
+                name: form.name,
+                image: form.image,
+                start_time: isUnlimited ? null : form.start_time,
+                end_time: isUnlimited ? null : form.end_time,
+                priority: Number(form.priority),
+                // enable: Number(form.enable),
+                display: Number(form.display),
+                description: form.description,
+                isHoliday: Number(form.isHoliday),
+
+            });
 
             Swal.fire({
                 icon: "success",
@@ -91,28 +96,55 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
             </div>
 
             {/* Thời gian */}
-            <div className="grid grid-cols-2 gap-3">
-                <div>
-                    <label className="block text-sm font-medium">Bắt đầu</label>
+            <div className="space-y-2">
+                <div className="flex items-center gap-2">
                     <input
-                        type="datetime-local"
-                        name="start_time"
-                        value={form.start_time?.slice(0, 16) ?? ""}
-                        onChange={handleChange}
-                        className="w-full border px-3 py-2 rounded text-sm"
+                        type="checkbox"
+                        id="unlimited"
+                        checked={isUnlimited}
+                        onChange={(e) => {
+                            const checked = e.target.checked;
+                            setIsUnlimited(checked);
+
+                            setForm((prev) => ({
+                                ...prev,
+                                start_time: checked ? null : prev.start_time,
+                                end_time: checked ? null : prev.end_time,
+                            }));
+                        }}
                     />
+                    <label htmlFor="unlimited" className="text-sm">
+                        Hiệu lực vô thời hạn
+                    </label>
                 </div>
-                <div>
-                    <label className="block text-sm font-medium">Kết thúc</label>
-                    <input
-                        type="datetime-local"
-                        name="end_time"
-                        value={form.end_time?.slice(0, 16) ?? ""}
-                        onChange={handleChange}
-                        className="w-full border px-3 py-2 rounded text-sm"
-                    />
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="block text-sm font-medium">Bắt đầu</label>
+                        <input
+                            type="datetime-local"
+                            name="start_time"
+                            value={form.start_time?.slice(0, 16) ?? ""}
+                            onChange={handleChange}
+                            disabled={isUnlimited}
+                            className="w-full border px-3 py-2 rounded text-sm disabled:bg-gray-100"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium">Kết thúc</label>
+                        <input
+                            type="datetime-local"
+                            name="end_time"
+                            value={form.end_time?.slice(0, 16) ?? ""}
+                            onChange={handleChange}
+                            disabled={isUnlimited}
+                            className="w-full border px-3 py-2 rounded text-sm disabled:bg-gray-100"
+                        />
+                    </div>
                 </div>
             </div>
+
 
             {/* Ưu tiên */}
             <div>
@@ -133,7 +165,7 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
 
             {/* Trạng thái */}
             <div className="flex gap-6">
-                <label className="flex items-center gap-2 text-sm">
+                {/* <label className="flex items-center gap-2 text-sm">
                     <input
                         type="checkbox"
                         name="enable"
@@ -141,7 +173,7 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
                         onChange={handleChange}
                     />
                     Kích hoạt
-                </label>
+                </label> */}
 
                 <label className="flex items-center gap-2 text-sm">
                     <input
@@ -172,7 +204,7 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
                     value={form.description ?? ""}
                     onChange={handleChange}
                     className="w-full border px-3 py-2 rounded text-sm"
-                    rows={3}
+                    rows={6}
                 />
             </div>
 
@@ -181,6 +213,7 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
                 <button
                     type="button"
                     onClick={onCancel}
+                    disabled={loading}
                     className="px-4 py-2 border rounded text-sm cursor-pointer"
                 >
                     Hủy
@@ -188,6 +221,7 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
 
                 <button
                     type="submit"
+                    disabled={loading}
                     className="px-4 py-2 bg-blue-600 text-white rounded text-sm cursor-pointer"
                 >
                     Lưu

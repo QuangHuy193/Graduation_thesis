@@ -92,7 +92,7 @@ function PromotionTable({ promotion, onEdit }: Props) {
                     {data.map((item) => (
                         <tr
                             key={item.rule_id}
-                            className="border-t border-b border-gray-700 hover:bg-gray-50 transition"
+                            className="border-t border-b border-gray-700 hover:bg-gray-100 transition"
                         >
                             {/* Tên */}
                             <td className="px-3 py-2 font-medium text-gray-800">
@@ -101,7 +101,7 @@ function PromotionTable({ promotion, onEdit }: Props) {
 
                             {/* Thời gian */}
                             <td className="px-3 py-2 text-gray-600">
-                                <div>{item.start_time || "Không thời hạn"}</div>
+                                <div>{item.start_time || "Vô thời hạn"}</div>
                                 <div className="text-xs text-gray-400">
                                     {item.end_time}
                                 </div>

@@ -31,3 +31,6 @@ export async function togglePromotionEnable(id: number) {
 
     return res.data;
 }
+export const updatePromotion = (rule_id: number, data: any) => {
+    return axiosInstance.patch(`/api/admin/promotion_rule/${rule_id}/updatePromotion`, data);
+};

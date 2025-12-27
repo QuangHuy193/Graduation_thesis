@@ -198,7 +198,7 @@ export default function FormLogin({
 
       // Redirect theo role
       const userRole: string = sessUser.role ?? "";
-      if (userRole === "admin") {
+      if (userRole === "admin" || userRole === "superadmin") {
         if (!state.saveLogin) {
           await Swal.fire({
             title: "Thông báo",
