@@ -9,7 +9,9 @@ import {
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import MovieTable from "@/components/MovieTable/MovieTable";
 import BookingsTable from "@/components/BookingsTable/BookingsTable";
-import PromotionTable, { PromotionRule } from "@/components/PromotionTable/PromotionTable";
+import PromotionTable, {
+  PromotionRule,
+} from "@/components/PromotionTable/PromotionTable";
 import { getAllPromotions } from "@/lib/axios/admin/promotion_ruleAPI";
 import Showtimestable, {
   CinemaEntry,
@@ -35,9 +37,6 @@ import RoomList from "@/components/RoomList/RoomList";
 import DiagramRoom from "@/components/RoomList/DiagramRoom";
 import UserTable from "@/components/UserTable/UserTable";
 import { UserITF } from "@/lib/interface/userInterface";
-import Dashboard from "@/components/Dashboard/Dashboard";
-import { getAdminDashboardStats } from "@/lib/axios/admin/dashboardAPI";
-import { DashboardStats } from "@/lib/interface/dashboardInterface";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
@@ -530,6 +529,7 @@ export default function AdminDashboard() {
     showtimes: "Suất chiếu",
     bookings: "Vé",
     promotions: "Sự kiện",
+    cinemas: "Danh sách rạp",
     rooms: "Danh sách phòng theo rạp",
     aside: "Danh sách phòng - Sơ đồ phòng",
     users: "Người dùng",
@@ -594,6 +594,13 @@ export default function AdminDashboard() {
               }`}
           >
             Quản lý suất chiếu
+          </button>
+          <button
+            onClick={() => setActiveTab("cinemas")}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "cinemas" ? "bg-slate-100" : "hover:bg-slate-50"
+              }`}
+          >
+            Quản lý rạp
           </button>
           <button
             onClick={() => setActiveTab("rooms")}
@@ -664,6 +671,12 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {activeTab === "cinemas" && (
+              <div className="mt-4">
+                <CinemaList />
+              </div>
+            )}
+
             {activeTab === "rooms" && (
               <div className="mt-4">
                 <RoomList
@@ -715,7 +728,10 @@ export default function AdminDashboard() {
             )}
             {activeTab === "promotions" && (
               <div className="mt-4">
-                <PromotionTable promotion={promotions} onEdit={handleEditPromotion} />
+                <PromotionTable
+                  promotion={promotions}
+                  onEdit={handleEditPromotion}
+                />
               </div>
             )}
             {activeTab === "users" && (

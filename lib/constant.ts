@@ -147,13 +147,13 @@ const MONDAY = 1;
 const WEEKEND = 96;
 
 export const DAY_TO_BINARY: Record<number, number> = {
-  1: MONDAY,    // Thứ 2
-  2: WEEKDAY,   // Thứ 3
-  3: WEEKDAY,   // Thứ 4
-  4: WEEKDAY,   // Thứ 5
-  5: WEEKDAY,   // Thứ 6
-  6: WEEKEND,   // Thứ 7
-  0: WEEKEND,   // Chủ nhật
+  1: MONDAY, // Thứ 2
+  2: WEEKDAY, // Thứ 3
+  3: WEEKDAY, // Thứ 4
+  4: WEEKDAY, // Thứ 5
+  5: WEEKDAY, // Thứ 6
+  6: WEEKEND, // Thứ 7
+  0: WEEKEND, // Chủ nhật
 };
 // menu sadmin
 export const MENUSUPERADMIN = [
@@ -169,4 +169,70 @@ export const MENUSUPERADMIN = [
     index: 2,
     title: "Khuyến mãi",
   },
+];
+
+export const PROVINCES = [
+  "Hà Nội",
+  "TP. Hồ Chí Minh",
+  "Hải Phòng",
+  "Đà Nẵng",
+  "Cần Thơ",
+  "An Giang",
+  "Bà Rịa - Vũng Tàu",
+  "Bắc Giang",
+  "Bắc Kạn",
+  "Bạc Liêu",
+  "Bắc Ninh",
+  "Bến Tre",
+  "Bình Định",
+  "Bình Dương",
+  "Bình Phước",
+  "Bình Thuận",
+  "Cà Mau",
+  "Cao Bằng",
+  "Đắk Lắk",
+  "Đắk Nông",
+  "Điện Biên",
+  "Đồng Nai",
+  "Đồng Tháp",
+  "Gia Lai",
+  "Hà Giang",
+  "Hà Nam",
+  "Hà Tĩnh",
+  "Hải Dương",
+  "Hậu Giang",
+  "Hòa Bình",
+  "Hưng Yên",
+  "Khánh Hòa",
+  "Kiên Giang",
+  "Kon Tum",
+  "Lai Châu",
+  "Lâm Đồng",
+  "Lạng Sơn",
+  "Lào Cai",
+  "Long An",
+  "Nam Định",
+  "Nghệ An",
+  "Ninh Bình",
+  "Ninh Thuận",
+  "Phú Thọ",
+  "Phú Yên",
+  "Quảng Bình",
+  "Quảng Nam",
+  "Quảng Ngãi",
+  "Quảng Ninh",
+  "Quảng Trị",
+  "Sóc Trăng",
+  "Sơn La",
+  "Tây Ninh",
+  "Thái Bình",
+  "Thái Nguyên",
+  "Thanh Hóa",
+  "Thừa Thiên Huế",
+  "Tiền Giang",
+  "Trà Vinh",
+  "Tuyên Quang",
+  "Vĩnh Long",
+  "Vĩnh Phúc",
+  "Yên Bái",
 ];
