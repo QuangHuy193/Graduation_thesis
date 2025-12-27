@@ -37,6 +37,10 @@ import RoomList from "@/components/RoomList/RoomList";
 import DiagramRoom from "@/components/RoomList/DiagramRoom";
 import UserTable from "@/components/UserTable/UserTable";
 import { UserITF } from "@/lib/interface/userInterface";
+import Dashboard from "@/components/Dashboard/Dashboard";
+import { getAdminDashboardStats } from "@/lib/axios/admin/dashboardAPI";
+import { DashboardStats } from "@/lib/interface/dashboardInterface";
+import CinemaList from "@/components/CinemaList/CinemaList";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
@@ -53,50 +57,7 @@ type AdminTab =
   | "rooms"
   | "promotions"
   | "aside";
-export const MOCK_USERS: UserITF[] = [
-  {
-    user_id: 1,
-    name: "Nguyễn Văn A",
-    phone_number: "0912345678",
-    email: "user1@gmail.com",
-    birthday: "2000-05-12",
-    age: 25,
-    vip: true,
-    point: 1200,
-    status: 1,
-    role: "user",
-    created_at: "2024-01-10 09:12:00",
-    updated_at: null,
-  },
-  {
-    user_id: 2,
-    name: "Trần Thị B",
-    phone_number: "0987654321",
-    email: "admin@gmail.com",
-    birthday: "1998-03-20",
-    age: 27,
-    vip: false,
-    point: 300,
-    status: 1,
-    role: "admin",
-    created_at: "2023-11-01 14:30:00",
-    updated_at: "2024-08-01 10:00:00",
-  },
-  {
-    user_id: 3,
-    name: "Lê Văn C",
-    phone_number: "0901122334",
-    email: "locked@gmail.com",
-    birthday: "2001-12-01",
-    age: 24,
-    vip: false,
-    point: 0,
-    status: 0,
-    role: "user",
-    created_at: "2024-06-15 08:20:00",
-    updated_at: null,
-  },
-];
+
 export default function AdminDashboard() {
   //Chọn tab quản lý
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
