@@ -43,7 +43,6 @@ function ShowTime({
   const [citys, setCitys] = useState([]);
   const [showTimes, setShowtimes] = useState({
     dataApi: {},
-    dataDisplay: {},
   });
   const [selected, setSelected] = useState({
     provinceSelected: "",
@@ -54,6 +53,7 @@ function ShowTime({
     fetchData: false,
   });
 
+  //  đặt vé  nhanh
   useEffect(() => {
     const dataSession = sessionStorage.getItem("quickticket");
     if (dataSession) {
@@ -64,15 +64,13 @@ function ShowTime({
       }));
     }
   }, []);
+
+  // lấy tỉnh
   useEffect(() => {
     const getCitys = async () => {
       try {
         const res = await getCityAPI();
         setCitys(res);
-        setSelected((prev) => ({
-          ...prev,
-          provinceSelected: "TP. Hồ Chí Minh",
-        }));
       } catch (error) {
         console.log(error);
       }
@@ -84,6 +82,13 @@ function ShowTime({
     setDateSelected(selected.dateSelected);
   }, [selected.dateSelected]);
 
+  // lọc showtime lấy rạp, giờ theo tỉnh của rạp
+  const filterByProvince = (data: any[], province: string) => {
+    if (province === "") return data;
+
+    return data.filter((item) => item.province === province);
+  };
+  // đổi ngày
   useEffect(() => {
     // xóa giờ, loại vé đã chọn gây lỗi khi đặt vé nhanh
     // setTimesSelect({
@@ -100,15 +105,23 @@ function ShowTime({
       try {
         const res = await getShowtimeByDateAPI(day, movie_id);
 
+        if (selected.provinceSelected === "") {
+          if (res.length > 0) {
+            setSelected((prev) => ({
+              ...prev,
+              provinceSelected: res[0].province,
+            }));
+          } else {
+            setSelected((prev) => ({
+              ...prev,
+              provinceSelected: "TP. Hồ Chí Minh",
+            }));
+          }
+        }
+
         const filtered = filterByProvince(res, selected.provinceSelected);
         await setShowtimes((prev) => ({
           ...prev,
-          dataDisplay: {
-            ...prev.dataDisplay,
-            [day]: {
-              data: res,
-            },
-          },
           dataApi: {
             ...prev.dataApi,
             [day]: {
@@ -123,29 +136,37 @@ function ShowTime({
       }
     };
 
-    // lọc showtime lấy rạp, giờ theo tỉnh của rạp
-    const filterByProvince = (data: any[], province: string) => {
-      if (!province) return data;
+    const day = selected.dateSelected ? selected.dateSelected : 0;
+    getShowtime(day);
+  }, [selected.dateSelected]);
 
-      return data.filter((item) => item.province === province);
+  // đổi tỉnh
+  useEffect(() => {
+    const getShowtime = async (day: number) => {
+      setToggle((prev) => ({ ...prev, fetchData: true }));
+      try {
+        const res = await getShowtimeByDateAPI(day, movie_id);
+
+        const filtered = filterByProvince(res, selected.provinceSelected);
+        await setShowtimes((prev) => ({
+          ...prev,
+          dataApi: {
+            ...prev.dataApi,
+            [day]: {
+              data: filtered,
+            },
+          },
+        }));
+        setToggle((prev) => ({ ...prev, fetchData: false }));
+      } catch (error) {
+        console.log(error);
+        setToggle((prev) => ({ ...prev, fetchData: false }));
+      }
     };
 
     const day = selected.dateSelected ? selected.dateSelected : 0;
-    if (!showTimes.dataApi[day]) {
-      getShowtime(day);
-    } else {
-      const raw = showTimes.dataApi[day].data;
-      const filtered = filterByProvince(raw, selected.provinceSelected);
-
-      setShowtimes((prev) => ({
-        ...prev,
-        dataDisplay: {
-          ...prev.dataDisplay,
-          [day]: { data: filtered },
-        },
-      }));
-    }
-  }, [selected.dateSelected, selected.provinceSelected]);
+    getShowtime(day);
+  }, [selected.provinceSelected]);
 
   useEffect(() => {
     // gọi api lấy ds loại vé và giá theo showtime và ngày
@@ -231,8 +252,8 @@ function ShowTime({
           </div>
         ) : (
           <div>
-            {showTimes.dataDisplay[selected.dateSelected]?.data?.length > 0 ? (
-              showTimes.dataDisplay[selected.dateSelected]?.data?.map(
+            {showTimes.dataApi[selected.dateSelected]?.data?.length > 0 ? (
+              showTimes.dataApi[selected.dateSelected]?.data?.map(
                 (d, i: number) => (
                   <div key={i} className="pb-3">
                     <ShowTimeCard
