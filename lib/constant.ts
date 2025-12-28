@@ -172,6 +172,7 @@ export const MENUSUPERADMIN = [
 ];
 
 export const PROVINCES = [
+  "",
   "Hà Nội",
   "TP. Hồ Chí Minh",
   "Hải Phòng",

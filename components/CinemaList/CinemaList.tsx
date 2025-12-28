@@ -69,6 +69,12 @@ function CinemaList() {
       {/* form thêm/sửa */}
       {state.displayForm && (
         <FormAddEditCinema
+          refreshCinemaList={() => {
+            setState((prev) => ({
+              ...prev,
+              refreshCinemaList: !prev.refreshCinemaList,
+            }));
+          }}
           cinemaEdit={state.cinemaEdit}
           onClose={() => {
             setState((prev) => ({ ...prev, displayForm: false }));
@@ -127,7 +133,11 @@ function CinemaList() {
               </div>
               <div className={`${styles.cinema_item} justify-end gap-2`}>
                 <button
-                  className={`${styles.action_btn} text-blue-400`}
+                  className={`${styles.action_btn} text-blue-400 ${
+                    state.cinemaIdEdit === c.cinema_id
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }`}
                   onClick={() => {
                     setState((prev) => ({
                       ...prev,

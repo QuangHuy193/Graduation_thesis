@@ -24,6 +24,7 @@
   background-color: #2563eb;
   color: white;
   border-radius: 8px;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     background-color: #1e40af;

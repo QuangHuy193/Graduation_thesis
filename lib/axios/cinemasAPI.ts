@@ -39,3 +39,41 @@ export async function getCinemasAPI() {
     throw error.response?.data || error;
   }
 }
+
+// thêm rạp
+export async function createCinemasAPI(data: {
+  name: string;
+  specific_address: string;
+  ward: string;
+  province: string;
+  price_base: number;
+}) {
+  try {
+    const response = await axiosInstance.post("/api/admin/cinema", data);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error create cinemas:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// thêm rạp
+export async function updateCinemasAPI(data: {
+  cinema_id: string | number;
+  name: string;
+  specific_address: string;
+  ward: string;
+  province: string;
+  price_base: number;
+}) {
+  try {
+    const response = await axiosInstance.put(
+      `/api/admin/cinema/${data.cinema_id}`,
+      data
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Error update cinemas:", error);
+    throw error.response?.data || error;
+  }
+}
