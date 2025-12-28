@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { getAdminDashboardStats } from "@/lib/axios/admin/dashboardAPI";
-import { DashboardStats } from "@/lib/interface/dashboardInterface";
+import { DashboardStats, DashboardWarnings } from "@/lib/interface/dashboardInterface";
 /* ======================
    MOCK DATA (TẠM THỜI)
    ====================== */
@@ -9,6 +8,7 @@ import { DashboardStats } from "@/lib/interface/dashboardInterface";
 
 type Props = {
     stats: DashboardStats | null;
+    warnings: DashboardWarnings | null;
 };
 
 
@@ -19,9 +19,9 @@ const mockWarnings = {
     expiringPromotions: 2,
     moviesWithoutShowtime: 1,
 };
-const hasWarning =
-    mockWarnings.expiringPromotions > 0 ||
-    mockWarnings.moviesWithoutShowtime > 0;
+// const hasWarning =
+//     mockWarnings.expiringPromotions > 0 ||
+//     mockWarnings.moviesWithoutShowtime > 0;
 // 👉 Sau này: chỉ dùng router.push(...)
 const quickActions = [
     { label: "Thêm phim", action: "add-movie" },
@@ -29,25 +29,9 @@ const quickActions = [
     { label: "Tạo khuyến mãi", action: "add-promotion" },
 ];
 
-export default function AdminDashboard({ stats }: Props) {
-    // const [stats, setStats] = useState<DashboardStats | null>(null);
-    // useEffect(() => {
-    //     if (!loaded.current.stats) {
-    //         getAdminDashboardStats()
-    //             .then((response) => {
-    //                 setStats(response.data.data);
-    //             })
-    //             .catch((error) => {
-    //                 console.error("Error fetching dashboard stats:", error);
-    //                 setStats(null);
-    //             });
-    //         loaded.current.stats = true;
-    //     };
-
-    // }, []);
-    // const loaded = useRef({
-    //     stats: false,
-    // });
+export default function AdminDashboard({ stats, warnings }: Props) {
+    const hasWarning =
+        (warnings?.moviesWithoutShowtime ?? 0) > 0;
     return (
         <div className="space-y-6">
             {/* ===== HÔM NAY ===== */}
@@ -84,20 +68,20 @@ export default function AdminDashboard({ stats }: Props) {
                     </div>
                 ) : (
                     <ul className="space-y-2 text-sm">
-                        {mockWarnings.expiringPromotions > 0 && (
+                        {/* {mockWarnings.expiringPromotions > 0 && (
                             <li className="flex items-center justify-between rounded bg-yellow-50 px-3 py-2">
                                 <span>Khuyến mãi sắp hết hạn</span>
                                 <span className="font-semibold text-yellow-700">
                                     {mockWarnings.expiringPromotions}
                                 </span>
                             </li>
-                        )}
+                        )} */}
 
-                        {mockWarnings.moviesWithoutShowtime > 0 && (
+                        {warnings.moviesWithoutShowtime > 0 && (
                             <li className="flex items-center justify-between rounded bg-red-50 px-3 py-2">
                                 <span>Phim chưa có suất chiếu</span>
                                 <span className="font-semibold text-red-600">
-                                    {mockWarnings.moviesWithoutShowtime}
+                                    {warnings?.moviesWithoutShowtime}
                                 </span>
                             </li>
                         )}

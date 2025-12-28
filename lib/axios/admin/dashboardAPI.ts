@@ -5,3 +5,8 @@ export const getAdminDashboardStats = () => {
         "/api/admin/dashboard/today"
     );
 };
+export const getAdminDashboardWarnings = () => {
+    return axiosInstance.get(
+        "/api/admin/dashboard/warning"
+    );
+}

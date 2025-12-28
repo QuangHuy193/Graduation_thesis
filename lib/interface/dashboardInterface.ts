@@ -3,3 +3,6 @@ export type DashboardStats = {
     moviesNowShowing: number;
     activePromotions: number;
 };
+export type DashboardWarnings = {
+    moviesWithoutShowtime: number;
+};

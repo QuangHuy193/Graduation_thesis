@@ -38,8 +38,8 @@ import DiagramRoom from "@/components/RoomList/DiagramRoom";
 import UserTable from "@/components/UserTable/UserTable";
 import { UserITF } from "@/lib/interface/userInterface";
 import Dashboard from "@/components/Dashboard/Dashboard";
-import { getAdminDashboardStats } from "@/lib/axios/admin/dashboardAPI";
-import { DashboardStats } from "@/lib/interface/dashboardInterface";
+import { getAdminDashboardStats, getAdminDashboardWarnings } from "@/lib/axios/admin/dashboardAPI";
+import { DashboardStats, DashboardWarnings } from "@/lib/interface/dashboardInterface";
 import CinemaList from "@/components/CinemaList/CinemaList";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
     Record<number, CinemaEntry>
   >({});
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
-
+  const [dashboardWarnings, setDashboardWarnings] = useState<DashboardWarnings | null>(null);
   const [roomsList, setRoomsList] = React.useState<RoomEntry[]>([]);
   // sửa thêm phòng
   const [room, setRoom] = useState();
@@ -127,6 +127,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (activeTab === "dashboard") {
       fetchDashboardStats();
+      fetchDashboardWarnings();
     }
     if (activeTab === "movies" && !loaded.current.movies) {
       fetchMovies();
@@ -212,8 +213,12 @@ export default function AdminDashboard() {
       setCinemasMap({});
     }
   }
+  const fetchDashboardWarnings = async () => {
+
+    const res = await getAdminDashboardWarnings();
+    setDashboardWarnings(res.data.data);
+  };
   const fetchDashboardStats = async () => {
-    // if (dashboardStats) return;
 
     const res = await getAdminDashboardStats();
     setDashboardStats(res.data.data);
@@ -628,7 +633,7 @@ export default function AdminDashboard() {
                   <h3 className="font-semibold mb-2">Gần đây</h3>
                   <p>Tổng quan trạng thái và thống kê doanh thu tuần qua.</p>
                 </div> */}
-                <Dashboard stats={dashboardStats} />
+                <Dashboard stats={dashboardStats} warnings={dashboardWarnings} />
               </div>
             )}
 
