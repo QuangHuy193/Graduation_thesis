@@ -57,7 +57,7 @@ export async function createCinemasAPI(data: {
   }
 }
 
-// thêm rạp
+// cập nhật rạp
 export async function updateCinemasAPI(data: {
   cinema_id: string | number;
   name: string;
@@ -70,6 +70,32 @@ export async function updateCinemasAPI(data: {
     const response = await axiosInstance.put(
       `/api/admin/cinema/${data.cinema_id}`,
       data
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Error update cinemas:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// hoạt động lại rạp
+export async function recoverCinemasAPI(cinema_id: number | string) {
+  try {
+    const response = await axiosInstance.put(
+      `/api/admin/cinema/${cinema_id}/recover`
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Error update cinemas:", error);
+    throw error.response?.data || error;
+  }
+}
+
+// kiểm tra trước khi xóa
+export async function checkBeforeDeleteCinemasAPI(cinema_id: number | string) {
+  try {
+    const response = await axiosInstance.get(
+      `/api/admin/cinema/${cinema_id}/check_before_del`
     );
     return response.data;
   } catch (error: any) {

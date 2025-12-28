@@ -486,7 +486,7 @@ export async function downloadElementAsImage(
     if (document.fonts && typeof document.fonts.ready?.then === "function") {
       try {
         await document.fonts.ready;
-      } catch { }
+      } catch {}
     }
 
     const rect = el.getBoundingClientRect();
@@ -590,6 +590,27 @@ export const showToast = (icon: string, title: string, time: number = 2000) => {
     timerProgressBar: true,
   });
 };
+
+export const showToastForever = (icon: string, title: string) => {
+  Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon,
+    title,
+    showConfirmButton: false,
+    timer: undefined, // không auto close
+    timerProgressBar: false,
+    didOpen: (toast) => {
+      toast.addEventListener("mouseenter", Swal.stopTimer);
+      toast.addEventListener("mouseleave", Swal.resumeTimer);
+    },
+  });
+};
+
+export const hideToastForever = () => {
+  Swal.close();
+};
+
 //Tạo mật khẩu 6 ký tự ngẫu nhiên
 export function generatePass(length = 6) {
   const chars =

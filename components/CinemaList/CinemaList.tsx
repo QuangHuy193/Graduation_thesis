@@ -1,14 +1,25 @@
 "use client";
 
-import { getCinemasAPI } from "@/lib/axios/cinemasAPI";
-import { faBan, faCheck, faPen, faX } from "@fortawesome/free-solid-svg-icons";
+import {
+  checkBeforeDeleteCinemasAPI,
+  getCinemasAPI,
+  recoverCinemasAPI,
+} from "@/lib/axios/cinemasAPI";
+import {
+  faBan,
+  faCheck,
+  faPen,
+  faRefresh,
+  faX,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Tippy from "@tippyjs/react";
 import { useEffect, useState } from "react";
 import styles from "./CinemaList.module.scss";
 import FormAddEditCinema from "./FormAddEditCinema";
-import { scrollToPosition } from "@/lib/function";
+import { scrollToPosition, showToast, showToastForever } from "@/lib/function";
 import Spinner from "../Spinner/Spinner";
+import Swal from "sweetalert2";
 
 function CinemaList() {
   const [state, setState] = useState({
@@ -42,8 +53,65 @@ function CinemaList() {
     };
     getCinemas();
   }, [state.refreshCinemaList]);
+
+  const handleCallDeleteApi = async (cinema_id) => {
+    console.log("Gọi api xóa");
+  };
+
+  // kiểm tra -> gọi api
+  const handleDelete = async (cinema_id) => {
+    try {
+      showToastForever("info", "Đang xử lý...");
+      const res = await checkBeforeDeleteCinemasAPI(cinema_id);
+      if (res.data.isDelete === "delete") {
+        // TODO
+        handleCallDeleteApi(cinema_id);
+        showToast("success", "Thành công (giả lậ)");
+      } else if (res.data.isDelete === "delete_showtime") {
+        Swal.fire({
+          icon: "warning",
+          text: res.message,
+          showCancelButton: true,
+          confirmButtonText: "TIẾP TỤC",
+          cancelButtonText: "DỪNG LẠI",
+          customClass: {
+            popup: "popup_alert",
+            confirmButton: `btn_alert`,
+            cancelButton: `btn_alert`,
+          },
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            // TODO
+            handleCallDeleteApi(cinema_id);
+            showToast("success", "Thành công (giả lậ)");
+          }
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      showToast("error", error.message);
+    }
+  };
+
+  // khôi phục
+  const handleRecover = async (cinema_id) => {
+    try {
+      showToastForever("info", "Đang xử lý...");
+      const res = await recoverCinemasAPI(cinema_id);
+      if (res.success) {
+        showToast("success", res.message);
+        setState((prev) => ({
+          ...prev,
+          refreshCinemaList: !prev.refreshCinemaList,
+        }));
+      }
+    } catch (error) {
+      console.log(error);
+      showToast("error", error.message);
+    }
+  };
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-white rounded-lg shadow relative">
       {/* thanh action */}
       <div className="flex justify-between p-2 items-center">
         <div>Lọc,...</div>
@@ -77,7 +145,11 @@ function CinemaList() {
           }}
           cinemaEdit={state.cinemaEdit}
           onClose={() => {
-            setState((prev) => ({ ...prev, displayForm: false }));
+            setState((prev) => ({
+              ...prev,
+              displayForm: false,
+              cinemaIdEdit: -1,
+            }));
           }}
         />
       )}
@@ -156,13 +228,40 @@ function CinemaList() {
                   className={`${styles.action_btn} ${
                     c.status === 1 ? "text-red-400" : "text-green-400"
                   } `}
+                  onClick={() => {
+                    Swal.fire({
+                      icon: "warning",
+                      text:
+                        c.status === 1
+                          ? "Bạn chắc chắn muốn ngừng hoạt động rạp này?"
+                          : "Bạn chắc chắn muốn rạp này hoạt động trở lại?",
+                      showCancelButton: true,
+                      confirmButtonText: "CHẮC CHẮN",
+                      cancelButtonText: "KHÔNG",
+                      customClass: {
+                        popup: "popup_alert",
+                        confirmButton: `btn_alert`,
+                        cancelButton: `btn_alert`,
+                      },
+                    }).then(async (result) => {
+                      if (result.isConfirmed) {
+                        if (c.status === 1) {
+                          handleDelete(c.cinema_id);
+                        } else {
+                          handleRecover(c.cinema_id);
+                        }
+                      }
+                    });
+                  }}
                 >
                   <Tippy
                     content={
                       c.status === 1 ? "Ngừng hoạt động" : "Hoạt động lại"
                     }
                   >
-                    <FontAwesomeIcon icon={c.status === 1 ? faBan : faCheck} />
+                    <FontAwesomeIcon
+                      icon={c.status === 1 ? faBan : faRefresh}
+                    />
                   </Tippy>
                 </button>
               </div>
