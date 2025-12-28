@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const [rows] = await db.query(
-      "SELECT cinema_id, name, province FROM cinemas"
+      "SELECT cinema_id, name, province FROM cinemas WHERE status = 1"
     );
     return NextResponse.json(rows);
   } catch (error) {

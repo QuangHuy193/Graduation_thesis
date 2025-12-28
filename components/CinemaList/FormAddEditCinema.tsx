@@ -58,16 +58,6 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
       return;
     }
 
-    if (
-      name === cinemaEdit.name &&
-      specific_address === cinemaEdit.specific_address &&
-      ward === cinemaEdit.ward &&
-      province === cinemaEdit.province &&
-      Number(price_base) === Number(cinemaEdit.price_base)
-    ) {
-      showToast("info", "Bạn chưa thay đổi bất kì thông tin gì của rạp");
-      return;
-    }
     try {
       setState((prev) => ({
         ...prev,
@@ -80,6 +70,16 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
       }
       // cập nhật
       else {
+        if (
+          name === cinemaEdit.name &&
+          specific_address === cinemaEdit.specific_address &&
+          ward === cinemaEdit.ward &&
+          province === cinemaEdit.province &&
+          Number(price_base) === Number(cinemaEdit.price_base)
+        ) {
+          showToast("info", "Bạn chưa thay đổi bất kì thông tin gì của rạp");
+          return;
+        }
         res = await updateCinemasAPI({ ...state.cinemaNew });
       }
       // thành công
@@ -171,7 +171,6 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
         <div className={`${styles.form_input_group}`}>
           <label>Giá gốc</label>
           <input
-            placeholder="Nhập số"
             inputMode="numeric"
             value={state.cinemaNew?.price_base}
             onChange={(e) => {
