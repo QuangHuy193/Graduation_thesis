@@ -200,7 +200,9 @@ function Checkout() {
                 buyer={userInfo ?? undefined}
                 onPay={async (method: any, payload: any) => {
                   const bookingID = await handleCreateBooking();
-                  sessionStorage.setItem("booking_id", String(bookingID));
+                  if (bookingID) {
+                    sessionStorage.setItem("booking_id", String(bookingID));
+                  }
                   return bookingID;
                 }}
                 amount={bookingData.total_price}

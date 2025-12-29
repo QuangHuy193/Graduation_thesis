@@ -14,8 +14,10 @@ export async function PUT(
   try {
     const body = await req.json();
     const { id } = await params;
+    console.log("id", id);
     // ticket [{seat_id, ticket_type_id, price (giá vé), total_price (có bắp nước), food [{food_id, quanity}]}]
     const { total_price, payment_method, voucher_id, ticket } = body;
+
     //Kiểm tra booking đã cập nhật chưa?
     const [rows] = await db.query(
       `SELECT status, user_id from booking WHERE booking_id=?`,
@@ -29,9 +31,13 @@ export async function PUT(
 
     // OK, an toàn dùng
     const statusCheck = status;
+    console.log("row", rows);
+    console.log("trước if");
     // cập nhật booking
     if (!statusCheck) {
+      console.log("vào if");
       if (total_price !== undefined) {
+        console.log("k total");
         await db.query(
           `UPDATE booking SET
         total_price = ?, payment_method = ?, status = 1, voucher_id = ?
@@ -43,6 +49,7 @@ export async function PUT(
           [getCurrentDateTime(), total_price, id]
         );
       } else {
+        console.log("có total");
         //Lấy total price
         const [bookingRows] = await db.execute(
           `SELECT total_price, showtime_id FROM booking WHERE booking_id = ?`,
@@ -63,6 +70,7 @@ export async function PUT(
         );
 
         if (currentTotal > 0) {
+          console.log("currentTotal > 0");
           await db.query(
             `INSERT INTO payment (payment_time, amount, booking_id) VALUE (?,?,?)`,
             [getCurrentDateTime(), currentTotal, id]
@@ -99,8 +107,8 @@ export async function PUT(
       const createdTickets: Array<any> = [];
 
       // nếu có danh sách ticket (ghế) thì tạo từng vé
-
       if (Array.isArray(ticket) && ticket.length > 0) {
+        console.log("tạo vé");
         for (const t of ticket) {
           try {
             const seat_id = t.seat_id ?? null;
@@ -122,8 +130,14 @@ export async function PUT(
               );
               continue;
             }
-            console.log("boking", bookingRows[0]);
+
             // cập nhật showtime_seat
+            //Lấy booking_id
+            const [bookingRows] = await db.execute(
+              `SELECT showtime_id FROM booking WHERE booking_id = ?`,
+              [id]
+            );
+            console.log("booo", bookingRows[0].showtime_id);
             await db.execute(
               `UPDATE showtime_seat SET status = 1 
               WHERE seat_id = ? AND showtime_id = ?`,
@@ -220,6 +234,7 @@ export async function PUT(
         201
       );
     }
+    return successResponse([], "Booking đã cập nhật rôi", 500);
   } catch (error) {
     console.error(error);
     return errorResponse("Cập nhật booking thất bại", 500, error.message);
