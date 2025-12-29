@@ -123,7 +123,10 @@ export default function FormLogin({
         sessUser = session?.user ?? null;
         if (!sessUser) {
           // trường hợp hiếm: session chưa ready
-          setMsg({ type: "error", text: "Không thể lấy thông tin người dùng." });
+          setMsg({
+            type: "error",
+            text: "Không thể lấy thông tin người dùng.",
+          });
           setLoading(false);
           return;
         }
@@ -138,7 +141,7 @@ export default function FormLogin({
         };
         const signInSession = await signInForm({
           identifier: idTrim,
-          password
+          password,
         });
         if (signInSession?.success === false && signInSession.data) {
           const errMsg = "Đăng nhập thất bại";
@@ -209,14 +212,13 @@ export default function FormLogin({
 
           sessionStorage.removeItem("user");
           window.location.href = "/login";
-        } else {
+        } else if (userRole === "admin") {
           router.push("/admin");
+        } else if (userRole === "superadmin") {
+          router.push("/sadmin");
+        } else {
+          router.push("/");
         }
-
-      } else if (userRole === "superadmin") {
-        router.push("/sadmin");
-      } else {
-        router.push("/");
       }
       return;
     } catch (err) {
@@ -301,8 +303,9 @@ export default function FormLogin({
               onClick={() => handleToggleVisibility("saveLogin")}
             >
               <div
-                className={`w-3.5 h-3.5  rounded-xs border border-black relative ${state.saveLogin === true ? "bg-orange-300" : ""
-                  }`}
+                className={`w-3.5 h-3.5  rounded-xs border border-black relative ${
+                  state.saveLogin === true ? "bg-orange-300" : ""
+                }`}
               >
                 {state.saveLogin && (
                   <FontAwesomeIcon
