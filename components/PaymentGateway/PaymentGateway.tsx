@@ -53,7 +53,7 @@ export default function PaymentGateway({
   description = "Thanh toán đơn hàng",
   items = [],
   buyer,
-  onPay = () => { },
+  onPay = () => {},
   onApplyCoupon = async () => ({ ok: true, discount: 0 }),
 }: PaymentGatewayProps) {
   const [selected, setSelected] = useState<PaymentMethodId | null>(
@@ -81,12 +81,11 @@ export default function PaymentGateway({
 
   const [loadingPay, setLoadingPay] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
-  const currentUserId =
-    user?.user_id
-      ? Number(user.user_id)
-      : userSes?.id
-        ? Number(userSes.id)
-        : null;
+  const currentUserId = user?.user_id
+    ? Number(user.user_id)
+    : userSes?.id
+    ? Number(userSes.id)
+    : null;
   useEffect(() => {
     const getCoupon = async (user_id) => {
       try {
@@ -152,7 +151,6 @@ export default function PaymentGateway({
     if (selected === "domestic_card") {
       setLoadingPay(true);
       try {
-        await Promise.resolve(onPay(selected, { coupon, amount, items }));
         const orderCode = generateOrderCode();
         const result = await createPayOSPayment({
           orderCode,
@@ -203,10 +201,11 @@ export default function PaymentGateway({
                 onClick={() => setSelected(m.id)}
                 aria-pressed={isSelected}
                 aria-label={m.label}
-                className={`w-full text-left border rounded-md p-4 flex items-center gap-4 transition-shadow focus:outline-none ${isSelected
-                  ? "ring-2 ring-offset-2 ring-indigo-500 bg-white/5"
-                  : "hover:shadow-md"
-                  }`}
+                className={`w-full text-left border rounded-md p-4 flex items-center gap-4 transition-shadow focus:outline-none ${
+                  isSelected
+                    ? "ring-2 ring-offset-2 ring-indigo-500 bg-white/5"
+                    : "hover:shadow-md"
+                }`}
                 type="button"
               >
                 <div className="text-2xl bg-white/10 rounded-md w-12 h-12 flex items-center justify-center">
@@ -254,10 +253,11 @@ export default function PaymentGateway({
           </div>
           {/* ds voucher */}
           <div
-            className={`transition-all duration-500 overflow-hidden ${couponListOption.couponDisplay
-              ? "max-h-[600px] opacity-100"
-              : "max-h-0 opacity-0"
-              } bg-indigo-600/95 rounded-b-md shadow-inner`}
+            className={`transition-all duration-500 overflow-hidden ${
+              couponListOption.couponDisplay
+                ? "max-h-[600px] opacity-100"
+                : "max-h-0 opacity-0"
+            } bg-indigo-600/95 rounded-b-md shadow-inner`}
           >
             <div className="pt-3 px-4 pb-4 space-y-3 text-white">
               {/* map list */}

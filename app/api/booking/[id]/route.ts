@@ -6,6 +6,7 @@ import {
   successResponse,
 } from "@/lib/function";
 
+// cập nhật booking thêm vé
 export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
@@ -16,14 +17,15 @@ export async function PUT(
     // ticket [{seat_id, ticket_type_id, price (giá vé), total_price (có bắp nước), food [{food_id, quanity}]}]
     const { total_price, payment_method, voucher_id, ticket } = body;
     //Kiểm tra booking đã cập nhật chưa?
-    const [rows] = await db.query(`SELECT status, user_id from booking WHERE booking_id=?`, [id]);
+    const [rows] = await db.query(
+      `SELECT status, user_id from booking WHERE booking_id=?`,
+      [id]
+    );
     if (rows.length === 0) {
       return errorResponse("Booking không tồn tại", 404);
     }
 
     const { status, user_id } = rows[0];
-
-
 
     // OK, an toàn dùng
     const statusCheck = status;
@@ -43,7 +45,7 @@ export async function PUT(
       } else {
         //Lấy total price
         const [bookingRows] = await db.execute(
-          `SELECT total_price FROM booking WHERE booking_id = ?`,
+          `SELECT total_price, showtime_id FROM booking WHERE booking_id = ?`,
           [id]
         );
 
@@ -66,7 +68,10 @@ export async function PUT(
             [getCurrentDateTime(), currentTotal, id]
           );
           if (user_id !== null) {
-            const [rows]: any = await db.query(`SELECT point from users where user_id=?`, [user_id]);
+            const [rows]: any = await db.query(
+              `SELECT point from users where user_id=?`,
+              [user_id]
+            );
             if (rows.length === 0) {
               throw new Error("User không tồn tại");
             }
@@ -75,10 +80,10 @@ export async function PUT(
             const earnedPoint = Math.floor(currentTotal / 1000);
             // giới hạn tối đa 10.000
             const newPoint = Math.min(presentPoint + earnedPoint, 10000);
-            await db.query(
-              `UPDATE users SET point = ? WHERE user_id = ?`,
-              [newPoint, user_id]
-            );
+            await db.query(`UPDATE users SET point = ? WHERE user_id = ?`, [
+              newPoint,
+              user_id,
+            ]);
           }
         }
       }
@@ -111,9 +116,19 @@ export async function PUT(
             );
             const ticketId = insertResult.insertId ?? insertResult[0]?.insertId;
             if (!ticketId) {
-              console.error("Không lấy được insertId khi tạo ticket", insertResult);
+              console.error(
+                "Không lấy được insertId khi tạo ticket",
+                insertResult
+              );
               continue;
             }
+            console.log("boking", bookingRows[0]);
+            // cập nhật showtime_seat
+            await db.execute(
+              `UPDATE showtime_seat SET status = 1 
+              WHERE seat_id = ? AND showtime_id = ?`,
+              [seat_id, bookingRows[0].showtime_id]
+            );
 
             // 2) Lưu food nếu có
             if (Array.isArray(t.food) && t.food.length > 0) {
@@ -163,7 +178,10 @@ export async function PUT(
          WHERE b.booking_id = ?`,
               [id]
             );
-            const bookingInfo = Array.isArray(bookingInfoRows) && bookingInfoRows.length > 0 ? bookingInfoRows[0] : null;
+            const bookingInfo =
+              Array.isArray(bookingInfoRows) && bookingInfoRows.length > 0
+                ? bookingInfoRows[0]
+                : null;
 
             // 6) Tạo payload QR (an toàn hơn: chỉ include id + minimal info)
             const qrPayload = JSON.stringify({
@@ -172,11 +190,13 @@ export async function PUT(
               seat: seatLabel,
               startTime: bookingInfo?.start_time ?? null,
               room: bookingInfo?.room_name ?? null,
-              foods: Array.isArray(foodRows) ? foodRows : []
+              foods: Array.isArray(foodRows) ? foodRows : [],
             });
 
             // 7) Generate QR
-            const qrDataUrl = await QRCode.toDataURL(qrPayload, { type: "image/png" });
+            const qrDataUrl = await QRCode.toDataURL(qrPayload, {
+              type: "image/png",
+            });
 
             // 8) Update ticket với qr_code
             await db.execute(
@@ -200,7 +220,6 @@ export async function PUT(
         201
       );
     }
-
   } catch (error) {
     console.error(error);
     return errorResponse("Cập nhật booking thất bại", 500, error.message);

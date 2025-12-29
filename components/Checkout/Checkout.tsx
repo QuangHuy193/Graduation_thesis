@@ -104,7 +104,7 @@ function Checkout() {
         if (prev.step < 2) return { ...prev, step: 2 };
         return prev; // nếu đã >=2 thì không giảm lại
       });
-    } else if ((status === "unauthenticated") || !userSes) {
+    } else if (status === "unauthenticated" || !userSes) {
       setAuth(false);
     }
   }, [status, user, userSes]);
@@ -125,32 +125,11 @@ function Checkout() {
 
     let payload;
 
-    if (!auth) {
-      // ❗ Trường hợp chưa đăng nhập → lấy userInfo từ form
-      if (!userInfo) {
-        console.warn("Thiếu thông tin userInfo khi chưa đăng nhập");
-        return;
-      }
-
-      payload = {
-        total_price: bookingData.total_price,
-        showtime_id: bookingData.showtime_id,
-        name: userInfo.name,
-        phone: userInfo.phone,
-        email: userInfo.email,
-      };
-
-      const res = await createBookingNoAuth(payload);
-
-      // TODO: redirect sang Payment
-      return res.data.data.booking_id;
-    }
-    const currentUserId =
-      user?.user_id
-        ? Number(user.user_id)
-        : userSes?.id
-          ? Number(userSes.id)
-          : null;
+    const currentUserId = user?.user_id
+      ? Number(user.user_id)
+      : userSes?.id
+      ? Number(userSes.id)
+      : null;
 
     if (!currentUserId) {
       console.error("Không có user_id");
@@ -184,16 +163,18 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+            }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              state.step === 3 && "text-(--color-yellow)"
+            }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>
