@@ -152,7 +152,7 @@ export default function PaymentGateway({
     if (selected === "domestic_card") {
       setLoadingPay(true);
       try {
-        await Promise.resolve(onPay(selected, { coupon, amount, items }));
+        // await Promise.resolve(onPay(selected, { coupon, amount, items }));
         const orderCode = generateOrderCode();
         const result = await createPayOSPayment({
           orderCode,
