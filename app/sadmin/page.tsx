@@ -8,10 +8,10 @@ export default async function SuperAdmim() {
 
   // chưa login -> redirect login (với callback)
   if (!session) {
-    redirect(`/login?callbackUrl=/admin`);
+    redirect(`/login?callbackUrl=/sadmin`);
   }
 
-  // có session nhưng không phải admin -> 403
+  // có session nhưng không phải sadmin -> 404
   const role = (session as any).user?.role ?? null;
   if (role !== "superadmin") {
     redirect("/404");
