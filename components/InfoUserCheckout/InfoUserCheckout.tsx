@@ -174,7 +174,11 @@ function InfoUserCheckout({
           email,
           phone,
         });
-        if (isInsert.success) console.log("Tạo booking thành công");
+
+        if (isInsert.success) {
+          sessionStorage.setItem("booking_id", isInsert.data?.booking_id);
+          console.log("Tạo booking thành công");
+        }
       } catch (error) {
         console.log(error);
       }

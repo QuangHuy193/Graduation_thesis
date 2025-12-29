@@ -9,7 +9,7 @@ export async function createBookingNoAuth(data: {
 }) {
   try {
     const response = await axiosInstance.post("/api/booking", data);
-    return response;
+    return response.data;
   } catch (error: any) {
     console.error("Error fetching cinemas:", error);
     throw error.response?.data || error;
