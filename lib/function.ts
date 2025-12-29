@@ -284,6 +284,18 @@ export function isSingleGapRemove(
   // 6. Nếu tới đây có ít nhất 1 gap ở giữa => không hợp lệ
   return true;
 }
+//Lấy danh sách ngày từ from đến to
+export function getDatesInRange(from: string, to: string): string[] {
+  const result: string[] = [];
+  let cur = new Date(from);
+  const end = new Date(to);
+
+  while (cur <= end) {
+    result.push(cur.toISOString().slice(0, 10));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return result;
+}
 
 export function getCurrentDateTime() {
   const now = new Date();
@@ -486,7 +498,7 @@ export async function downloadElementAsImage(
     if (document.fonts && typeof document.fonts.ready?.then === "function") {
       try {
         await document.fonts.ready;
-      } catch {}
+      } catch { }
     }
 
     const rect = el.getBoundingClientRect();

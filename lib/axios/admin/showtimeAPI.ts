@@ -88,3 +88,13 @@ export async function createShowtimeWithDay(payload: {
     const res = await axiosInstance.post("/api/admin/showtime/createShowtimeAuto", payload);
     return res.data;
 }
+export async function createShowtimeBulk(payload: {
+    movie_id: number;
+    room_id: number;
+    movie_screen_id: number;
+    from_date: string;         // YYYY-MM-DD
+    to_date: string;
+}) {
+    const res = await axiosInstance.post("/api/admin/showtime/createShowtimeAuto", payload);
+    return res.data;
+}

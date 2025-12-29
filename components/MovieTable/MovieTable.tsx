@@ -60,7 +60,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
             }
         }
         fetchPrices();
-    }, []);
+    }, [movies]);
     function goToUploadWithId(movieId: number) {
         if (!movieId || Number.isNaN(Number(movieId))) {
             console.warn("Invalid movieId:", movieId);
@@ -375,12 +375,12 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                         </div>
                                     </td>
 
-                                    <td className="px-4 py-3">{m.duration} min</td>
+                                    <td className="px-4 py-3">{m.duration || 0} min</td>
                                     <td className="px-4 py-3">{m.country || "-"}</td>
 
 
 
-                                    <td className="px-4 py-3">{fmtDate(m.release_date.toString())}</td>
+                                    <td className="px-4 py-3">{m.release_date ? fmtDate(m.release_date.toString()) : "-"}</td>
                                     <td className="px-4 py-3">{m.age_require ?? "-"}</td>
                                     <td className="px-4 py-3">{sumPrice.find(p => p.movie_id === m.movie_id)?.TONG || 0}</td>
                                     <td className="px-4 py-3">

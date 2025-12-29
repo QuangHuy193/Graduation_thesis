@@ -115,6 +115,7 @@ export default function AdminDashboard() {
         fetchCinemas(),
         fetchRooms(),
         fetchScreenings(),
+        fetchMovies(),
       ]);
     } finally {
       setLoading(false);
@@ -141,6 +142,7 @@ export default function AdminDashboard() {
     if (activeTab === "showtimes" && !loaded.current.showtimes) {
       fetchShowtimeBundle();
       loaded.current.showtimes = true;
+      loaded.current.movies = true;
     }
 
     if (activeTab === "promotions" && !loaded.current.promotions) {
@@ -689,6 +691,8 @@ export default function AdminDashboard() {
                   roomsList={roomsList}
                   movieScreenings={screenings}
                   externalMovies={moviesEx}
+                  onBulkApplied={fetchShowtimes}
+                  onLoadingChange={setLoading}
                 />
               </div>
             )}

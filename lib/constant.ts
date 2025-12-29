@@ -136,7 +136,7 @@ export const weekdays = [
 export const LIMITDAY = 5;
 export const PHONEREGEX = /^(0[0-9]{9})$/;
 export const EMAILREGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+export const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 export const CANCELBOOKING = `Tiền được hoàn lại khi hủy vé sẽ được tính trên thời gian 
 hiện tại so với thời gian chiếu, cụ thể như sau: Hủy trước 24 giờ: Hoàn 95% giá vé,
 Hủy từ 12 giờ - 24 giờ: Hoàn 90%, Hủy từ 6 giờ - 12 giờ: Hoàn 85%,

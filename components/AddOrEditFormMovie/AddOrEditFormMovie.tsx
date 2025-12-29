@@ -105,6 +105,14 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
             // return alert("Tiêu đề không được để trống");
             return Swal.fire("Tiêu đề không được để trống");
         }
+        if (!form.country.trim()) {
+            // return alert("Tiêu đề không được để trống");
+            return Swal.fire("Vui lòng chọn quốc gia của phim");
+        }
+        if (!form.subtitle.trim()) {
+            // return alert("Tiêu đề không được để trống");
+            return Swal.fire("Vui lòng chọn ngôn ngữ phụ đề");
+        }
         if (Number(form.duration) < 0) return Swal.fire("Thời lượng phải >= 0");;
 
         // build payload phù hợp MovieFullITF
@@ -205,7 +213,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label className={`${styles.label} text-xs`}>Tiêu đề</label>
+                        <label className={`${styles.label} text-xs`}>Tiêu đề <b className="text-red-500 text-xs">*</b></label>
                         <input className={`${styles.input} w-full`} value={form.name} onChange={(e) => update({ name: e.target.value })} />
                     </div>
 
@@ -225,7 +233,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                     </div>
 
                     <div>
-                        <label className={`${styles.label} text-xs`}>Quốc gia</label>
+                        <label className={`${styles.label} text-xs`}>Quốc gia <b className="text-red-500 text-xs">*</b></label>
                         <input
                             className={`${styles.input} w-full`}
                             list="country-list"
@@ -243,7 +251,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                     </div>
 
                     <div>
-                        <label className={`${styles.label} text-xs`}>Subtitle</label>
+                        <label className={`${styles.label} text-xs`}>Phụ đề <b className="text-red-500 text-xs">*</b></label>
                         <input
                             className={`${styles.input} w-full`}
                             list="subtitle-list"
@@ -261,16 +269,6 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                     </div>
 
 
-                    <div className={`${styles.colSpan2} md:col-span-2`}>
-                        <label className={`${styles.label} text-xs`}>Poster (image URL)</label>
-                        <input className={`${styles.input} w-full`} value={form.image} onChange={(e) => update({ image: e.target.value })} />
-                        {form.image ? (
-                            <div className={styles.posterWrap}>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={form.image} alt="preview" className={styles.poster} />
-                            </div>
-                        ) : null}
-                    </div>
 
                     <div className={`${styles.colSpan2} md:col-span-2`}>
                         <label className={`${styles.label} text-xs`}>Trailer (embed URL)</label>

@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import styles from "./ShowtimesTable.module.scss"
 import { PendingSlotUpdate } from "@/app/admin/AdminClient";
+import { createShowtimeBulk } from "@/lib/axios/admin/showtimeAPI";
 export type MovieScreenSlot = { movie_screen_id: number; start_time: string; end_time: string };
 export type ShowtimeDay = {
   showtime_id: number;
@@ -29,6 +30,8 @@ type Props = {
   onCommit?: (changes: PendingSlotUpdate[]) => Promise<any>;
   onSelect?: (s: ShowtimeDay) => void;
   externalMovies?: ExternalMovie[];
+  onLoadingChange?: (v: boolean) => void;
+  onBulkApplied?: () => Promise<any> | void;
 };
 
 const toDateKey = (d: string) => d?.slice(0, 10);
@@ -48,6 +51,8 @@ export default function ShowtimeTimetable({
   initialDate = null,
   onCommit,
   externalMovies = [],
+  onBulkApplied,
+  onLoadingChange,
 }: Props) {
   const [state, setState] = useState<ShowtimeDay[]>(showtimes);
   const [pending, setPending] = useState<Record<number, PendingSlotUpdate>>({});
@@ -55,6 +60,15 @@ export default function ShowtimeTimetable({
   const originalRef = useRef<ShowtimeDay[] | null>(null);
   const [trashHover, setTrashHover] = useState(false);
   const [activeCinema, setActiveCinema] = useState<number | "all">("all");
+  const [bulkApply, setBulkApply] = useState<{
+    from_date: string;
+    showtime_ids: number[];
+  } | null>(null);
+  const [bulkContext, setBulkContext] = useState<{
+    movie_id: number;
+    room_id: number;
+    movie_screen_id: number;
+  } | null>(null);
 
   // animation states
   const [draggingId, setDraggingId] = useState<number | null>(null);
@@ -346,7 +360,24 @@ export default function ShowtimeTimetable({
           room_name: undefined,
           movie_screen_id: slotId,
         };
-
+        setBulkApply(prev => {
+          const from = activeDate!;
+          if (!prev || prev.from_date !== from) {
+            return {
+              from_date: from,
+              showtime_ids: [tempId],
+            };
+          }
+          return {
+            ...prev,
+            showtime_ids: [...prev.showtime_ids, tempId],
+          };
+        });
+        setBulkContext({
+          movie_id: d.movie_id!,
+          room_id: roomId,
+          movie_screen_id: slotId,
+        });
         // optimistic insert (same as before)
         setState(prev => {
           const copy = [...prev, newShow].sort((a, b) => {
@@ -424,10 +455,96 @@ export default function ShowtimeTimetable({
     originalRef.current = state;
     setPending({});
   };
+  const handleSave = async () => {
+    // ❌ Không có thay đổi gì
+    if (!Object.keys(pending).length) return;
+
+    // ✅ Có temp showtime → hỏi
+    if (bulkApply && bulkContext) {
+      const result = await Swal.fire({
+        title: "Áp dụng nhiều ngày?",
+        text: `Bạn vừa thêm ${bulkApply.showtime_ids.length} suất chiếu mới. Có muốn áp dụng đến ngày khác không?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Áp dụng nhiều ngày",
+        cancelButtonText: "Chỉ ngày này",
+      });
+
+      // 👉 User CHỌN ÁP DỤNG NHIỀU NGÀY
+      if (result.isConfirmed) {
+        const { value: toDate } = await Swal.fire({
+          title: "Chọn ngày kết thúc",
+          input: "date",
+          inputAttributes: {
+            min: bulkApply.from_date,
+          },
+          showCancelButton: true,
+          confirmButtonText: "Áp dụng",
+        });
+
+        if (toDate) {
+          // 🔥 BULK CREATE
+          // await createShowtimeBulk({
+          //   movie_id: bulkContext.movie_id,
+          //   room_id: bulkContext.room_id,
+          //   movie_screen_id: bulkContext.movie_screen_id,
+          //   from_date: bulkApply.from_date,
+          //   to_date: toDate,
+          // });
+
+          // // reset local UI
+          // setBulkApply(null);
+          // setBulkContext(null);
+          // setPending({});
+
+          // // reload canonical data
+          // if (onBulkApplied) await onBulkApplied();
+          // return;
+          try {
+            onLoadingChange?.(true);   // 🔥 BÁO parent: loading ON
+
+            await createShowtimeBulk({
+              movie_id: bulkContext.movie_id,
+              room_id: bulkContext.room_id,
+              movie_screen_id: bulkContext.movie_screen_id,
+              from_date: bulkApply.from_date,
+              to_date: toDate,
+            });
+
+            // reset local UI
+            setBulkApply(null);
+            setBulkContext(null);
+            setPending({});
+
+            // reload canonical data
+            if (onBulkApplied) await onBulkApplied();
+          } finally {
+            onLoadingChange?.(false);  // 🔥 loading OFF
+          }
+
+          return;
+        }
+      }
+
+      // 👉 User KHÔNG muốn bulk → fallthrough commit single-day
+    }
+
+    // 🔹 FLOW CŨ: commit từng showtime (single date)
+    await commit();
+
+    // cleanup
+    setBulkApply(null);
+    setBulkContext(null);
+  };
 
 
 
-  const discard = () => { if (originalRef.current) setState(originalRef.current); setPending({}); };
+  const discard = () => {
+    if (originalRef.current) setState(originalRef.current); setPending({});
+    setBulkApply(null);
+    setBulkContext(null);
+
+  };
 
   if (!activeDate) return <div>Không có suất.</div>;
 
@@ -461,10 +578,11 @@ export default function ShowtimeTimetable({
             {Object.keys(pending).length > 0 && (
               <>
                 <span className="text-amber-600">{Object.keys(pending).length} thay đổi</span>
-                <button onClick={commit} className="bg-blue-600 text-white px-3 py-1 rounded cursor-pointer">Lưu</button>
+                <button onClick={handleSave} className="bg-blue-600 text-white px-3 py-1 rounded cursor-pointer">Lưu</button>
                 <button onClick={discard} className="border px-3 py-1 rounded cursor-pointer">Hủy</button>
               </>
             )}
+
           </div>
 
           <div className="space-y-6">
