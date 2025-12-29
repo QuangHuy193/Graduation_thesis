@@ -81,12 +81,11 @@ export default function PaymentGateway({
 
   const [loadingPay, setLoadingPay] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
-  const currentUserId =
-    user?.user_id
-      ? Number(user.user_id)
-      : userSes?.id
-        ? Number(userSes.id)
-        : null;
+  const currentUserId = user?.user_id
+    ? Number(user.user_id)
+    : userSes?.id
+      ? Number(userSes.id)
+      : null;
   useEffect(() => {
     const getCoupon = async (user_id) => {
       try {
@@ -152,7 +151,7 @@ export default function PaymentGateway({
     if (selected === "domestic_card") {
       setLoadingPay(true);
       try {
-       
+
         const orderCode = generateOrderCode();
         const result = await createPayOSPayment({
           orderCode,
