@@ -25,6 +25,7 @@ export async function GET() {
       LEFT JOIN images i ON m.movie_id = i.movie_id
       GROUP BY m.movie_id`
             );
+
             conn.release();
 
             return NextResponse.json(rows);

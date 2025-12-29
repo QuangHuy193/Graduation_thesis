@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
+import { getPrice } from "@/lib/axios/admin/movieAPI";
 import { deleteMovie } from "@/lib/axios/admin/movieAPI";
 import Button from "../Button/Button";
 import { useRouter } from "next/navigation";
@@ -34,6 +35,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     const [query, setQuery] = useState("");
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
+    const [sumPrice, setSumPrice] = useState([]);
     const [perPage, setPerPage] = useState(8);
     const [sortBy, setSortBy] = useState<"release_date" | "name" | "duration" | "created_at">("created_at");
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -47,6 +49,18 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     // function goToUploadWithId(m: MovieFullITF) {
     //     router.push(`/uploadpic?movieId=${encodeURIComponent(String(m.movie_id))}`);
     // }
+    useEffect(() => {
+        async function fetchPrices() {
+            try {
+                const data = await getPrice();
+                setSumPrice(data);
+            }
+            catch (error) {
+                console.error("Lỗi khi lấy tổng doanh thu:", error);
+            }
+        }
+        fetchPrices();
+    }, []);
     function goToUploadWithId(movieId: number) {
         if (!movieId || Number.isNaN(Number(movieId))) {
             console.warn("Invalid movieId:", movieId);
@@ -310,6 +324,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                 <th className="text-left px-4 py-3">Quốc gia</th>
                                 <th className="text-left px-4 py-3">Ngày công chiếu</th>
                                 <th className="text-left px-4 py-3">Độ tuổi</th>
+                                <th className="text-left px-4 py-3">Tổng doanh thu</th>
                                 <th className="text-left px-4 py-3">Trạng thái</th>
                                 <th className="text-right px-4 py-3">Hành động</th>
                             </tr>
@@ -317,6 +332,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                         <tbody>
                             {paginated.map((m) => (
                                 <tr key={m.movie_id} className="border-t group hover:bg-slate-50">
+
                                     <td className="px-4 py-3">
                                         <div className="w-16 h-24 bg-slate-100 rounded overflow-hidden flex items-center justify-center">
                                             {m.image ? (
@@ -366,7 +382,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
 
                                     <td className="px-4 py-3">{fmtDate(m.release_date.toString())}</td>
                                     <td className="px-4 py-3">{m.age_require ?? "-"}</td>
-
+                                    <td className="px-4 py-3">{sumPrice.find(p => p.movie_id === m.movie_id)?.TONG || 0}</td>
                                     <td className="px-4 py-3">
                                         {m.status === 1 ? (
                                             <span className="inline-block text-xs px-2 py-1 rounded-full bg-green-100">
