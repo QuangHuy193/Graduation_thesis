@@ -46,26 +46,32 @@ export async function DELETE(req: Request, { params }: { params: string }) {
     }
 
     // có lịch chiếu chưa có booking
-    if (type === 1) {
-      await db.execute(`UPDATE rooms SET status = 0 WHERE room_id = ?`, [id]);
+    if (type === 1 || type === 2) {
+      // có lịch chiếu, có booking
+      if (type === 2) {
+        const connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        // lấy tất cả booking thuộc phòng
+        const [bookings]: any = await connection.query(
+          `SELECT b.booking_id, b.total_price 
+          FROM booking b 
+          JOIN showtime s ON b.showtime_id = s.showtime_id 
+          WHERE s.room_id = ? AND b.status = 1`,
+          [id]
+        );
+
+        for (const booking of bookings) {
+          // TODO gọi api hoàn tiền
+        }
+
+        await connection.commit();
+      }
+
+      // hủy lịch chiếu
       await db.execute(`UPDATE showtime SET status = 0 WHERE room_id = ?`, [
         id,
       ]);
-      return successResponse([], "Chuyển trạng thái phòng thành công", 200);
-    }
-
-    // TODO
-    // có lịch chiếu, có booking
-    if (type === 2) {
-      const connection = await db.getConnection();
-      await connection.beginTransaction();
-
-      const [showtimes] = await db.query(
-        `SELECT showtime_id FROM showtime WHERE room_id = ?`,
-        [id]
-      );
-
-      await connection.commit();
     }
 
     // chưa có lịch chiếu
@@ -96,15 +102,6 @@ export async function PUT(req: Request, { params }: { params: string }) {
     const connection = await db.getConnection();
     await connection.beginTransaction();
 
-    // hủy lịch chiếu
-    if (type === 1) {
-    }
-
-    // hoàn tiền
-    if (type === 2) {
-    }
-
-    // TODO
     // cập nhật room
     await db.execute(
       `UPDATE rooms SET name = ?, capacity = ?, width = ?, height = ? WHERE room_id = ?`,
@@ -154,7 +151,6 @@ export async function PUT(req: Request, { params }: { params: string }) {
       if (toDelete.length > 0) {
         const deleteIds = toDelete.map((g) => g.gap_id);
 
-        // TODO
         await db.query(`DELETE FROM asile_gap WHERE gap_id IN (?)`, [
           deleteIds,
         ]);
@@ -168,7 +164,6 @@ export async function PUT(req: Request, { params }: { params: string }) {
           id, // room_id
         ]);
 
-        // TODO
         await db.query(
           `INSERT INTO asile_gap (gap_row, gap_index, gap_width, room_id) VALUES ?`,
           [values]
@@ -218,18 +213,74 @@ export async function PUT(req: Request, { params }: { params: string }) {
 
     if (seatsToDelete.length > 0) {
       const ids = seatsToDelete.map((s) => s.seat_id);
-      // TODO
-      await db.query(`DELETE FROM seats WHERE seat_id IN (?)`, [ids]);
+      const connection = await db.getConnection();
+
+      try {
+        // có showtime hoặc booking
+        if (type === 1 || type === 2) {
+          await connection.beginTransaction();
+
+          // Lấy booking bị ảnh hưởng (ghế đã đặt)
+          const [bookings]: any = await connection.query(
+            `SELECT DISTINCT b.booking_id, b.total_price
+          FROM showtime_seat ss
+          JOIN showtime st ON st.showtime_id = ss.showtime_id          
+          JOIN booking b ON b.showtime_id = st.showtime_id
+          JOIN ticket t ON t.booking_id = b.booking_id
+          WHERE t.seat_id IN (?) AND ss.status = 1`,
+            [ids]
+          );
+
+          // có booking
+          if (bookings.length > 0) {
+            // Hủy booking + hoàn tiền
+            for (const booking of bookings) {
+              // TODO: hoàn tiền 100% cho booking.booking_id
+            }
+          }
+
+          // Hủy ghế trong showtime_seat
+          await connection.query(
+            `DELETE FROM showtime_seat WHERE seat_id IN (?)`,
+            [ids]
+          );
+
+          await connection.commit();
+        }
+        // Xóa ghế
+        await connection.query(`DELETE FROM seats WHERE seat_id IN (?)`, [ids]);
+      } catch (err) {
+        await connection.rollback();
+        throw err;
+      } finally {
+        connection.release();
+      }
     }
 
     if (seatsToInsert.length > 0) {
       const values = seatsToInsert.map((s) => [s.row, s.col, id]);
 
-      // TODO
-      await db.query(
+      // thêm ghế mới
+      const [inserted] = await db.query(
         `INSERT INTO seats (seat_row, seat_column, room_id) VALUES ? `,
         [values]
       );
+
+      // có showtime
+      if (type === 1) {
+        const firstSeatId = inserted.insertId;
+        const totalSeats = inserted.affectedRows;
+
+        // thêm ghế cho showtime_seat
+        await db.query(
+          `INSERT INTO showtime_seat (seat_id, showtime_id, status)
+          SELECT s.seat_id, st.showtime_id, 1
+          FROM seats s
+          JOIN showtime st ON st.room_id = s.room_id
+          WHERE s.seat_id BETWEEN ? AND ? AND s.room_id = ?`,
+          [firstSeatId, firstSeatId + totalSeats - 1, id]
+        );
+      }
     }
 
     await connection.commit();

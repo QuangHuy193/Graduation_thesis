@@ -25,8 +25,6 @@ export async function PUT(req: Request, { params }: { params: string }) {
       [name, specific_address, ward, province, price_base, id]
     );
 
-    // TODO cập nhật price_fixed
-
     return successResponse({}, "Cập nhật rạp thành công", 200);
   } catch (error) {
     console.error(error);
@@ -38,18 +36,50 @@ export async function PUT(req: Request, { params }: { params: string }) {
 export async function DELETE(req: Request, { params }: { params: string }) {
   try {
     const { id } = await params;
+    const body = await req.json();
+    // 0 xóa bình thường
+    // 1 có showtime
+    // 2 có showtime, booking
+    const { type } = body;
 
-    const [showtimes] = await db.query(
-      `SELECT COUNT(s.showtime_id) 
-      FROM showtime s
-      JOIN rooms r ON r.room_id = s.room_id
-      JOIN cinemas c ON c.cinema_id = r.cinema_id
-      WHERE c.cinema_id = ?`,
+    if (type === 1 || type === 2) {
+      if (type === 2) {
+        const connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        // lấy tất cả booking thuộc phòng
+        const [bookings]: any = await connection.query(
+          `SELECT b.booking_id, b.total_price
+          FROM booking b
+          JOIN showtime s ON b.showtime_id = s.showtime_id
+          WHERE r.cinema_id = ? AND b.status = 1`,
+          [id]
+        );
+
+        for (const booking of bookings) {
+          // TODO gọi api hoàn tiền
+        }
+
+        await connection.commit();
+      }
+
+      // hủy lịch chiếu
+      await db.query(
+        `UPDATE showtime s
+        JOIN rooms r ON s.room_id = r.room_id
+        WHERE r.cinema_id = ?`,
+        [id]
+      );
+    }
+
+    // hủy rạp bình thường
+    await db.query(
+      `UPDATE cinemas 
+      SET status = 0 
+      WHERE cinema_id = ?`,
       [id]
     );
-
-    if (showtimes.length > 0)
-      return successResponse({}, "Rạp đã ngưng hoạt động", 200);
+    return successResponse({}, "Rạp đã ngưng hoạt động", 200);
   } catch (error) {
     console.error(error);
     return errorResponse(

@@ -14,13 +14,30 @@ export async function GET(req: Request, { params }: { params: string }) {
       WHERE c.cinema_id = ? AND s.status = 1`,
       [id]
     );
-    console.log("st", showtimes);
+
     if (showtimes[0].count > 0) {
-      return successResponse(
-        { isDelete: "delete_showtime" },
-        "Rạp hiện đang có lịch chiếu, tiếp tục sẽ hủy tất cả lịch chiếu?",
-        200
+      const [bookings] = await db.query(
+        `SELECT COUNT(b.booking_id) AS count
+        FROM booking b
+        JOIN showtime st ON st.showtime_id = b.showtime_id
+        JOIN rooms r ON r.room_id = st.room_id
+        JOIN cinemas c ON c.cinema_id = r.cinema_id
+        WHERE c.cinema_id = ? AND st.status = 1 AND b.status = 1`,
+        [id]
       );
+      if (bookings[0].count === 0) {
+        return successResponse(
+          { isDelete: "delete_showtime" },
+          `Rạp hiện đang có ${showtimes[0].count} lịch chiếu, tiếp tục sẽ hủy tất cả lịch chiếu?`,
+          200
+        );
+      } else {
+        return successResponse(
+          { isDelete: "delete_showtime" },
+          `Rạp hiện đang có ${showtimes[0].count} lịch chiếu và có tổng cộng ${bookings[0].count} đơn hàng, tiếp tục sẽ hủy tất cả lịch chiếu, đơn hàng và hoàn tiền 100% cho khách hàng?`,
+          200
+        );
+      }
     } else {
       return successResponse(
         { isDelete: "delete" },
