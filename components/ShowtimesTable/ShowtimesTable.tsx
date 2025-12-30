@@ -16,7 +16,7 @@ export type ShowtimeDay = {
   cinema_id?: number | null;
   cinema_name?: string | null;
 };
-// type PendingSlotUpdate = { showtime_id: number; from_slot: number | null; to_slot: number | null; updated: ShowtimeDay };
+
 export type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null };
 export type CinemaEntry = { cinema_id: number; name?: string };
 type ExternalMovie = { movie_id?: number; id?: number; movieId?: number; name?: string | null; title?: string | null };
@@ -32,11 +32,13 @@ type Props = {
   externalMovies?: ExternalMovie[];
   onLoadingChange?: (v: boolean) => void;
   onBulkApplied?: () => Promise<any> | void;
+  onSuccess?: (msg?: string) => void;
 };
-
+//Hàm lấy date từ datetime
 const toDateKey = (d: string) => d?.slice(0, 10);
+//Hàm lấy ngày hiện tại
 const todayVN = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" });
-
+//Tạo ngày phục vụ cho việc thêm hàng loạt
 function addDaysISO(d: string, days: number) {
   const dt = new Date(d + "T00:00:00");
   dt.setDate(dt.getDate() + days);
@@ -53,50 +55,84 @@ export default function ShowtimeTimetable({
   externalMovies = [],
   onBulkApplied,
   onLoadingChange,
+  onSuccess,
 }: Props) {
+  //Lấy showtime từ parent
   const [state, setState] = useState<ShowtimeDay[]>(showtimes);
+  //trang thái kéo thả suất chiếu
   const [pending, setPending] = useState<Record<number, PendingSlotUpdate>>({});
-  const [activeDate, setActiveDate] = useState<string | null>(initialDate);
+  //Ngày hiện tại để kéo suất chiếu vào
+  const [activeDate, setActiveDate] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("active_date") || initialDate;
+    }
+    return initialDate
+  }
+
+  );
+  //Trạng thái kiểm tra đã có suất chiếu từ parent chưa
   const originalRef = useRef<ShowtimeDay[] | null>(null);
+  //Hoạt ảnh thùng rác
   const [trashHover, setTrashHover] = useState(false);
-  const [activeCinema, setActiveCinema] = useState<number | "all">("all");
+  //Rạp hiện tại để kéo suất chiếu vào
+  const [activeCinema, setActiveCinema] = useState<number | "all">(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("active_cinema");
+      if (saved === "all") return "all";
+      if (saved && !isNaN(Number(saved))) return Number(saved);
+    }
+    return "all";
+  });
+  //Thêm hàng loạt
   const [bulkApply, setBulkApply] = useState<{
     from_date: string;
     showtime_ids: number[];
   } | null>(null);
-  const [bulkContext, setBulkContext] = useState<{
+  const [bulkContexts, setBulkContexts] = useState<Array<{
     movie_id: number;
     room_id: number;
     movie_screen_id: number;
-  } | null>(null);
+  }>>([]);
 
-  // animation states
+
+  // Hoạt ảnh
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [hoverSlot, setHoverSlot] = useState<string | null>(null);
   const [justInserted, setJustInserted] = useState<string | null>(null);
 
-  // dragData supports existing or external normalized
+  // Biến dữ liệu khi kéo
   const dragData = useRef<{ type: "existing"; id: number } | { type: "external"; movie_id: number; movie_name?: string } | null>(null);
 
+  //Lấy showtime từ parent
   useEffect(() => {
     setState(showtimes);
     if (originalRef.current === null) originalRef.current = showtimes;
   }, [showtimes]);
-
-  useEffect(() => {
-    setDraggingId(null);
+  //Hàm khởi tạo lại dữ liệu kéo thả
+  const clearDragState = () => {
     setHoverSlot(null);
+    setDraggingId(null);
     dragData.current = null;
-  }, [externalMovies])
-  const WINDOW_DAYS = 15;
-  const startDate = initialDate ?? todayVN();
+  };
+  //Khỏi tạo lại dữ liệu kéo thả khi danh sách phim đang chiếu làm mới
+  useEffect(() => {
+    // setDraggingId(null);
+    // setHoverSlot(null);
+    // dragData.current = null;
+    clearDragState();
+  }, [externalMovies]);
 
+  //Khởi tạo số ngày hiển thị
+  const WINDOW_DAYS = 15;
+  //Lấy ngày hiện tại làm ngày hiên thị
+  const startDate = initialDate ?? todayVN();
+  //Sinh ra một mảng các ngày liên tiếp bắt đầu từ startDate để phục vụ cho tính năng thêm hàng loạt
   const dateKeys = useMemo(() => {
     const out: string[] = [];
     for (let i = 0; i < WINDOW_DAYS; i++) out.push(addDaysISO(startDate, i));
     return out;
   }, [startDate]);
-
+  //Gom suất chiếu theo phòng, theo khung giờ
   const grouped = useMemo(() => {
     const m: Record<string, Record<string, Record<number, ShowtimeDay | null>>> = {};
     for (const s of state) {
@@ -109,16 +145,17 @@ export default function ShowtimeTimetable({
     return m;
   }, [state]);
 
-  const clearDragState = () => {
-    setHoverSlot(null);
-    setDraggingId?.(null);        // nếu bạn có draggingId state
-    dragData.current = null;
-  };
+  //Kiểm tra nếu chưa có ngày hiển thị hiện tại thì sẽ hiển thị startDate
   useEffect(() => {
     if (!activeDate) {
       setActiveDate(startDate);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("active_date", startDate);
+      }
     }
   }, [startDate, activeDate]);
+
+
   useEffect(() => {
     const onDragEndGlobal = () => {
       clearDragState();
@@ -148,7 +185,14 @@ export default function ShowtimeTimetable({
       [activeCinema]: roomsByCinema[activeCinema] ?? []
     };
   }, [roomsByCinema, activeCinema]);
-  const handleSelectDate = (date: string) => { if (date === activeDate) return; setActiveDate(date); };
+  const handleSelectDate = (date: string) => {
+    if (date === activeDate) return;
+    setActiveDate(date);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("active_date", date);
+    }
+  };
+
   function readDragPayload(e?: React.DragEvent<HTMLDivElement>) {
     try {
       if (e) {
@@ -178,38 +222,60 @@ export default function ShowtimeTimetable({
     const payload = readDragPayload(e);
     if (!payload) return;
 
-    // Determine id and whether it's an existing showtime or external movie
-    // your drag payload for existing probably has shape { type: 'existing', id: <showtime_id>, ... }
-    const type = payload.type ?? payload?.dragType ?? null;
+    // ✅ Parse showtimeId NGAY LẬP TỨC
+    const showtimeId = Number(
+      payload.showtime_id ??
+      payload.id ??
+      NaN
+    );
 
-    // If external movie (not an existing show), we don't delete (no-op)
-    if (type === "external" || payload.movie_id) {
-      // nothing to delete — maybe show warning
+    if (!Number.isFinite(showtimeId)) return;
+
+    const isTemp = showtimeId < 0;
+
+    // ✅ XÓA TEMP SHOWTIME
+    if (isTemp) {
+      setState(prev => prev.filter(s => s.showtime_id !== showtimeId));
+
+      setPending(prev => {
+        const out = { ...prev };
+        delete out[showtimeId];
+        return out;
+      });
+
+      setBulkApply(prev => {
+        if (!prev) return null;
+        const ids = prev.showtime_ids.filter(id => id !== showtimeId);
+        return ids.length ? { ...prev, showtime_ids: ids } : null;
+      });
+
+      setBulkContexts(prev =>
+        prev.filter(ctx =>
+          !(
+            ctx.movie_id === payload.movie_id &&
+            ctx.room_id === payload.room_id &&
+            ctx.movie_screen_id === payload.movie_screen_id
+          )
+        )
+      );
+
       return;
     }
 
-    // if existing show
-    const showtimeId = Number(payload.id ?? payload.showtime_id ?? payload.movie_screen_id ?? NaN);
-    if (!Number.isFinite(showtimeId)) return;
+    // ✅ EXISTING SHOWTIME → soft delete
+    setState(prev => prev.filter(s => s.showtime_id !== showtimeId));
 
-    // optimistic removal from UI state
-    setState(prev => prev.filter(s => Number((s as any).showtime_id ?? (s as any).id ?? NaN) !== showtimeId));
-
-    // Add pending delete: set status = 0 (inactive)
-    setPending(prev => {
-      const out = { ...prev };
-      out[showtimeId] = {
+    setPending(prev => ({
+      ...prev,
+      [showtimeId]: {
         showtime_id: showtimeId,
-        // from_slot can be useful for audit / rollback
-        from_slot: payload.movie_screen_id ?? payload.to_slot ?? null,
+        from_slot: payload.movie_screen_id ?? null,
         to_slot: null,
         updated: { ...payload, status: 0 },
-      };
-      return out;
-    });
-
-
+      }
+    }));
   }
+
 
   const handleDragStart = (e: React.DragEvent, st: ShowtimeDay) => {
     setDraggingId(st.showtime_id);
@@ -248,10 +314,9 @@ export default function ShowtimeTimetable({
     e.dataTransfer.setDragImage(img, 0, 0);
   };
 
-
+  //khởi tạo id tạm để hiển thị các suất chiếu trước khi lưu vào db
   const genTempId = () => -(Math.floor(Math.random() * 1_000_000) + 1);
 
-  // mark: THIS FUNCTION IS ASYNC because we await onAdd
   const handleDropSlot = async (roomId: number, slotId: number, e: React.DragEvent) => {
     e.preventDefault();
     const d = dragData.current;
@@ -373,11 +438,14 @@ export default function ShowtimeTimetable({
             showtime_ids: [...prev.showtime_ids, tempId],
           };
         });
-        setBulkContext({
-          movie_id: d.movie_id!,
-          room_id: roomId,
-          movie_screen_id: slotId,
-        });
+        setBulkContexts(prev => [
+          ...prev,
+          {
+            movie_id: d.movie_id!,
+            room_id: roomId,
+            movie_screen_id: slotId,
+          }
+        ]);
         // optimistic insert (same as before)
         setState(prev => {
           const copy = [...prev, newShow].sort((a, b) => {
@@ -456,23 +524,22 @@ export default function ShowtimeTimetable({
     setPending({});
   };
   const handleSave = async () => {
-    // ❌ Không có thay đổi gì
     if (!Object.keys(pending).length) return;
 
-    // ✅ Có temp showtime → hỏi
-    if (bulkApply && bulkContext) {
+    // 👉 Có bulk context
+    if (bulkApply && bulkContexts.length > 0) {
       const result = await Swal.fire({
         title: "Áp dụng nhiều ngày?",
-        text: `Bạn vừa thêm ${bulkApply.showtime_ids.length} suất chiếu mới. Có muốn áp dụng đến ngày khác không?`,
+        text: `Bạn vừa thêm ${bulkApply.showtime_ids.length} suất chiếu mới.`,
         icon: "question",
         showCancelButton: true,
         confirmButtonText: "Áp dụng nhiều ngày",
         cancelButtonText: "Chỉ ngày này",
       });
 
-      // 👉 User CHỌN ÁP DỤNG NHIỀU NGÀY
+      // 🔴 User chọn "Áp dụng nhiều ngày"
       if (result.isConfirmed) {
-        const { value: toDate } = await Swal.fire({
+        const resDate = await Swal.fire({
           title: "Chọn ngày kết thúc",
           input: "date",
           inputAttributes: {
@@ -480,69 +547,56 @@ export default function ShowtimeTimetable({
           },
           showCancelButton: true,
           confirmButtonText: "Áp dụng",
+          cancelButtonText: "Hủy",
         });
 
-        if (toDate) {
-          // 🔥 BULK CREATE
-          // await createShowtimeBulk({
-          //   movie_id: bulkContext.movie_id,
-          //   room_id: bulkContext.room_id,
-          //   movie_screen_id: bulkContext.movie_screen_id,
-          //   from_date: bulkApply.from_date,
-          //   to_date: toDate,
-          // });
-
-          // // reset local UI
-          // setBulkApply(null);
-          // setBulkContext(null);
-          // setPending({});
-
-          // // reload canonical data
-          // if (onBulkApplied) await onBulkApplied();
-          // return;
-          try {
-            onLoadingChange?.(true);   // 🔥 BÁO parent: loading ON
-
-            await createShowtimeBulk({
-              movie_id: bulkContext.movie_id,
-              room_id: bulkContext.room_id,
-              movie_screen_id: bulkContext.movie_screen_id,
-              from_date: bulkApply.from_date,
-              to_date: toDate,
-            });
-
-            // reset local UI
-            setBulkApply(null);
-            setBulkContext(null);
-            setPending({});
-
-            // reload canonical data
-            if (onBulkApplied) await onBulkApplied();
-          } finally {
-            onLoadingChange?.(false);  // 🔥 loading OFF
-          }
-
+        // ❌ User CANCEL chọn ngày → KHÔNG LÀM GÌ
+        if (!resDate.isConfirmed || !resDate.value) {
           return;
         }
+
+        // ✅ User chọn ngày hợp lệ → BULK
+        try {
+          onLoadingChange?.(true);
+
+          await createShowtimeBulk({
+            from_date: bulkApply.from_date,
+            to_date: resDate.value,
+            items: bulkContexts,
+          });
+
+          setBulkApply(null);
+          setBulkContexts([]);
+          setPending({});
+
+          if (onBulkApplied) await onBulkApplied();
+          onSuccess?.("Áp dụng suất chiếu thành công");
+        } finally {
+          onLoadingChange?.(false);
+        }
+
+        return; // 🔥 cực kỳ quan trọng
       }
 
-      // 👉 User KHÔNG muốn bulk → fallthrough commit single-day
+      // 🟡 User chọn "Chỉ ngày này" → COMMIT
+      await commit();
+      setBulkApply(null);
+      setBulkContexts([]);
+      return;
     }
 
-    // 🔹 FLOW CŨ: commit từng showtime (single date)
+    // 👉 Không có bulk → commit bình thường
     await commit();
-
-    // cleanup
-    setBulkApply(null);
-    setBulkContext(null);
   };
 
 
 
+
   const discard = () => {
-    if (originalRef.current) setState(originalRef.current); setPending({});
+    if (originalRef.current) setState(originalRef.current);
+    setPending({});
     setBulkApply(null);
-    setBulkContext(null);
+    setBulkContexts([]);
 
   };
 
@@ -560,11 +614,16 @@ export default function ShowtimeTimetable({
             <label>Rạp:</label>
             <select
               value={activeCinema}
-              onChange={(e) =>
-                setActiveCinema(
-                  e.target.value === "all" ? "all" : Number(e.target.value)
-                )
-              }
+              onChange={(e) => {
+                const value =
+                  e.target.value === "all" ? "all" : Number(e.target.value);
+
+                setActiveCinema(value);
+
+                if (typeof window !== "undefined") {
+                  sessionStorage.setItem("active_cinema", String(value));
+                }
+              }}
               className="border px-2 py-1 rounded cursor-pointer"
             >
               <option value="all">Tất cả rạp</option>

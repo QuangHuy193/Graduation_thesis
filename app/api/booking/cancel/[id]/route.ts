@@ -38,9 +38,14 @@ export async function DELETE(
 
     // lấy ra payment
     const [pmRows] = await db.execute(
-      "SELECT amount FROM payment WHERE booking_id = ?",
+      "SELECT amount, order_code FROM payment WHERE booking_id = ?",
       [id]
     );
+
+    const orderCode = pmRows[0]?.order_code;
+    if (!orderCode) {
+      return errorResponse("Không tìm thấy orderCode PayOS", 400);
+    }
     // tính toán thêm percent
     let totalRefund = pmRows[0]?.amount ?? 0;
     totalRefund = (totalRefund * percent) / 100;
@@ -53,8 +58,9 @@ export async function DELETE(
         amount: Math.round(totalRefund),
         // amount: 10000,
         description: `Hoàn tiền booking #${id}`,
-        toBin: refundInfo.toBin,
-        toAccountNumber: refundInfo.toAccountNumber
+        orderCode,
+        // toBin: refundInfo.toBin,
+        // toAccountNumber: refundInfo.toAccountNumber
       };
       const result = await refundPayOS(refundPayload);
       const payout = result?.data?.data;

@@ -153,6 +153,7 @@ export default function PaymentGateway({
       try {
         await Promise.resolve(onPay(selected, { coupon, amount, items }));
         const orderCode = generateOrderCode();
+        sessionStorage.setItem("order_code", String(orderCode));
         const result = await createPayOSPayment({
           orderCode,
           amount,
@@ -179,14 +180,14 @@ export default function PaymentGateway({
     }
 
     // Các phương thức khác: theo callback onPay (legacy)
-    try {
-      setLoadingPay(true);
-      await Promise.resolve(onPay(selected, { coupon, amount, items }));
-    } catch (err: any) {
-      setPayError(err?.message ?? "Lỗi khi xử lý thanh toán");
-    } finally {
-      setLoadingPay(false);
-    }
+    // try {
+    //   setLoadingPay(true);
+    //   await Promise.resolve(onPay(selected, { coupon, amount, items }));
+    // } catch (err: any) {
+    //   setPayError(err?.message ?? "Lỗi khi xử lý thanh toán");
+    // } finally {
+    //   setLoadingPay(false);
+    // }
   }, [selected, coupon, amount, description, items, onPay]);
 
   return (

@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import InfoBooking from "../InfoBooking/InfoBooking";
 import { convertToTickets, toMySQLDate } from "@/lib/function";
 import InfoTicket from "../InfoTicket/InfoTicket";
+import { updatePaymentOrderCode } from "@/lib/axios/paymentAPI";
 
 type UserInfo = {
   name: string;
@@ -78,7 +79,9 @@ function Checkout() {
     const updateBooking = async (bookingID, data) => {
       await updateBookingToPaid(bookingID, data); // ⬅ Gọi API /booking/[id]
     };
-
+    const addOrderCode = async (bookingID, orderCode) => {
+      await updatePaymentOrderCode(bookingID, orderCode);
+    }
     if (paymentStatus === "PAID") {
       const bookingIDRaw = sessionStorage.getItem("booking_id");
       const bookingID = Number(bookingIDRaw);
@@ -90,6 +93,11 @@ function Checkout() {
           const data = JSON.parse(bookingData);
           const tickets = convertToTickets(data);
           updateBooking(bookingID, tickets);
+        }
+        const orderCode = sessionStorage.getItem("order_code");
+        if (orderCode) {
+          //Cập nhật ordercode vào payment phục vụ hoàn tiền
+          addOrderCode(bookingID, orderCode);
         }
       }
     }
@@ -128,8 +136,8 @@ function Checkout() {
     const currentUserId = user?.user_id
       ? Number(user.user_id)
       : userSes?.id
-      ? Number(userSes.id)
-      : null;
+        ? Number(userSes.id)
+        : null;
 
     if (!currentUserId) {
       console.error("Không có user_id");
@@ -163,18 +171,16 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${
-              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+              }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${
-              state.step === 3 && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
+              }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>

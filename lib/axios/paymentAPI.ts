@@ -54,8 +54,9 @@ export interface RefundPayload {
     referenceId: string;
     amount: number;
     description: string;
-    toBin: string;
-    toAccountNumber: string;
+    orderCode: string;
+    // toBin: string;
+    // toAccountNumber: string;
 }
 
 export async function refundPayOS(payload: RefundPayload) {
@@ -71,4 +72,14 @@ export async function refundPayOS(payload: RefundPayload) {
         console.error("Refund PayOS error:", err.response?.data || err.message);
         throw err.response?.data || err;
     }
+}
+export async function updatePaymentOrderCode(payload: {
+    booking_id: number;
+    order_code: string | number;
+}) {
+    const res = await axiosInstance.post(
+        "/api/payment/addOrderCode",
+        payload
+    );
+    return res.data;
 }

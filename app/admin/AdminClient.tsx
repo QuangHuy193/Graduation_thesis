@@ -693,6 +693,14 @@ export default function AdminDashboard() {
                   externalMovies={moviesEx}
                   onBulkApplied={fetchShowtimes}
                   onLoadingChange={setLoading}
+                  onSuccess={(msg?: string) =>
+                    Swal.fire({
+                      icon: "success",
+                      title: msg ?? "Thành công",
+                      timer: 1200,
+                      showConfirmButton: false,
+                    })
+                  }
                 />
               </div>
             )}
