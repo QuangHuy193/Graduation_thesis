@@ -222,7 +222,7 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
           <div>
             <button type="submit" className={`${styles.btn_add}`}>
               {state.isFetch.addOrEdit
-                ? "Đang sử lý..."
+                ? "Đang xử lý..."
                 : cinemaEdit !== null
                 ? "Cập nhật rạp"
                 : "Tạo mới rạp"}

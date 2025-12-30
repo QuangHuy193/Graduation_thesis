@@ -33,7 +33,7 @@ export async function GET(req: Request, { params }: { params: string }) {
         );
       } else {
         return successResponse(
-          { isDelete: "delete_showtime" },
+          { isDelete: "delete_showtime_booking" },
           `Rạp hiện đang có ${showtimes[0].count} lịch chiếu và có tổng cộng ${bookings[0].count} đơn hàng, tiếp tục sẽ hủy tất cả lịch chiếu, đơn hàng và hoàn tiền 100% cho khách hàng?`,
           200
         );

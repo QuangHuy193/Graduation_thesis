@@ -20,6 +20,7 @@ import FormAddEditCinema from "./FormAddEditCinema";
 import { scrollToPosition, showToast, showToastForever } from "@/lib/function";
 import Spinner from "../Spinner/Spinner";
 import Swal from "sweetalert2";
+import { deleteCinemaAPI } from "@/lib/axios/admin/cinemaAPI";
 
 function CinemaList() {
   const [state, setState] = useState({
@@ -54,8 +55,21 @@ function CinemaList() {
     getCinemas();
   }, [state.refreshCinemaList]);
 
-  const handleCallDeleteApi = async (cinema_id) => {
-    console.log("Gọi api xóa");
+  const handleCallDeleteApi = async (cinema_id, type) => {
+    try {
+      showToastForever("info", "Đang xử lý...");
+      const res = await deleteCinemaAPI(cinema_id, type);
+      if (res.success) {
+        showToast("success", res.message);
+        setState((prev) => ({
+          ...prev,
+          refreshCinemaList: !prev.refreshCinemaList,
+        }));
+      }
+    } catch (error) {
+      console.log(error);
+      showToast("error", "Có lỗi xảy ra, vui lòng thử lại");
+    }
   };
 
   // kiểm tra -> gọi api
@@ -65,8 +79,7 @@ function CinemaList() {
       const res = await checkBeforeDeleteCinemasAPI(cinema_id);
       if (res.data.isDelete === "delete") {
         // TODO
-        handleCallDeleteApi(cinema_id);
-        showToast("success", "Thành công (giả lậ)");
+        handleCallDeleteApi(cinema_id, 0);
       } else if (res.data.isDelete === "delete_showtime") {
         Swal.fire({
           icon: "warning",
@@ -81,9 +94,24 @@ function CinemaList() {
           },
         }).then(async (result) => {
           if (result.isConfirmed) {
-            // TODO
-            handleCallDeleteApi(cinema_id);
-            showToast("success", "Thành công (giả lậ)");
+            handleCallDeleteApi(cinema_id, 1);
+          }
+        });
+      } else if (res.data.isDelete === "delete_showtime_booking") {
+        Swal.fire({
+          icon: "warning",
+          text: res.message,
+          showCancelButton: true,
+          confirmButtonText: "TIẾP TỤC",
+          cancelButtonText: "DỪNG LẠI",
+          customClass: {
+            popup: "popup_alert",
+            confirmButton: `btn_alert`,
+            cancelButton: `btn_alert`,
+          },
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            handleCallDeleteApi(cinema_id, 2);
           }
         });
       }
