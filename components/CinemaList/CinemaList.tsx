@@ -8,6 +8,7 @@ import {
 import {
   faBan,
   faCheck,
+  faClock,
   faPen,
   faRefresh,
   faX,
@@ -142,7 +143,33 @@ function CinemaList() {
     <div className="bg-white rounded-lg shadow relative">
       {/* thanh action */}
       <div className="flex justify-between p-2 items-center">
-        <div>Lọc,...</div>
+        {/* action right */}
+        <div>
+          {/* thêm khung giờ */}
+          {state.displayForm && (
+            <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-sm border">
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded-md
+                 hover:bg-blue-600 transition text-sm font-medium"
+              >
+                Thêm khung giờ <FontAwesomeIcon icon={faClock} />
+              </button>
+              <span className="text-gray-500 text-sm">Từ</span>
+              <input
+                type="time"
+                className="px-3 py-2 border rounded-md text-sm
+                 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <span className="text-gray-500 text-sm">–</span>
+              <input
+                type="time"
+                className="px-3 py-2 border rounded-md text-sm
+                 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+            </div>
+          )}
+        </div>
+
         <div>
           {(!state.displayForm ||
             (state.displayForm && state.cinemaEdit !== null)) && (

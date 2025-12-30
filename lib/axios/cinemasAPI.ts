@@ -32,7 +32,7 @@ export async function getTablePriceAPI(id: number) {
 
 export async function getCinemasAPI() {
   try {
-    const response = await axiosInstance.get("/api/cinemas/detail");
+    const response = await axiosInstance.get("/api/admin/cinema/detail");
     return response.data;
   } catch (error: any) {
     console.error("Error fetching cinemas:", error);
@@ -47,6 +47,7 @@ export async function createCinemasAPI(data: {
   ward: string;
   province: string;
   price_base: number;
+  time;
 }) {
   try {
     const response = await axiosInstance.post("/api/admin/cinema", data);
@@ -65,6 +66,7 @@ export async function updateCinemasAPI(data: {
   ward: string;
   province: string;
   price_base: number;
+  time;
 }) {
   try {
     const response = await axiosInstance.put(

@@ -6,7 +6,7 @@ export async function PUT(req: Request, { params }: { params: string }) {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { name, specific_address, ward, province, price_base } = body;
+    const { name, specific_address, ward, province, price_base, time } = body;
 
     const [rows] = await db.query<RowDataPacket[]>(
       `SELECT cinema_id FROM cinemas 
@@ -18,12 +18,26 @@ export async function PUT(req: Request, { params }: { params: string }) {
       return errorResponse("Tên rạp đã tồn tại", 409);
     }
 
-    await db.query(
+    const [update] = await db.query(
       `UPDATE cinemas 
       SET name = ?, specific_address = ?, ward = ?, province = ?, price_base = ? 
       WHERE cinema_id = ?`,
       [name, specific_address, ward, province, price_base, id]
     );
+
+    await db.query(`DELETE FROM movie_screening_cinema WHERE cinema_id = ?`, [
+      id,
+    ]);
+
+    if (time.length > 0) {
+      const values = time.map((t) => [id, t.movie_screen_id]);
+
+      await db.query(
+        `INSERT INTO movie_screening_cinema (cinema_id, movie_screen_id)
+       VALUES ?`,
+        [values]
+      );
+    }
 
     return successResponse({}, "Cập nhật rạp thành công", 200);
   } catch (error) {

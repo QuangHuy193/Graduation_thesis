@@ -13,7 +13,7 @@ export async function GET(
       FROM movies m
       JOIN showtime st ON st.movie_id = m.movie_id
       JOIN rooms r ON r.room_id = st.room_id
-      WHERE r.cinema_id = ?
+      WHERE r.cinema_id = ? AND st.status = 1
       GROUP BY m.movie_id`,
       [id]
     );

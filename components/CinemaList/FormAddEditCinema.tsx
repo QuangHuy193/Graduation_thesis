@@ -1,16 +1,23 @@
+"use client";
 import { useEffect, useState } from "react";
 import styles from "./CinemaList.module.scss";
 import { PROVINCES } from "@/lib/constant";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleXmark, faRefresh } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCheck,
+  faCircleXmark,
+  faRefresh,
+} from "@fortawesome/free-solid-svg-icons";
 import { createCinemasAPI, updateCinemasAPI } from "@/lib/axios/cinemasAPI";
 import { showToast } from "@/lib/function";
+import { getScreenings } from "@/lib/axios/admin/movie_screenAPI";
 
 function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
   const [state, setState] = useState({
     isFetch: {
       addOrEdit: false,
     },
+    movieScreening: [],
     cinemaNew: {
       cinema_id: -1,
       name: "",
@@ -18,8 +25,22 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
       ward: "",
       province: "",
       price_base: 0,
+      time: [],
     },
   });
+
+  //  lấy ds tất cả giờ chiếu
+  useEffect(() => {
+    const getMovieScreen = async () => {
+      try {
+        const res = await getScreenings();
+        setState((prev) => ({ ...prev, movieScreening: res }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getMovieScreen();
+  }, []);
 
   useEffect(() => {
     if (cinemaEdit !== null) {
@@ -34,6 +55,7 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
           ward: "",
           province: "",
           price_base: 0,
+          time: [],
         },
       }));
     }
@@ -41,7 +63,7 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { name, specific_address, ward, province, price_base } =
+    const { name, specific_address, ward, province, price_base, time } =
       state.cinemaNew;
     if (
       name.trim() === "" ||
@@ -58,6 +80,14 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
       return;
     }
 
+    if (time.length === 0) {
+      showToast(
+        "error",
+        "Bạn chưa chọn bất kì khung giờ hoạt động nào cho rạp!"
+      );
+      return;
+    }
+
     try {
       setState((prev) => ({
         ...prev,
@@ -70,12 +100,18 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
       }
       // cập nhật
       else {
+        const timeOld = cinemaEdit.time.map((t) => t.movie_screen_id).sort();
+        const timeNew = time.map((t) => t.movie_screen_id).sort();
+
+        const isEqual = timeOld.every((id, index) => id === timeNew[index]);
+        console.log(isEqual);
         if (
           name === cinemaEdit.name &&
           specific_address === cinemaEdit.specific_address &&
           ward === cinemaEdit.ward &&
           province === cinemaEdit.province &&
-          Number(price_base) === Number(cinemaEdit.price_base)
+          Number(price_base) === Number(cinemaEdit.price_base) &&
+          isEqual
         ) {
           showToast("info", "Bạn chưa thay đổi bất kì thông tin gì của rạp");
           return;
@@ -97,6 +133,31 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
         isFetch: { ...prev.isFetch, addOrEdit: false },
       }));
     }
+  };
+
+  // toggle time
+  const handleToggleTime = (movie_screen_id) => {
+    setState((prev) => {
+      const index = prev.cinemaNew.time.findIndex(
+        (t) => t.movie_screen_id === movie_screen_id
+      );
+
+      let newTime = [...prev.cinemaNew.time];
+
+      if (index !== -1) {
+        newTime.splice(index, 1);
+      } else {
+        newTime.push({ movie_screen_id });
+      }
+
+      return {
+        ...prev,
+        cinemaNew: {
+          ...prev.cinemaNew,
+          time: newTime,
+        },
+      };
+    });
   };
 
   return (
@@ -188,6 +249,40 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
             }}
           />
         </div>
+        <div className={`${styles.form_input_group}`}>
+          <label>Khung giờ hoạt động</label>
+          {state.movieScreening.map((t, ind) => {
+            let isSelected = false;
+            if (state.cinemaNew.time.length !== 0) {
+              isSelected = state.cinemaNew.time.some(
+                (item) => item.movie_screen_id === t.movie_screen_id
+              );
+            }
+
+            return (
+              <div
+                key={ind}
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => handleToggleTime(t.movie_screen_id)}
+              >
+                <div
+                  className="w-5 h-5 border border-blue-400 rounded-sm flex 
+                items-center justify-center"
+                >
+                  {isSelected && (
+                    <FontAwesomeIcon
+                      icon={faCheck}
+                      className="text-green-500"
+                    />
+                  )}
+                </div>
+                <span>
+                  {t.start_time}-{t.end_time}
+                </span>
+              </div>
+            );
+          })}
+        </div>
         <div className="flex justify-end gap-2 my-2">
           <div>
             <button
@@ -207,6 +302,7 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
                       ward: "",
                       province: "",
                       price_base: 0,
+                      time: [],
                     },
                   }));
                 }

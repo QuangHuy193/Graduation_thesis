@@ -5,7 +5,7 @@ import { errorResponse, successResponse } from "@/lib/function";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, specific_address, ward, province, price_base } = body;
+    const { name, specific_address, ward, province, price_base, time } = body;
 
     const [rows] = await db.query<RowDataPacket[]>(
       `SELECT cinema_id FROM cinemas WHERE name = ? AND status = 1 LIMIT 1`,
@@ -21,6 +21,14 @@ export async function POST(req: Request) {
       VALUES (?,?,?,?,?,?)`,
       [name, specific_address, ward, province, price_base, 1]
     );
+
+    const values = time.map((t) => [insert.insertId, t.movie_screen_id]);
+    await db.query(
+      `INSERT INTO movie_screening_cinema (cinema_id, movie_screen_id)
+      VALUES (?)`,
+      [values]
+    );
+
     return successResponse(
       {
         cinema_id: insert.insertId,
