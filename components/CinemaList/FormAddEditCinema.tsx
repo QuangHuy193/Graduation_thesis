@@ -12,7 +12,12 @@ import { createCinemasAPI, updateCinemasAPI } from "@/lib/axios/cinemasAPI";
 import { showToast } from "@/lib/function";
 import { getScreenings } from "@/lib/axios/admin/movie_screenAPI";
 
-function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
+function FormAddEditCinema({
+  movieScreening,
+  cinemaEdit,
+  onClose,
+  refreshCinemaList,
+}) {
   const [state, setState] = useState({
     isFetch: {
       addOrEdit: false,
@@ -31,16 +36,10 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
 
   //  lấy ds tất cả giờ chiếu
   useEffect(() => {
-    const getMovieScreen = async () => {
-      try {
-        const res = await getScreenings();
-        setState((prev) => ({ ...prev, movieScreening: res }));
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getMovieScreen();
-  }, []);
+    if (movieScreening.length > 0) {
+      setState((prev) => ({ ...prev, movieScreening: movieScreening }));
+    }
+  }, [movieScreening]);
 
   useEffect(() => {
     if (cinemaEdit !== null) {
@@ -250,7 +249,7 @@ function FormAddEditCinema({ cinemaEdit, onClose, refreshCinemaList }) {
           />
         </div>
         <div className={`${styles.form_input_group}`}>
-          <label>Khung giờ hoạt động</label>
+          <label>Các khung giờ chiếu</label>
           {state.movieScreening.map((t, ind) => {
             let isSelected = false;
             if (state.cinemaNew.time.length !== 0) {

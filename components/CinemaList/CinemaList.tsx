@@ -22,18 +22,32 @@ import { scrollToPosition, showToast, showToastForever } from "@/lib/function";
 import Spinner from "../Spinner/Spinner";
 import Swal from "sweetalert2";
 import { deleteCinemaAPI } from "@/lib/axios/admin/cinemaAPI";
+import { getScreenings } from "@/lib/axios/admin/movie_screenAPI";
 
-function CinemaList() {
+function CinemaList({ setActiviTab }) {
   const [state, setState] = useState({
     isFetch: {
       cinemas: false,
     },
     cinemaList: [],
+    movieScreening: [],
     refreshCinemaList: false,
     displayForm: false,
     cinemaIdEdit: -1,
     cinemaEdit: null,
   });
+
+  useEffect(() => {
+    const getMovieScreen = async () => {
+      try {
+        const res = await getScreenings();
+        setState((prev) => ({ ...prev, movieScreening: res }));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getMovieScreen();
+  }, []);
 
   useEffect(() => {
     const getCinemas = async () => {
@@ -79,7 +93,6 @@ function CinemaList() {
       showToastForever("info", "Đang xử lý...");
       const res = await checkBeforeDeleteCinemasAPI(cinema_id);
       if (res.data.isDelete === "delete") {
-        // TODO
         handleCallDeleteApi(cinema_id, 0);
       } else if (res.data.isDelete === "delete_showtime") {
         Swal.fire({
@@ -146,28 +159,17 @@ function CinemaList() {
         {/* action right */}
         <div>
           {/* thêm khung giờ */}
-          {state.displayForm && (
-            <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-sm border">
-              <button
-                className="px-4 py-2 bg-blue-500 text-white rounded-md
-                 hover:bg-blue-600 transition text-sm font-medium"
-              >
-                Thêm khung giờ <FontAwesomeIcon icon={faClock} />
-              </button>
-              <span className="text-gray-500 text-sm">Từ</span>
-              <input
-                type="time"
-                className="px-3 py-2 border rounded-md text-sm
-                 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <span className="text-gray-500 text-sm">–</span>
-              <input
-                type="time"
-                className="px-3 py-2 border rounded-md text-sm
-                 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-3 p-2 rounded-lg">
+            <button
+              className="px-4 py-2 border border-blue-400 text-blue-500
+              rounded-md hover:bg-blue-50 transition text-sm font-medium
+              flex items-center gap-2 cursor-pointer"
+              onClick={() => setActiviTab("moviescreen")}
+            >
+              <FontAwesomeIcon icon={faClock} />
+              Quản lý khung giờ chiếu
+            </button>
+          </div>
         </div>
 
         <div>
@@ -192,6 +194,7 @@ function CinemaList() {
       {/* form thêm/sửa */}
       {state.displayForm && (
         <FormAddEditCinema
+          movieScreening={state.movieScreening}
           refreshCinemaList={() => {
             setState((prev) => ({
               ...prev,

@@ -28,7 +28,7 @@ export async function GET(
 
   // Format YYYY-MM-DD
   const date = target.toISOString().split("T")[0];
-  console.log(date, id);
+
   try {
     const [rows] = await db.query(
       `SELECT s.showtime_id, s.date, s.movie_id,
@@ -46,6 +46,8 @@ export async function GET(
        ORDER BY c.cinema_id, r.room_id`,
       [date, id]
     );
+    console.log(date, id);
+    console.log("row", rows);
 
     const cinemasMap = new Map<string | number, any>();
 
