@@ -153,7 +153,6 @@ export default function PaymentGateway({
       try {
         await Promise.resolve(onPay(selected, { coupon, amount, items }));
         const orderCode = generateOrderCode();
-        sessionStorage.setItem("order_code", String(orderCode));
         const result = await createPayOSPayment({
           orderCode,
           amount,

@@ -10,9 +10,8 @@ export async function POST(req: Request) {
             referenceId: body.referenceId,
             amount: Number(body.amount),
             description: body.description,
-            orderCode: body.orderCode,
-            // toBin: body.toBin,
-            // toAccountNumber: body.toAccountNumber,
+            toBin: body.toBin,
+            toAccountNumber: body.toAccountNumber,
             // category: ["refund"]
         };
 
