@@ -3,11 +3,7 @@ import PaymentGateway from "../PaymentGateway/PaymentGateway";
 import styles from "./Checkout.module.scss";
 import InfoUserCheckout from "../InfoUserCheckout/InfoUserCheckout";
 import { useSession } from "next-auth/react";
-import {
-  createBookingNoAuth,
-  createBookingAuth,
-  updateBookingToPaid,
-} from "@/lib/axios/bookingAPI";
+import { createBookingAuth, updateBookingToPaid } from "@/lib/axios/bookingAPI";
 import { useSearchParams } from "next/navigation";
 import InfoBooking from "../InfoBooking/InfoBooking";
 import { convertToTickets, toMySQLDate } from "@/lib/function";
@@ -45,6 +41,11 @@ function Checkout() {
   const [state, setState] = useState({
     step: 1,
   });
+
+  // giá giảm truyền vào info booking
+  const [priceDes, setPriceDes] = useState(0);
+  // voucher truyền vào
+
   const [auth, setAuth] = useState(false);
   //Dùng cho trường hợp ko đăng nhập (auth=false)
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -129,8 +130,8 @@ function Checkout() {
     const currentUserId = user?.user_id
       ? Number(user.user_id)
       : userSes?.id
-        ? Number(userSes.id)
-        : null;
+      ? Number(userSes.id)
+      : null;
 
     if (!currentUserId) {
       console.error("Không có user_id");
@@ -164,16 +165,18 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+            }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
-              }`}
+            className={`${styles.step_title} ${
+              state.step === 3 && "text-(--color-yellow)"
+            }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>
@@ -196,6 +199,7 @@ function Checkout() {
             )}
             {state.step === 2 && (
               <PaymentGateway
+                setPriceDes={setPriceDes}
                 buyer={userInfo ?? undefined}
                 onPay={async (method: any, payload: any) => {
                   const bookingID = await handleCreateBooking();
@@ -211,7 +215,7 @@ function Checkout() {
             {state.step === 3 && <div>Thanh toán thành công</div>}
           </div>
           <div className="flex-1 pb-5">
-            <InfoBooking />
+            <InfoBooking priceDes={priceDes} />
           </div>
         </div>
       )}

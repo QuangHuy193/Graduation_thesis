@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { lockSeatAPI, unlocksSeatAPI } from "@/lib/axios/seatsAPI";
 
-function InfoBooking() {
+function InfoBooking({ priceDes }) {
   const router = useRouter();
   const [bookingData, setBookingData] = useState(null);
   const [state, setState] = useState({
@@ -51,6 +51,7 @@ function InfoBooking() {
       const diff = expireTime - now;
 
       // Hết giờ
+
       if (diff <= 0) {
         clearInterval(timer);
         unlockSeats(
@@ -184,8 +185,23 @@ function InfoBooking() {
         <div className={`text-(--color-yellow) font-semibold`}>
           SỐ TIỀN CẦN THANH TOÁN
         </div>
-        <div className={`text-xl font-bold`}>
-          {Number(bookingData?.total_price).toLocaleString("vi-VN")} VNĐ
+
+        <div className="space-y-1 font-bold">
+          {/* Giá cũ */}
+          <div
+            className={`text-lg  ${
+              priceDes > 0 ? "text-gray-400 line-through" : ""
+            }`}
+          >
+            {Number(bookingData?.total_price).toLocaleString("vi-VN")} VNĐ
+          </div>
+
+          {/* Giá mới */}
+          {priceDes > 0 && (
+            <div className="text-xl font-bold text-green-400">
+              {Number(priceDes).toLocaleString("vi-VN")} VNĐ
+            </div>
+          )}
         </div>
       </div>
     </div>

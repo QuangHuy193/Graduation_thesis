@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { createPayOSPayment } from "@/lib/axios/paymentAPI";
 import { getVoucherByUserAPI } from "@/lib/axios/voucherAPI";
 import { useSession } from "next-auth/react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 /**
  * Usage:
  * <PaymentGateway
@@ -30,6 +32,7 @@ type PaymentMethodId = (typeof PAYMENT_METHODS)[number]["id"];
 type ApplyCouponResult = { ok: boolean; discount?: number; message?: string };
 
 type PaymentGatewayProps = {
+  setPriceDes: (price: number) => void;
   initialMethod?: PaymentMethodId;
   amount: number;
   description?: string;
@@ -48,17 +51,19 @@ type UserSession = {
 } | null;
 
 export default function PaymentGateway({
+  setPriceDes,
   initialMethod = "domestic_card",
   amount,
   description = "Thanh toán đơn hàng",
   items = [],
   buyer,
-  onPay = () => { },
-  onApplyCoupon = async () => ({ ok: true, discount: 0 }),
+  onPay = () => {},
 }: PaymentGatewayProps) {
   const [selected, setSelected] = useState<PaymentMethodId | null>(
     initialMethod
   );
+  // giá có thể giảm
+  const [priceFinal, setPriceFinal] = useState(amount);
   // user
   const { data: session } = useSession();
   const user = session?.user;
@@ -74,9 +79,10 @@ export default function PaymentGateway({
     couponList: [],
     couponDisplay: false,
   });
-  // lưu id voucher
-  const [coupon, setCoupon] = useState(-1);
-  const [couponMsg, setCouponMsg] = useState("Bạn đang có mã giảm giá");
+
+  const [coupon, setCoupon] = useState({});
+  // thông báo
+  const [couponMsg, setCouponMsg] = useState("Bạn chưa có mã giảm giá nào.");
   const [loadingCoupon, setLoadingCoupon] = useState(false);
 
   const [loadingPay, setLoadingPay] = useState(false);
@@ -84,12 +90,17 @@ export default function PaymentGateway({
   const currentUserId = user?.user_id
     ? Number(user.user_id)
     : userSes?.id
-      ? Number(userSes.id)
-      : null;
+    ? Number(userSes.id)
+    : null;
+
+  // lấy ds voucher
   useEffect(() => {
     const getCoupon = async (user_id) => {
       try {
         const res = await getVoucherByUserAPI(user_id);
+        if (res.length > 0) {
+          setCouponMsg("Bạn đang có mã giảm giá");
+        }
         setCouponListOption((prev) => ({ ...prev, couponList: res }));
       } catch (error) {
         console.log(error);
@@ -102,31 +113,29 @@ export default function PaymentGateway({
     setSelected(initialMethod);
   }, [initialMethod]);
 
-  const handleApplyCoupon = useCallback(async () => {
-    if (!coupon || coupon === -1) {
-      setCouponMsg("Vui lòng chọn mã giảm giá");
-      return;
+  const handleApplyCoupon = async (coupon) => {
+    // setLoadingCoupon(true);
+    // setCouponMsg("Đang kiểm tra mã...");
+
+    // áp dụng giảm
+    let priceNew = amount;
+    const couponValue = Math.abs(Number(coupon.value));
+    if (coupon.rule_uniti === "percent") {
+      const priceDes = (priceNew * couponValue) / 100;
+      priceNew = priceNew - priceDes;
+    } else {
+      priceNew = priceNew - couponValue; // giảm tiền cố định
     }
-    setLoadingCoupon(true);
-    setCouponMsg("Đang kiểm tra mã...");
-    try {
-      const res = await onApplyCoupon(coupon.trim());
-      if (res && res.ok) {
-        setCouponMsg(`Áp dụng thành công - Giảm ${res.discount || 0}%`);
-      } else {
-        setCouponMsg(res?.message ?? "Mã không hợp lệ");
-      }
-    } catch (e) {
-      setCouponMsg("Lỗi khi áp dụng mã");
-    } finally {
-      setLoadingCoupon(false);
-    }
-  }, [coupon, onApplyCoupon]);
+    // set cho thanh toán
+    setPriceFinal(priceNew);
+    // set cho infobooking
+    setPriceDes(priceNew);
+  };
 
   const handleReset = useCallback(() => {
     setSelected(initialMethod);
-    setCoupon("");
-    setCouponMsg("Bạn đang có mã giảm giá");
+    setCoupon({});
+    setCouponMsg("");
     setPayError(null);
   }, [initialMethod]);
 
@@ -151,11 +160,13 @@ export default function PaymentGateway({
     if (selected === "domestic_card") {
       setLoadingPay(true);
       try {
-        await Promise.resolve(onPay(selected, { coupon, amount, items }));
-        const orderCode = generateOrderCode();
+        await Promise.resolve(onPay(selected, { coupon, priceFinal, items }));
+        const orderCode = await generateOrderCode();
+        console.log("qr", orderCode);
+        console.log("priceFinal", priceFinal);
         const result = await createPayOSPayment({
           orderCode,
-          amount,
+          amount: priceFinal,
           description,
           items,
           coupon: coupon || undefined,
@@ -163,6 +174,7 @@ export default function PaymentGateway({
           cancelUrl: `${window.location.origin}/checkout`,
           buyer: buyer || undefined,
         });
+        console.log("result", result);
 
         if (result.ok && result.checkoutUrl) {
           window.location.href = result.checkoutUrl;
@@ -187,7 +199,7 @@ export default function PaymentGateway({
     // } finally {
     //   setLoadingPay(false);
     // }
-  }, [selected, coupon, amount, description, items, onPay]);
+  }, [selected, coupon, priceFinal, description, items, onPay]);
 
   return (
     <div className="max-w-3xl mx-auto p-6">
@@ -202,10 +214,11 @@ export default function PaymentGateway({
                 onClick={() => setSelected(m.id)}
                 aria-pressed={isSelected}
                 aria-label={m.label}
-                className={`w-full text-left border rounded-md p-4 flex items-center gap-4 transition-shadow focus:outline-none ${isSelected
-                  ? "ring-2 ring-offset-2 ring-indigo-500 bg-white/5"
-                  : "hover:shadow-md"
-                  }`}
+                className={`w-full text-left border rounded-md p-4 flex items-center gap-4 transition-shadow focus:outline-none ${
+                  isSelected
+                    ? "ring-2 ring-offset-2 ring-indigo-500 bg-white/5"
+                    : "hover:shadow-md"
+                }`}
                 type="button"
               >
                 <div className="text-2xl bg-white/10 rounded-md w-12 h-12 flex items-center justify-center">
@@ -253,10 +266,11 @@ export default function PaymentGateway({
           </div>
           {/* ds voucher */}
           <div
-            className={`transition-all duration-500 overflow-hidden ${couponListOption.couponDisplay
-              ? "max-h-[600px] opacity-100"
-              : "max-h-0 opacity-0"
-              } bg-indigo-600/95 rounded-b-md shadow-inner`}
+            className={`transition-all duration-500 overflow-hidden ${
+              couponListOption.couponDisplay
+                ? "max-h-[600px] opacity-100"
+                : "max-h-0 opacity-0"
+            } bg-indigo-600/95 rounded-b-md shadow-inner`}
           >
             <div className="pt-3 px-4 pb-4 space-y-3 text-white">
               {/* map list */}
@@ -265,25 +279,29 @@ export default function PaymentGateway({
                   <div
                     key={c.voucher_id}
                     className="p-3 bg-white/10 rounded-md border border-white/10 
-                       hover:bg-white/20 transition cursor-pointer"
-                    onClick={() => setCoupon(c.voucher_id)}
+                       hover:bg-white/20 transition cursor-pointer relative"
+                    onClick={() => {
+                      if (coupon.voucher_id === c.voucher_id) {
+                        setCoupon({});
+                        handleApplyCoupon({});
+                      } else {
+                        setCoupon(c);
+                        handleApplyCoupon(c);
+                      }
+                    }}
                   >
                     <div className="font-semibold">{c.name}</div>
                     <div className="text-sm opacity-80">{c.description}</div>
+                    {coupon.voucher_id === c.voucher_id && (
+                      <div
+                        className="absolute top-1/2 right-2 -translate-y-1/2 
+                     text-emerald-400"
+                      >
+                        <FontAwesomeIcon icon={faCircleCheck} />
+                      </div>
+                    )}
                   </div>
                 ))}
-
-              <div className="flex justify-end">
-                <button
-                  onClick={handleApplyCoupon}
-                  disabled={loadingCoupon}
-                  className="px-3 py-2 bg-white/20 hover:bg-white/30 rounded-md 
-                    text-white font-medium disabled:opacity-50 cursor-pointer"
-                  type="button"
-                >
-                  {loadingCoupon ? "Đang..." : "Áp dụng"}
-                </button>
-              </div>
             </div>
           </div>
         </div>
