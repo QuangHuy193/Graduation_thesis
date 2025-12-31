@@ -267,12 +267,15 @@ function ShowTime({
               )
             ) : (
               <div
-                className="flex justify-center items-center text-2xl md:text-4xl text-(--color-yellow) 
-                py-10 gap-2 md:gap-3 text-center"
+                className="flex justify-center items-center text-xl md:text-4xl text-(--color-yellow) 
+                py-10 gap-2 md:gap-3 text-center uppercase"
               >
                 <span>
-                  <FontAwesomeIcon icon={faVideoSlash} /> HIỆN CHƯA CÓ LỊCH
-                  CHIẾU
+                  <div>
+                    <FontAwesomeIcon icon={faVideoSlash} /> HIỆN CHƯA CÓ LỊCH
+                    CHIẾU
+                  </div>
+                  <span>CHO RẠP Ở {selected.provinceSelected}</span>
                 </span>
               </div>
             )}

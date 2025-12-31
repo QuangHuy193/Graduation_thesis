@@ -38,9 +38,16 @@ import DiagramRoom from "@/components/RoomList/DiagramRoom";
 import UserTable from "@/components/UserTable/UserTable";
 import { UserITF } from "@/lib/interface/userInterface";
 import Dashboard from "@/components/Dashboard/Dashboard";
-import { getAdminDashboardStats, getAdminDashboardWarnings } from "@/lib/axios/admin/dashboardAPI";
-import { DashboardStats, DashboardWarnings } from "@/lib/interface/dashboardInterface";
+import {
+  getAdminDashboardStats,
+  getAdminDashboardWarnings,
+} from "@/lib/axios/admin/dashboardAPI";
+import {
+  DashboardStats,
+  DashboardWarnings,
+} from "@/lib/interface/dashboardInterface";
 import CinemaList from "@/components/CinemaList/CinemaList";
+import MovieScreening from "@/components/CinemaList/MovieScreening";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
@@ -56,13 +63,17 @@ type AdminTab =
   | "showtimes"
   | "rooms"
   | "promotions"
-  | "aside";
+  | "aside"
+  | "moviescreen"
+  | "cinemas";
 
 export default function AdminDashboard() {
   //Chọn tab quản lý
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
     if (typeof window !== "undefined") {
-      return sessionStorage.getItem("admin_active_tab") as AdminTab || "dashboard";
+      return (
+        (sessionStorage.getItem("admin_active_tab") as AdminTab) || "dashboard"
+      );
     }
     return "dashboard";
   });
@@ -86,8 +97,11 @@ export default function AdminDashboard() {
   const [cinemasMap, setCinemasMap] = React.useState<
     Record<number, CinemaEntry>
   >({});
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
-  const [dashboardWarnings, setDashboardWarnings] = useState<DashboardWarnings | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null
+  );
+  const [dashboardWarnings, setDashboardWarnings] =
+    useState<DashboardWarnings | null>(null);
   const [roomsList, setRoomsList] = React.useState<RoomEntry[]>([]);
   // sửa thêm phòng
   const [room, setRoom] = useState();
@@ -216,12 +230,10 @@ export default function AdminDashboard() {
     }
   }
   const fetchDashboardWarnings = async () => {
-
     const res = await getAdminDashboardWarnings();
     setDashboardWarnings(res.data.data);
   };
   const fetchDashboardStats = async () => {
-
     const res = await getAdminDashboardStats();
     setDashboardStats(res.data.data);
   };
@@ -343,8 +355,8 @@ export default function AdminDashboard() {
               typeof u.status === "number"
                 ? u.status
                 : u.status === "active"
-                  ? 1
-                  : 1,
+                ? 1
+                : 1,
           };
 
           const res = await createShowtimeWithDay(createPayload);
@@ -415,8 +427,8 @@ export default function AdminDashboard() {
           typeof u.showtime_id === "number" && u.showtime_id > 0
             ? u.showtime_id
             : typeof u.id === "number" && u.id > 0
-              ? u.id
-              : null;
+            ? u.id
+            : null;
 
         const date = u.date ?? u.show_date ?? u.showDate ?? null;
 
@@ -472,9 +484,11 @@ export default function AdminDashboard() {
       if (err.response?.status === 409 || api?.status === 409) {
         const conflict = api?.conflict;
         const msg = conflict
-          ? `Xung đột: phòng ${conflict.target_room
-          } có suất chồng giờ (showtime ${conflict.conflicting?.showtime_id ?? conflict.conflicting?.id
-          }).`
+          ? `Xung đột: phòng ${
+              conflict.target_room
+            } có suất chồng giờ (showtime ${
+              conflict.conflicting?.showtime_id ?? conflict.conflicting?.id
+            }).`
           : "Xung đột khi lưu — có suất chồng giờ.";
         Swal.fire({ icon: "error", title: "Commit thất bại", text: msg });
       } else {
@@ -498,6 +512,7 @@ export default function AdminDashboard() {
     bookings: "Vé",
     promotions: "Sự kiện",
     cinemas: "Danh sách rạp",
+    moviescreen: "Khung giờ chiếu",
     rooms: "Danh sách phòng theo rạp",
     aside: "Danh sách phòng - Sơ đồ phòng",
     users: "Người dùng",
@@ -529,22 +544,25 @@ export default function AdminDashboard() {
         <nav className="space-y-2">
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "dashboard" ? "bg-slate-100" : "hover:bg-slate-50"
-              }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
+              activeTab === "dashboard" ? "bg-slate-100" : "hover:bg-slate-50"
+            }`}
           >
             Tổng quan
           </button>
           <button
             onClick={() => setActiveTab("users")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "users" ? "bg-slate-100" : "hover:bg-slate-50"
-              }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
+              activeTab === "users" ? "bg-slate-100" : "hover:bg-slate-50"
+            }`}
           >
             Quản lý thành viên
           </button>
           <button
             onClick={() => setActiveTab("movies")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "movies" ? "bg-slate-100" : "hover:bg-slate-50"
-              }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
+              activeTab === "movies" ? "bg-slate-100" : "hover:bg-slate-50"
+            }`}
           >
             Quản lý phim
           </button>
@@ -558,29 +576,33 @@ export default function AdminDashboard() {
           </button> */}
           <button
             onClick={() => setActiveTab("showtimes")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "showtimes" ? "bg-slate-100" : "hover:bg-slate-50"
-              }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
+              activeTab === "showtimes" ? "bg-slate-100" : "hover:bg-slate-50"
+            }`}
           >
             Quản lý suất chiếu
           </button>
           <button
             onClick={() => setActiveTab("cinemas")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "cinemas" ? "bg-slate-100" : "hover:bg-slate-50"
-              }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
+              activeTab === "cinemas" ? "bg-slate-100" : "hover:bg-slate-50"
+            }`}
           >
             Quản lý rạp
           </button>
           <button
             onClick={() => setActiveTab("rooms")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "rooms" ? "bg-slate-100" : "hover:bg-slate-50"
-              }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
+              activeTab === "rooms" ? "bg-slate-100" : "hover:bg-slate-50"
+            }`}
           >
             Quản lý phòng
           </button>
           <button
             onClick={() => setActiveTab("promotions")}
-            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "promotions" ? "bg-slate-100" : "hover:bg-slate-50"
-              }`}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
+              activeTab === "promotions" ? "bg-slate-100" : "hover:bg-slate-50"
+            }`}
           >
             Sự kiện & CTKM
           </button>
@@ -635,13 +657,22 @@ export default function AdminDashboard() {
                   <h3 className="font-semibold mb-2">Gần đây</h3>
                   <p>Tổng quan trạng thái và thống kê doanh thu tuần qua.</p>
                 </div> */}
-                <Dashboard stats={dashboardStats} warnings={dashboardWarnings} />
+                <Dashboard
+                  stats={dashboardStats}
+                  warnings={dashboardWarnings}
+                />
+              </div>
+            )}
+
+            {activeTab === "moviescreen" && (
+              <div className="mt-4">
+                <MovieScreening setActiviTab={(name) => setActiveTab(name)} />
               </div>
             )}
 
             {activeTab === "cinemas" && (
               <div className="mt-4">
-                <CinemaList />
+                <CinemaList setActiviTab={(name) => setActiveTab(name)} />
               </div>
             )}
 
