@@ -1,3 +1,4 @@
+import { triggerRefund } from "@/lib/axios/paymentAPI";
 import { db } from "@/lib/db";
 import { successResponse, errorResponse } from "@/lib/function";
 
@@ -63,6 +64,12 @@ export async function DELETE(req: Request, { params }: { params: string }) {
 
         for (const booking of bookings) {
           // TODO gọi api hoàn tiền
+          const res = await triggerRefund();
+          if (res.ok) {
+            await connection.query(`UPDATE booking SET status = 4 WHERE booking_id = ?`, [booking.booking_id]);
+            await connection.query(`INSERT INTO refund (percent, amount, reason, booking_id) VALUES
+(100, ?, 'Hoàn tiền phía hệ thống', ?)`, [booking.total_price, booking.booking_id]);
+          }
         }
 
         await connection.commit();
@@ -236,6 +243,12 @@ export async function PUT(req: Request, { params }: { params: string }) {
             // Hủy booking + hoàn tiền
             for (const booking of bookings) {
               // TODO: hoàn tiền 100% cho booking.booking_id
+              const res = await triggerRefund();
+              if (res.ok) {
+                await connection.query(`UPDATE booking SET status = 4 WHERE booking_id = ?`, [booking.booking_id]);
+                await connection.query(`INSERT INTO refund (percent, amount, reason, booking_id) VALUES
+(100, ?, 'Hoàn tiền phía hệ thống', ?)`, [booking.total_price, booking.booking_id]);
+              }
             }
           }
 

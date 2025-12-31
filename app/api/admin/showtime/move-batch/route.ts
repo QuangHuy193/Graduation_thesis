@@ -1,7 +1,7 @@
 // app/api/showtimes/move-batch/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-
+import nodemailer from "nodemailer";
 type MoveItemInput = {
     showtime_id: number;
     date?: string | null; // allow null to indicate deletion
@@ -61,13 +61,19 @@ export async function POST(request: Request) {
                 const m = raw as MoveItemInput;
 
                 // Lock the target showtime row
-                const [selRows] = await conn.query(`SELECT * FROM showtime WHERE showtime_id = ? FOR UPDATE`, [m.showtime_id]);
+                const [selRows] = await conn.query(`SELECT date,movie_id,room_id,movie_screen_id FROM showtime WHERE showtime_id = ? FOR UPDATE`, [m.showtime_id]);
                 const existing = (selRows as any[])[0] ?? null;
 
                 if (!existing) {
                     results.push({ ok: false, reason: "not_found", input: m });
                     continue;
                 }
+                const {
+                    date: oldDate,
+                    movie_id: MovieId,
+                    room_id: oldRoomId,
+                    movie_screen_id: oldMovieScreenId,
+                } = existing;
 
                 // If payload includes key "date" and it's explicitly null -> DELETE the showtime
                 if (Object.prototype.hasOwnProperty.call(m, "date") && m.date === null) {
@@ -109,8 +115,76 @@ export async function POST(request: Request) {
                     const sql = `UPDATE showtime SET ${updates.join(", ")} WHERE showtime_id = ?`;
                     await conn.query(sql, params);
                     // fetch fresh row
-                    const [fresh] = await conn.query(`SELECT * FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
-                    results.push({ ok: true, action: "updated", row: (fresh as any[])[0] });
+                    const [rows]: any[] = await conn.query(
+                        `SELECT date, movie_id, room_id, movie_screen_id
+   FROM showtime
+   WHERE showtime_id = ?`,
+                        [m.showtime_id]
+                    );
+                    if (!rows.length) {
+                        throw new Error(`Showtime ${m.showtime_id} không tồn tại`);
+                    }
+                    const {
+                        room_id: newRoomId,
+                        movie_screen_id: newMovieScreenId,
+                    } = rows[0];
+                    const [emails]: any[] = await conn.query(`select email from booking where showtime_id=? and status=1`, [m.showtime_id]);
+                    if (emails.length > 0) {
+                        // tạo transporter 1 lần (KHÔNG để trong loop)
+                        const [movieRows] = await conn.query(`select name from movies where movie_id=?`, [MovieId]);
+                        const movieName = movieRows[0].name ?? "Không xác định";
+                        const [roomRows] = await conn.query(`SELECT name from rooms WHERE room_id=?`, [newRoomId]);
+                        const roomName = roomRows[0].name ?? "Không xác định";
+                        const [movieSceenRows] = await conn.query(`SELECT start_time,end_time from movie_screenings WHERE movie_screen_id=?`, [newMovieScreenId]);
+                        const start = movieSceenRows[0].start_time ?? "Không xác định";
+                        const end = movieSceenRows[0].end_time ?? "Không xác định";
+                        const transporter = nodemailer.createTransport({
+                            service: "gmail",
+                            auth: {
+                                user: process.env.EMAIL_USER,
+                                pass: process.env.EMAIL_PASS,
+                            },
+                        });
+
+                        for (const { email } of emails) {
+                            if (!email) continue;
+
+                            await transporter.sendMail({
+                                from: `"CineGO" <${process.env.EMAIL_USER}>`,
+                                to: email,
+                                subject: "Thông báo thay đổi suất chiếu | CineGO",
+                                html: `
+        <h3>Xin chào,</h3>
+
+        <p>
+          Suất chiếu phim <strong>${movieName}</strong> mà bạn đã đặt
+          vào ngày <strong>${oldDate}</strong>
+          vừa có sự thay đổi từ hệ thống.
+        </p>
+
+        <h4>📌 Thông tin suất chiếu mới</h4>
+        <ul>
+          <li><strong>Phòng chiếu:</strong> ${roomName}</li>
+          <li><strong>Thời gian:</strong> ${start} – ${end}</li>
+        </ul>
+
+        <p>
+          Vui lòng đăng nhập <strong>CineGO</strong> để kiểm tra lại thông tin
+          suất chiếu và ghế ngồi của bạn.
+        </p>
+
+        <br/>
+
+        <p>
+          Trân trọng,<br/>
+          <strong>CineGO</strong>
+        </p>
+      `,
+                            });
+                        }
+                    }
+
+                    results.push({ ok: true, action: "updated", row: rows[0] });
                 } else {
                     // nothing to update
                     results.push({ ok: true, action: "noop", row: existing });

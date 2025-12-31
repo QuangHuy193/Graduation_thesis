@@ -21,12 +21,21 @@ export async function POST(
     }
 
     const booking_time = getCurrentDateTime();
+    const [rows]: any = await db.query(
+      `SELECT email FROM users WHERE user_id = ?`,
+      [id]
+    );
 
+    if (!rows.length) {
+      throw new Error("User không tồn tại");
+    }
+
+    const { email } = rows[0];
     const [data] = await db.query(
       `INSERT INTO booking 
-      (total_price, booking_time, status, showtime_id, user_id)
-       values (?,?,?,?,?)`,
-      [total_price, booking_time, 0, showtime_id, id]
+      (total_price, booking_time, status, showtime_id, user_id, email)
+       values (?,?,?,?,?,?)`,
+      [total_price, booking_time, 0, showtime_id, id, email]
     );
 
     return successResponse(
