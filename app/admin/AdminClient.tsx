@@ -48,6 +48,7 @@ import {
 } from "@/lib/interface/dashboardInterface";
 import CinemaList from "@/components/CinemaList/CinemaList";
 import MovieScreening from "@/components/CinemaList/MovieScreening";
+import QrScanner from "@/components/QrScanner/QrScanner";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
@@ -516,6 +517,7 @@ export default function AdminDashboard() {
     rooms: "Danh sách phòng theo rạp",
     aside: "Danh sách phòng - Sơ đồ phòng",
     users: "Người dùng",
+    sweepqr: "Quét mã vé",
   };
 
   function handleOpenAdd() {
@@ -597,6 +599,14 @@ export default function AdminDashboard() {
             }`}
           >
             Quản lý phòng
+          </button>
+          <button
+            onClick={() => setActiveTab("sweepqr")}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
+              activeTab === "rooms" ? "bg-slate-100" : "hover:bg-slate-50"
+            }`}
+          >
+            Quét mã vé
           </button>
           <button
             onClick={() => setActiveTab("promotions")}
@@ -694,6 +704,12 @@ export default function AdminDashboard() {
                   room={room}
                   setToggleRoom={(path) => setActiveTab(path)}
                 />
+              </div>
+            )}
+
+            {activeTab === "sweepqr" && (
+              <div className="mt-4">
+                <QrScanner />
               </div>
             )}
 
