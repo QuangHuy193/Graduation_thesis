@@ -498,7 +498,7 @@ export async function downloadElementAsImage(
     if (document.fonts && typeof document.fonts.ready?.then === "function") {
       try {
         await document.fonts.ready;
-      } catch { }
+      } catch {}
     }
 
     const rect = el.getBoundingClientRect();
@@ -612,10 +612,7 @@ export const showToastForever = (icon: string, title: string) => {
     showConfirmButton: false,
     timer: undefined, // không auto close
     timerProgressBar: false,
-    didOpen: (toast) => {
-      toast.addEventListener("mouseenter", Swal.stopTimer);
-      toast.addEventListener("mouseleave", Swal.resumeTimer);
-    },
+    showCloseButton: true,
   });
 };
 

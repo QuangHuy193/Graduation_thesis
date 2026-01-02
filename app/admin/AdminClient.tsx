@@ -63,6 +63,7 @@ type AdminTab =
   | "bookings"
   | "showtimes"
   | "rooms"
+  | "scanner"
   | "promotions"
   | "aside"
   | "moviescreen"
@@ -517,7 +518,7 @@ export default function AdminDashboard() {
     rooms: "Danh sách phòng theo rạp",
     aside: "Danh sách phòng - Sơ đồ phòng",
     users: "Người dùng",
-    sweepqr: "Quét mã vé",
+    scanner: "Quét mã vé",
   };
 
   function handleOpenAdd() {
@@ -601,9 +602,9 @@ export default function AdminDashboard() {
             Quản lý phòng
           </button>
           <button
-            onClick={() => setActiveTab("sweepqr")}
+            onClick={() => setActiveTab("scanner")}
             className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${
-              activeTab === "rooms" ? "bg-slate-100" : "hover:bg-slate-50"
+              activeTab === "scanner" ? "bg-slate-100" : "hover:bg-slate-50"
             }`}
           >
             Quét mã vé
@@ -707,7 +708,7 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {activeTab === "sweepqr" && (
+            {activeTab === "scanner" && (
               <div className="mt-4">
                 <QrScanner />
               </div>

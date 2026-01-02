@@ -1,0 +1,118 @@
+.btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background-color: #2563eb;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.result {
+  margin-top: 16px;
+  padding: 10px;
+  background: #ecfeff;
+  border-radius: 8px;
+}
+
+/* bọc toàn bộ, căn giữa màn hình */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* căn giữa dọc */
+  align-items: center; /* căn giữa ngang */
+  padding: 12px;
+}
+
+/* khung */
+.reader {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+/*  camera*/
+.readerCamera {
+  max-width: 320px;
+  background: #000;
+}
+
+/*  ảnh */
+.readerImage {
+  max-height: 250px;
+  max-width: 520px;
+  background: #f8fafc;
+}
+
+/* khung hiển thị mã vé */
+.result {
+  margin: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #ecfeff;
+  color: #0f172a;
+  font-size: 16px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* danh sách đồ ăn */
+.foodList {
+  margin: 12px;
+  width: 100%;
+  max-width: 520px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* tiêu đề */
+.foodTitle {
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #9a3412;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* từng món */
+.foodItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #fed7aa;
+}
+
+.foodItem:last-child {
+  border-bottom: none;
+}
+
+/* số lượng */
+.foodQty {
+  min-width: 36px;
+  text-align: center;
+  font-weight: 700;
+  color: #ea580c;
+  background: #ffedd5;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* tên món */
+.foodName {
+  flex: 1;
+  font-size: 14px;
+  color: #7c2d12;
+}
