@@ -24,39 +24,76 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
   const ticketRefs = useRef<Array<HTMLDivElement | null>>([]);
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
+  // useEffect(() => {
+  //   let mounted = true;
+  //   let retryCount = 0;
+  //   let MAX_RETRY = 5;
+  //   async function fetchTickets() {
+  //     if (!mounted) return;
+  //     setLoading(true);
+  //     try {
+  //       const res = await getTicketByBokingIdAPI(bookingId);
+  //       // console.log(res);
+  //       const data = res?.data ?? res;
+  //       if (Array.isArray(data) && data.length > 0) {
+  //         setTickets(data);
+  //         setLoading(false);
+  //         return;
+  //       }
+  //       if (retryCount < MAX_RETRY) {
+  //         retryCount++;
+  //         setTimeout(fetchTickets, 1500);
+  //       } else {
+  //         setLoading(false);
+  //       }
+
+  //     } catch (err: any) {
+  //       // console.error(err);
+  //       if (mounted) setError(err?.message ?? "Lỗi khi lấy vé");
+  //     }
+  //   }
+
+  //   fetchTickets();
+  //   return () => {
+  //     mounted = false;
+  //   };
+  // }, [bookingId]);
+  const loadTickets = async () => {
     let retryCount = 0;
-    let MAX_RETRY = 5;
-    async function fetchTickets() {
-      if (!mounted) return;
-      setLoading(true);
+    const MAX_RETRY = 3;
+
+    setLoading(true);
+    setError("");
+
+    async function fetchOnce() {
       try {
         const res = await getTicketByBokingIdAPI(bookingId);
-        // console.log(res);
         const data = res?.data ?? res;
+
         if (Array.isArray(data) && data.length > 0) {
           setTickets(data);
           setLoading(false);
-          return;
+          return true;
         }
-        if (retryCount < MAX_RETRY) {
-          retryCount++;
-          setTimeout(fetchTickets, 1500);
-        } else {
-          setLoading(false);
-        }
-
+        return false;
       } catch (err: any) {
-        // console.error(err);
-        if (mounted) setError(err?.message ?? "Lỗi khi lấy vé");
+        setError(err?.message ?? "Lỗi khi lấy vé");
+        setLoading(false);
+        return true;
       }
     }
 
-    fetchTickets();
-    return () => {
-      mounted = false;
-    };
+    while (retryCount < MAX_RETRY) {
+      const done = await fetchOnce();
+      if (done) return;
+      retryCount++;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+
+    setLoading(false);
+  };
+  useEffect(() => {
+    loadTickets();
   }, [bookingId]);
 
   const handleDownloadSingle = (index: number) => {
@@ -151,6 +188,17 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
                  hover:bg-blue-700"
               >
                 Tải vé
+              </button>
+              <button
+                onClick={loadTickets}
+                disabled={loading}
+                title="Tải lại vé"
+                className="w-9 h-9 flex items-center justify-center
+                 rounded-full border border-gray-500 text-gray-300
+                 hover:bg-gray-700 hover:text-white
+                 disabled:opacity-50"
+              >
+                {loading ? "…" : "↻"}
               </button>
             </div>
           </div>

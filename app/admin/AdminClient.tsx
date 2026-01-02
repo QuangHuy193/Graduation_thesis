@@ -239,7 +239,9 @@ export default function AdminDashboard() {
     const res = await getAdminDashboardStats();
     setDashboardStats(res.data.data);
   };
-
+  function handleReloadBooking() {
+    fetchBookings();
+  }
   async function fetchRooms() {
     try {
       const res = await getAllRooms();
@@ -715,7 +717,7 @@ export default function AdminDashboard() {
 
             {activeTab === "bookings" && (
               <div className="mt-4">
-                <BookingsTable bookings={bookings} />
+                <BookingsTable bookings={bookings} onUpdateRefund={handleReloadBooking} />
               </div>
             )}
 

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
-import { getAllBookings } from "@/lib/axios/admin/bookingAPI";
+import { getAllBookings, refundBookingAgent } from "@/lib/axios/admin/bookingAPI";
 type UserLite = {
     user_id: number;
     name?: string;
@@ -45,8 +45,8 @@ function fmtDateTime(iso?: string | null) {
         return iso;
     }
 }
-type Props = { bookings?: BookingItem[]; initial?: BookingItem[] };
-export default function BookingsTable({ bookings: propBookings = [], initial = [] as BookingItem[] }: Props) {
+type Props = { bookings?: BookingItem[]; initial?: BookingItem[]; onUpdateRefund?: () => void };
+export default function BookingsTable({ bookings: propBookings = [], initial = [] as BookingItem[], onUpdateRefund }: Props) {
     const [bookings, setBookings] = useState<BookingItem[]>(propBookings || initial);
     const [loading, setLoading] = useState(false);
 
@@ -68,8 +68,8 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
 
     async function doRefund(bookingId: number) {
         const ok = await Swal.fire({
-            title: "Hoàn tiền toàn bộ?",
-            text: `Bạn có chắc muốn hoàn tiền toàn bộ cho booking #${bookingId}?`,
+            title: "Hoàn tiền ?",
+            text: `Bạn có chắc muốn hoàn tiền ?`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Có, hoàn tiền",
@@ -78,9 +78,9 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
         if (!ok.isConfirmed) return;
 
         try {
-            const res = await fetch(`/api/admin/bookings/${bookingId}/refund`, { method: "POST" });
-            const j = await res.json();
-            if (!res.ok) throw new Error(j?.error || "Refund failed");
+            const res: any = await refundBookingAgent(bookingId);
+            if (!res?.success) throw new Error("Refund failed");
+            onUpdateRefund?.();
             Swal.fire("Thành công", "Đã hoàn tiền", "success");
         } catch (err: any) {
             console.error(err);
@@ -332,7 +332,7 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                                 <td className="px-4 py-3 text-right">
                                     <div className="inline-flex gap-2">
                                         <button className="px-3 py-1 border rounded text-sm cursor-pointer" onClick={() => setSelected(b)}>Chi tiết</button>
-                                        {b.status !== 2 && (
+                                        {b.status === 1 && (
                                             <button className="px-3 py-1 border rounded text-sm text-red-600 cursor-pointer" onClick={() => doRefund(b.booking_id)}>Hoàn tiền</button>
                                         )}
                                         {/* <div className="relative inline-block">

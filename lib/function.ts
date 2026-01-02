@@ -434,8 +434,8 @@ export function getRefundPercent(
   const diffMs = showtime.getTime() - now.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
 
-  console.log(date, time, vip);
-  console.log(now, diffHours);
+  // console.log(date, time, vip);
+  // console.log(now, diffHours);
 
   if (vip === 0) {
     if (diffHours >= 24) return 100;
@@ -498,7 +498,7 @@ export async function downloadElementAsImage(
     if (document.fonts && typeof document.fonts.ready?.then === "function") {
       try {
         await document.fonts.ready;
-      } catch {}
+      } catch { }
     }
 
     const rect = el.getBoundingClientRect();

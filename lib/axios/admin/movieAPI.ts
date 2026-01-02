@@ -100,6 +100,6 @@ export async function callBulkApi(movies) {
     // const res = await axios.post("/api/movies/bulk?atomic=true", payload);
 }
 export async function getPrice() {
-    const res = await axiosInstance.get(`/api/admin/movies/getTotalPrice`);
+    const res = await axiosInstance.get(`/api/admin/movies/getTotalRevenue`);
     return res.data.data;
 }

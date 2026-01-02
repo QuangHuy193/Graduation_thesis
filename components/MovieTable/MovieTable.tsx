@@ -382,7 +382,12 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
 
                                     <td className="px-4 py-3">{m.release_date ? fmtDate(m.release_date.toString()) : "-"}</td>
                                     <td className="px-4 py-3">{m.age_require ?? "-"}</td>
-                                    <td className="px-4 py-3">{sumPrice.find(p => p.movie_id === m.movie_id)?.TONG || 0}</td>
+                                    <td className="px-4 py-3"> {new Intl.NumberFormat("vi-VN", {
+                                        style: "currency",
+                                        currency: "VND",
+                                    }).format(
+                                        sumPrice.find(p => p.movie_id === m.movie_id)?.TONG || 0
+                                    )}</td>
                                     <td className="px-4 py-3">
                                         {m.status === 1 ? (
                                             <span className="inline-block text-xs px-2 py-1 rounded-full bg-green-100">

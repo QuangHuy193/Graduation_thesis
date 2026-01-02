@@ -268,7 +268,7 @@ export default function BookingHistory({
 
           {/* Body */}
           <div>
-            {bookings.map((b) => (
+            {bookings.map((b: any) => (
               <div key={b.booking_id} className="border-b border-gray-700">
                 {/* Row */}
                 <div
