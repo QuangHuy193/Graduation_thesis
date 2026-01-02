@@ -9,12 +9,17 @@ type UserLite = {
 
 type ShowtimeLite = {
     showtime_id: number;
-    movie_title?: string;
-    start_time?: string | null;
+    date?: string;
     cinema_name?: string;
 };
-
+type SeatLite = {
+    seat_row: string;
+    seat_column: string;
+}
 export type BookingItem = {
+    movie?: string;
+    room?: string;
+    cinema?: string;
     booking_id: number;
     total_price: number;
     booking_time: string; // ISO string
@@ -25,7 +30,7 @@ export type BookingItem = {
     user?: UserLite | null;
     voucher_id?: number | null;
     showtime?: ShowtimeLite | null;
-    seats?: string[]; // ['A1','A2']
+    seats?: SeatLite[] | null;
 };
 
 function fmtCurrency(v?: number) {
@@ -108,6 +113,10 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
             Swal.fire("Lỗi", err?.message || "Không thể cập nhật trạng thái", "error");
         }
     }
+    function getDateOnly(iso?: string | null) {
+        if (!iso) return "-";
+        return new Date(iso).toLocaleDateString("vi-VN"); // YYYY-MM-DD
+    }
 
     // client-side filter + sort + paginate (giống cách movietable làm)
     const filteredSorted = useMemo(() => {
@@ -119,10 +128,15 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
         if (q) {
             list = list.filter((b) => {
                 const idMatch = String(b.booking_id).includes(q);
-                const userMatch = (b.user?.name || b.user?.email || "").toLowerCase().includes(q);
-                const movieMatch = (b.showtime?.movie_title || "").toLowerCase().includes(q);
-                const seatsMatch = (b.seats || []).some((s) => String(s).toLowerCase().includes(q));
-                return idMatch || userMatch || movieMatch || seatsMatch;
+                const userMatch = (b.user?.name || "").toLowerCase().includes(q);
+                const emailMatch = (b.user?.email || "").toLowerCase().includes(q);
+                const movieMatch = (b.movie || "").toLowerCase().includes(q);
+                const seatsMatch = (b.seats || []).some(seat =>
+                    `${seat.seat_row}${seat.seat_column}`
+                        .toLowerCase()
+                        .includes(q)
+                );
+                return idMatch || userMatch || movieMatch || seatsMatch || emailMatch;
             });
         }
 
@@ -155,15 +169,25 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
     const paginated = filteredSorted.slice(start, start + perPage);
 
 
-    const statusText = (s?: number) => {
-        switch (s) {
-            case 0: return "Chờ thanh toán";
-            case 1: return "Xác nhận";
-            case 2: return "Hoàn tiền";
-            case 3: return "Hủy";
-            default: return "Khác";
-        }
+    const STATUS_CONFIG: Record<number, { text: string; className: string }> = {
+        0: {
+            text: "Chưa thanh toán",
+            className: "bg-yellow-100 text-yellow-800",
+        },
+        1: {
+            text: "Đã thanh toán",
+            className: "bg-green-100 text-green-700",
+        },
+        3: {
+            text: "Chờ hoàn tiền",
+            className: "bg-orange-100 text-orange-700",
+        },
+        4: {
+            text: "Đã hoàn tiền",
+            className: "bg-blue-100 text-blue-700",
+        },
     };
+
 
     // CSV Export (current list)
     const exportCSV = () => {
@@ -173,15 +197,18 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
         filteredSorted.forEach(b => {
             rows.push([
                 String(b.booking_id),
-                b.showtime?.movie_title || "-",
-                (b.seats || []).join(", "),
+                b.movie || "-",
+                (b.seats || [])
+                    .map(s => `${s.seat_row}${s.seat_column}`)
+                    .join(", "),
                 String(b.total_price),
                 b.user?.name || b.user?.email || "-",
                 b.booking_time,
-                statusText(b.status),
+                STATUS_CONFIG[b.status]?.text,
                 b.payment_method || "-"
             ]);
         });
+
         const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
@@ -202,7 +229,7 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                         onChange={(e) => setQuery(e.target.value)}
                         className="border rounded px-3 py-2 text-sm w-64"
                     />
-                    <select className="border rounded px-2 py-2 text-sm"
+                    <select className="border rounded px-2 py-2 text-sm cursor-pointer"
                         value={statusFilter}
                         onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
                         <option value="">Tất cả</option>
@@ -211,7 +238,7 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                         <option value="2">Hoàn tiền</option>
                         <option value="3">Hủy</option>
                     </select>
-                    <select className="border rounded px-2 py-2 text-sm" value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}>
+                    <select className="border rounded px-2 py-2 text-sm cursor-pointers" value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}>
                         <option value={10}>10 / trang</option>
                         <option value={25}>25 / trang</option>
                         <option value={50}>50 / trang</option>
@@ -220,7 +247,7 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
 
                 <div className="flex items-center gap-2">
                     <label className="text-sm">Sắp xếp:</label>
-                    <select className="border rounded px-2 py-2 text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+                    <select className="border rounded px-2 py-2 text-sm cursor-pointer" value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
                         <option value="booking_time">Thời gian đặt</option>
                         <option value="total_price">Tổng tiền</option>
                     </select>
@@ -228,8 +255,8 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                         {sortDir === "asc" ? "⤴️" : "⤵️"}
                     </button>
 
-                    <button className="px-3 py-1 border rounded text-sm" onClick={exportCSV}>Xuất CSV</button>
-                    <button className="px-3 py-1 border rounded text-sm" onClick={() => setPage(1)}>
+                    <button className="px-3 py-1 border rounded text-sm cursor-pointer" onClick={exportCSV}>Xuất CSV</button>
+                    <button className="px-3 py-1 border rounded text-sm cursor-pointer" onClick={() => setPage(1)}>
                         Tải lại
                     </button>
                 </div>
@@ -240,7 +267,7 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                     <thead className="bg-slate-50">
                         <tr>
                             <th className="text-left px-4 py-3">Mã</th>
-                            <th className="text-left px-4 py-3">Phim / Showtime</th>
+                            <th className="text-left px-4 py-3">Phim / Suất</th>
                             <th className="text-left px-4 py-3">Ghế</th>
                             <th className="text-left px-4 py-3">Giá</th>
                             <th className="text-left px-4 py-3">Khách</th>
@@ -258,26 +285,57 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                         ) : paginated.map(b => (
                             <tr key={b.booking_id} className="border-t hover:bg-slate-50">
                                 <td className="px-4 py-3">{b.booking_id}</td>
-                                <td className="px-4 py-3">
-                                    <div className="font-medium">{b.showtime?.movie_title || "-"}</div>
-                                    <div className="text-xs text-slate-500">{b.showtime?.cinema_name || ""} • {fmtDateTime(b.showtime?.start_time || "")}</div>
+                                <td className="px-4 py-3 max-w-[320px]">
+                                    {/* Tên phim */}
+                                    <div className="font-medium truncate">
+                                        {b.movie || "-"}
+                                    </div>
+
+                                    {/* Rạp + phòng */}
+                                    <div className="text-xs text-slate-500 truncate">
+                                        {b.cinema || ""} • {b.room || ""}
+                                    </div>
+
+                                    {/* Ngày + giờ chiếu */}
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] text-slate-600">
+                                            {getDateOnly(b.showtime?.date || "")}
+                                        </span>
+
+                                        {/* {b.showtime?.start_time && (
+                                            <span className="px-2 py-0.5 rounded bg-blue-50 text-[11px] text-blue-700">
+                                                {b.showtime.start_time.slice(0, 5)}
+                                            </span>
+                                        )} */}
+                                    </div>
                                 </td>
-                                <td className="px-4 py-3">{(b.seats || []).join(", ") || "-"}</td>
+
+                                <td className="px-4 py-3">
+                                    {(b.seats && b.seats.length > 0)
+                                        ? b.seats.map(s => `${s.seat_row}${s.seat_column}`).join(", ")
+                                        : "-"}
+                                </td>
+
                                 <td className="px-4 py-3">{fmtCurrency(b.total_price)}</td>
                                 <td className="px-4 py-3">{b.user?.name || b.user?.email || "-"}</td>
                                 <td className="px-4 py-3">{fmtDateTime(b.booking_time)}</td>
                                 <td className="px-4 py-3">
-                                    <span className="inline-block text-xs px-2 py-1 rounded-full bg-slate-100">
-                                        {statusText(b.status)}
+                                    <span
+                                        className={`inline-block text-xs px-2 py-1 rounded-full font-medium
+      ${STATUS_CONFIG[b.status]?.className || "bg-slate-100 text-slate-600"}
+    `}
+                                    >
+                                        {STATUS_CONFIG[b.status]?.text || "Khác"}
                                     </span>
                                 </td>
+
                                 <td className="px-4 py-3 text-right">
                                     <div className="inline-flex gap-2">
-                                        <button className="px-3 py-1 border rounded text-sm" onClick={() => setSelected(b)}>Chi tiết</button>
+                                        <button className="px-3 py-1 border rounded text-sm cursor-pointer" onClick={() => setSelected(b)}>Chi tiết</button>
                                         {b.status !== 2 && (
-                                            <button className="px-3 py-1 border rounded text-sm text-red-600" onClick={() => doRefund(b.booking_id)}>Refund</button>
+                                            <button className="px-3 py-1 border rounded text-sm text-red-600 cursor-pointer" onClick={() => doRefund(b.booking_id)}>Hoàn tiền</button>
                                         )}
-                                        <div className="relative inline-block">
+                                        {/* <div className="relative inline-block">
                                             <select className="border rounded px-2 py-1 text-sm" onChange={(e) => changeStatus(b.booking_id, Number(e.target.value))} defaultValue="">
                                                 <option value="">Đổi trạng thái</option>
                                                 <option value="0">Chờ thanh toán</option>
@@ -285,7 +343,7 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                                                 <option value="2">Hoàn tiền</option>
                                                 <option value="3">Hủy</option>
                                             </select>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </td>
                             </tr>
@@ -307,45 +365,96 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
             {/* detail modal */}
             {selected && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                    <div className="bg-white rounded shadow max-w-2xl w-full overflow-hidden">
-                        <div className="p-3 flex justify-between items-center border-b">
-                            <div className="font-medium">Booking #{selected.booking_id} — Chi tiết</div>
-                            <button onClick={() => setSelected(null)} className="px-3 py-1 border rounded">Đóng</button>
-                        </div>
+                    <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full overflow-hidden">
 
-                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* ===== Header ===== */}
+                        <div className="px-5 py-4 border-b flex items-center justify-between">
                             <div>
-                                <div className="text-xs text-slate-500">Khách</div>
-                                <div className="font-medium">{selected.user?.name || selected.user?.email || "-"}</div>
-                                <div className="text-xs text-slate-500 mt-2">Phương thức</div>
-                                <div>{selected.payment_method || "-"}</div>
-
-                                <div className="text-xs text-slate-500 mt-2">Tổng giá</div>
-                                <div className="font-medium">{fmtCurrency(selected.total_price)}</div>
-
-                                <div className="text-xs text-slate-500 mt-2">Trạng thái</div>
-                                <div>{statusText(selected.status)}</div>
+                                <h3 className="text-lg font-semibold">🎟️ Chi tiết đơn đặt vé</h3>
+                                <p className="text-xs text-slate-500">Mã đơn: #{selected.booking_id}</p>
                             </div>
 
-                            <div>
-                                <div className="text-xs text-slate-500">Phim / Showtime</div>
-                                <div className="font-medium">{selected.showtime?.movie_title || "-"}</div>
-                                <div className="text-xs text-slate-500 mt-1">{selected.showtime?.cinema_name || ""} • {fmtDateTime(selected.showtime?.start_time || "")}</div>
+                            <span
+                                className={`text-xs px-3 py-1 rounded-full font-medium
+          ${STATUS_CONFIG[selected.status]?.className || "bg-slate-100 text-slate-600"}
+        `}
+                            >
+                                {STATUS_CONFIG[selected.status]?.text || "Khác"}
+                            </span>
+                        </div>
 
-                                <div className="text-xs text-slate-500 mt-3">Ghế</div>
-                                <div>{(selected.seats || []).join(", ") || "-"}</div>
+                        {/* ===== Content ===== */}
+                        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
 
-                                <div className="text-xs text-slate-500 mt-3">Booking time</div>
-                                <div>{fmtDateTime(selected.booking_time)}</div>
+                            {/* ===== Cột trái ===== */}
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="text-xs text-slate-500">👤 Khách hàng</div>
+                                    <div className="font-medium">
+                                        {selected.user?.name || selected.user?.email || "-"}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="text-xs text-slate-500">💳 Phương thức thanh toán</div>
+                                    <div>{selected.payment_method || "-"}</div>
+                                </div>
+
+                                <div>
+                                    <div className="text-xs text-slate-500">💰 Tổng tiền</div>
+                                    <div className="text-base font-semibold text-green-600">
+                                        {fmtCurrency(selected.total_price)}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="text-xs text-slate-500">🕒 Thời gian đặt</div>
+                                    <div>{fmtDateTime(selected.booking_time)}</div>
+                                </div>
+                            </div>
+
+                            {/* ===== Cột phải ===== */}
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="text-xs text-slate-500">🎬 Phim</div>
+                                    <div className="font-medium">{selected.movie || "-"}</div>
+                                    <div className="text-xs text-slate-500 mt-1">
+                                        {selected.cinema || ""} • {selected.room || ""} •{" "}
+                                        {getDateOnly(selected.showtime?.date || "")}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="text-xs text-slate-500">💺 Ghế đã chọn</div>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                        {(selected.seats && selected.seats.length > 0)
+                                            ? selected.seats.map((s, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="px-2 py-1 rounded-md text-xs bg-slate-100 border"
+                                                >
+                                                    {s.seat_row}{s.seat_column}
+                                                </span>
+                                            ))
+                                            : <span>-</span>}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="p-3 border-t flex items-center justify-end gap-2">
-                            {selected.status !== 2 && <button className="px-3 py-1 border rounded text-red-600" onClick={() => { doRefund(selected.booking_id); setSelected(null); }}>Hoàn tiền</button>}
-                            <button className="px-3 py-1 border rounded" onClick={() => setSelected(null)}>Đóng</button>
+                        {/* ===== Footer ===== */}
+                        <div className="px-5 py-3 border-t flex justify-end">
+                            <button
+                                onClick={() => setSelected(null)}
+                                className="px-4 py-2 border rounded-lg text-sm hover:bg-slate-50 cursor-pointer"
+                            >
+                                Đóng
+                            </button>
                         </div>
+
                     </div>
                 </div>
+
             )}
         </div>
     );

@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { togglePromotionEnable } from "@/lib/axios/admin/promotion_ruleAPI";
 import Spinner from "../Spinner/Spinner";
 import PromotionFormEdit from "../PromotionFormEdit/PromotionFormEdit";
+import PromotionCreateModal from "../PromotionCreateModal/PromotionCreateModal";
+
 export type PromotionRule = {
     rule_id: number;
     name: string;
@@ -26,6 +28,7 @@ function PromotionTable({ promotion, onEdit }: Props) {
     const [dataList, setDatalist] = useState<PromotionRule[]>([]);
     const [loading, setLoading] = useState(false);
     const [editingPromotion, setEditingPromotion] = useState<PromotionRule | null>(null);
+    const [openAddForm, setOpenAddForm] = useState(false);
     const holidayList = dataList.filter((p) => p.isHoliday === 1);
     const promotionList = dataList.filter((p) => !p.isHoliday);
 
@@ -51,6 +54,11 @@ function PromotionTable({ promotion, onEdit }: Props) {
             setLoading(false);
         }
     }
+    const handleCreate = async (payload: any) => {
+        console.log("CREATE PROMOTION:", payload);
+        // await fetch("/api/admin/promotions", { method: "POST", body: JSON.stringify(payload) })
+        setOpenAddForm(false);
+    };
     const renderTable = (data: PromotionRule[]) => (
         <div className="rounded-lg overflow-hidden">
             <table className="w-full text-sm">
@@ -199,6 +207,25 @@ function PromotionTable({ promotion, onEdit }: Props) {
                     Ngày lễ / Sự kiện
                 </button>
 
+                <button
+                    onClick={() => setOpenAddForm(true)}
+                    className="
+    ml-auto
+    inline-flex items-center gap-2
+    px-4 py-2
+    rounded-lg
+    bg-gradient-to-r from-blue-600 to-blue-500
+    text-white text-sm font-medium
+    shadow-sm
+    hover:from-blue-700 hover:to-blue-600
+    hover:shadow-md
+    transition
+    cursor-pointer
+  "
+                >
+                    <span className="text-lg leading-none">＋</span>
+                    <span>Thêm CTKM</span>
+                </button>
 
             </div>
 
@@ -226,7 +253,19 @@ function PromotionTable({ promotion, onEdit }: Props) {
                     </div>
                 </div>
             )}
-
+            {
+                openAddForm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div className="w-full max-w-xl rounded bg-white p-4">
+                            <PromotionCreateModal
+                                open={openAddForm}
+                                onClose={() => setOpenAddForm(false)}
+                                onSubmit={handleCreate}
+                            />
+                        </div>
+                    </div>
+                )
+            }
         </div>
     );
 }
