@@ -39,15 +39,14 @@ export default function QrScanner() {
     const scanerQrTicket = async (ticket_id: number | string) => {
       try {
         const res = await scanQRTicketAPI(ticket_id);
-        if (res.scan === "go") {
-          showToast("success", "Quét thành công, mời vào cửa.");
-        } else if (res.scan === "food") {
-          showToast("success", "Quét thành công, mời nhận bắp nước.");
-          setFoods(res.foods);
-        } else if (res.scan === "scanner") {
-          showToast("info", "Vé đã được quét trước đó rồi.");
-        } else if (res.scan === "cancel") {
-          showToast("error", "Vé đã hủy, không thể quét!");
+        if (res.data.scan !== "cancel") {
+          if (res.data.scan === "scanner") {
+            showToast("info", res.message);
+          } else {
+            showToast("success", res.message);
+          }
+        } else {
+          showToast("error", res.message);
         }
       } catch (error) {
         console.log(error);

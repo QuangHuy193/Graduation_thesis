@@ -140,7 +140,6 @@ function RoomList({
       setState((prev) => ({
         ...prev,
         isFetch: { ...prev.isFetch, status: -1 },
-        reload: !prev.reload,
       }));
     }
   };
