@@ -700,7 +700,7 @@ export default function ShowtimeTimetable({
                                     <div className="text-xs text-gray-600 mb-1">{slot.start_time} – {slot.end_time}</div>
                                     {existing ? (
                                       <div
-                                        className={`p-2 bg-black border rounded cursor-move ${styles.dragItem}
+                                        className={`p-2 bg-white border rounded cursor-move ${styles.dragItem}
     ${draggingId === existing.showtime_id ? styles.dragging : ""}
     ${justInserted === `${room.room_id}-${slot.movie_screen_id}` ? styles.fadeIn : ""}
   `}

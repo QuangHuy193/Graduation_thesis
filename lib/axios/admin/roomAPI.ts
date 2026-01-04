@@ -16,3 +16,11 @@ export const getCinemaFromRoom = async (room_id: number) => {
         return null;
     }
 }
+export async function getTotalSeats(room_id: number) {
+    try {
+        const res = await axiosInstance.get(`/api/admin/rooms/${room_id}/getTotalSeatByRoom`);
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
+}

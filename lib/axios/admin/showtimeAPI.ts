@@ -108,3 +108,11 @@ export async function createShowtimeBulk(payload: {
     }
 
 }
+export async function getAvailableSeats(showtime_id: number) {
+    try {
+        const res = await axiosInstance.get(`/api/admin/showtime/${showtime_id}/getAvailableSeatByShowtime`);
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
+}
