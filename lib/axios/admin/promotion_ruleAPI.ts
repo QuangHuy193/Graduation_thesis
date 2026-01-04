@@ -34,3 +34,13 @@ export async function togglePromotionEnable(id: number) {
 export const updatePromotion = (rule_id: number, data: any) => {
     return axiosInstance.patch(`/api/admin/promotion_rule/${rule_id}/updatePromotion`, data);
 };
+export const addPromotion = async (data: any) => {
+    try {
+        const res = await axiosInstance.post(`/api/admin/promotion_rule/addPromotion`, data);
+        return res.data;
+    } catch (error) {
+        console.error("addPromotion error:", error);
+        throw error;
+    }
+
+}

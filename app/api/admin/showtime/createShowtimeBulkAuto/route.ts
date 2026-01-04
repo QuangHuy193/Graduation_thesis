@@ -5,7 +5,7 @@ import { getCinemaFromRoom } from "@/lib/axios/admin/roomAPI";
 import { DATE_REGEX, DAY_TO_BINARY } from "@/lib/constant";
 import { checkIsHoliday } from "@/lib/axios/admin/promotion_ruleAPI";
 import { getDatesInRange } from "@/lib/function";
-
+// import { successResponse, errorResponse } from "@/lib/function";
 export async function POST(req: Request) {
     const body = await req.json().catch(() => null);
     if (!body) {
@@ -89,8 +89,16 @@ export async function POST(req: Request) {
                 );
 
                 if ((conf as any[]).length > 0) {
+                    // throw new Error(
+                    //     `Slot conflict at ${date} (room ${room_id}, screen ${movie_screen_id})`
+                    // );
+                    const [roomRows]: any = await conn.query(`select name from rooms where room_id=?`, [room_id]);
+                    const roomName = roomRows[0].name;
+                    const [screenRows]: any = await conn.query(`select start_time,end_time from movie_screenings where movie_screen_id=?`, [movie_screen_id]);
+                    const start_time = screenRows[0].start_time;
+                    const end_time = screenRows[0].end_time;
                     throw new Error(
-                        `Slot conflict at ${date} (room ${room_id}, screen ${movie_screen_id})`
+                        `Có suất bị trùng vào ngày ${date}, ${roomName}, suất [${start_time} - ${end_time}]`
                     );
                 }
 
@@ -104,7 +112,7 @@ export async function POST(req: Request) {
                 const showtimeId = Number((ins as any).insertId);
 
                 // 3️⃣ CREATE SEATS
-                const [seats] = await conn.query(
+                const [seats]: any = await conn.query(
                     `SELECT seat_id FROM seats WHERE room_id = ?`,
                     [room_id]
                 );
@@ -130,7 +138,7 @@ export async function POST(req: Request) {
                 const dayBinary = DAY_TO_BINARY[d.getDay()];
                 const isHoliday = (await checkIsHoliday(date))?.data ? 1 : 0;
 
-                const [normalRows] = await conn.query(
+                const [normalRows]: any = await conn.query(
                     `SELECT price FROM price_fixed
        WHERE cinema_id = ?
          AND ticket_type_id = 1
@@ -141,7 +149,7 @@ export async function POST(req: Request) {
                     [cinemaId, dayBinary, isHoliday]
                 );
 
-                const [studentRows] = await conn.query(
+                const [studentRows]: any = await conn.query(
                     `SELECT price FROM price_fixed
        WHERE cinema_id = ?
          AND ticket_type_id = 2

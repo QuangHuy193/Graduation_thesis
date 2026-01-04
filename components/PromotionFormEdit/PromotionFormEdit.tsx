@@ -8,11 +8,13 @@ type Props = {
     promotion: PromotionRule;
     onSaved: () => void;
     onCancel?: () => void;
+    setLoading?: (v: boolean) => void;
+    loading?: boolean;
 };
 
-export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
+export default function PromotionForm({ promotion, onSaved, onCancel, setLoading, loading }: Props) {
     const [form, setForm] = useState<PromotionRule>({ ...promotion });
-    const [loading, setLoading] = useState(false);
+    // const [loading, setLoading] = useState(false);
     const [isUnlimited, setIsUnlimited] = useState(
         !form.start_time && !form.end_time
     );
@@ -36,7 +38,7 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
         e.preventDefault();
 
         try {
-            setLoading(true);
+            setLoading?.(true);
             //Gọi api update
             await updatePromotion(form.rule_id, {
                 name: form.name,
@@ -63,7 +65,7 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
             console.error(err);
             Swal.fire("Lỗi", "Không thể cập nhật promotion", "error");
         } finally {
-            setLoading(false);
+            setLoading?.(false);
         }
     };
 
@@ -222,9 +224,12 @@ export default function PromotionForm({ promotion, onSaved, onCancel }: Props) {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded text-sm cursor-pointer"
+                    className={`
+      px-4 py-2 bg-blue-600 text-white rounded text-sm
+      ${loading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+    `}
                 >
-                    Lưu
+                    {loading ? "Đang lưu..." : "Lưu"}
                 </button>
             </div>
 

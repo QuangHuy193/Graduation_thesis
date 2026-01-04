@@ -304,7 +304,7 @@ export default function AdminDashboard() {
   function handleEditMovie() {
     fetchMovies();
   }
-  function handleEditPromotion() {
+  function handleReloadPromotion() {
     fetchPromotion();
   }
   const handleDeleteFromChild = () => {
@@ -747,7 +747,8 @@ export default function AdminDashboard() {
               <div className="mt-4">
                 <PromotionTable
                   promotion={promotions}
-                  onEdit={handleEditPromotion}
+                  onEdit={handleReloadPromotion}
+                  onAdd={handleReloadPromotion}
                 />
               </div>
             )}

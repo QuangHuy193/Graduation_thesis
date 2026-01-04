@@ -4,6 +4,7 @@ import { togglePromotionEnable } from "@/lib/axios/admin/promotion_ruleAPI";
 import Spinner from "../Spinner/Spinner";
 import PromotionFormEdit from "../PromotionFormEdit/PromotionFormEdit";
 import PromotionCreateModal from "../PromotionCreateModal/PromotionCreateModal";
+import { on } from "events";
 
 export type PromotionRule = {
     rule_id: number;
@@ -20,10 +21,12 @@ export type PromotionRule = {
 type Props = {
     promotion: PromotionRule[],
     onEdit: () => void;
+    onAdd: () => void;
+    user?: any;
 }
 // 🔹 MOCK DATA
 
-function PromotionTable({ promotion, onEdit }: Props) {
+function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
     const [activeTab, setActiveTab] = useState<"holiday" | "promotion">("promotion");
     const [dataList, setDatalist] = useState<PromotionRule[]>([]);
     const [loading, setLoading] = useState(false);
@@ -55,14 +58,15 @@ function PromotionTable({ promotion, onEdit }: Props) {
         }
     }
     const handleCreate = async (payload: any) => {
-        console.log("CREATE PROMOTION:", payload);
+        // console.log("CREATE PROMOTION:", payload);
         // await fetch("/api/admin/promotions", { method: "POST", body: JSON.stringify(payload) })
+
         setOpenAddForm(false);
     };
     const renderTable = (data: PromotionRule[]) => (
         <div className="rounded-lg overflow-hidden">
             <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-100">
                     <tr>
                         <th className="px-3 py-2 text-left font-semibold text-gray-700">
                             Tên
@@ -156,22 +160,25 @@ function PromotionTable({ promotion, onEdit }: Props) {
                                 >
                                     Sửa
                                 </button>
+                                {user?.role === "superadmin" && (
+                                    item.enable ? (
+                                        <button
+                                            onClick={() => handleDisable(item.rule_id)}
+                                            className="w-[90px] rounded border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 cursor-pointer"
+                                        >
+                                            Vô hiệu
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleDisable(item.rule_id)}
+                                            className="w-[90px] rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-600 hover:bg-green-50 cursor-pointer"
+                                        >
+                                            Kích hoạt
+                                        </button>
+                                    )
 
-                                {item.enable ? (
-                                    <button
-                                        onClick={() => handleDisable(item.rule_id)}
-                                        className="w-[90px] rounded border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 cursor-pointer"
-                                    >
-                                        Vô hiệu
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => handleDisable(item.rule_id)}
-                                        className="w-[90px] rounded border border-green-300 px-3 py-1 text-xs font-medium text-green-600 hover:bg-green-50 cursor-pointer"
-                                    >
-                                        Kích hoạt
-                                    </button>
                                 )}
+
                             </td>
                         </tr>
                     ))}
@@ -244,11 +251,15 @@ function PromotionTable({ promotion, onEdit }: Props) {
                     <div className="w-full max-w-xl rounded bg-white p-4">
                         <PromotionFormEdit
                             promotion={editingPromotion}
-                            onSaved={() => {
+                            onSaved={async () => {
+                                // setLoading(true);
                                 setEditingPromotion(null);
-                                onEdit();
+                                await onEdit();          // reload list
+                                // setLoading(false);
                             }}
                             onCancel={() => setEditingPromotion(null)}
+                            setLoading={setLoading}
+                            loading={loading}
                         />
                     </div>
                 </div>
@@ -260,7 +271,13 @@ function PromotionTable({ promotion, onEdit }: Props) {
                             <PromotionCreateModal
                                 open={openAddForm}
                                 onClose={() => setOpenAddForm(false)}
-                                onSubmit={handleCreate}
+                                onSubmit={async () => {
+                                    //Gọi parent để reload
+                                    onAdd();
+                                    setOpenAddForm(false);
+                                }}
+                                setLoading={setLoading}
+                                loading={loading}
                             />
                         </div>
                     </div>

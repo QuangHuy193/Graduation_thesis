@@ -34,7 +34,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ ok: false, message: "movie_id is required and must be a number" }, { status: 400 });
     }
 
-
+    const cinemaIdraw = await getCinemaFromRoom(room_id);
+    const cinemaId = cinemaIdraw?.data?.[0]?.cinema_id ?? null;
+    const d = new Date(date);
+    const dayBinary = DAY_TO_BINARY[d.getDay()];
+    const isHoliday = (await checkIsHoliday(date))?.data ? 1 : 0;
     const conn = await db.getConnection();
     try {
         await conn.beginTransaction();
@@ -51,14 +55,17 @@ export async function POST(req: Request) {
             const confRow = (conf as any[])[0];
             if (confRow && Number(confRow.showtime_id) !== showtimeId) {
                 await conn.rollback();
-                return NextResponse.json(
-                    {
-                        ok: false,
-                        code: "conflict",
-                        message: "Slot conflict",
-                        conflict: { target_room: room_id, show_date: date, movie_screen_id, conflicting: confRow },
-                    },
-                    { status: 409 }
+                // return NextResponse.json(
+                //     {
+                //         ok: false,
+                //         code: "conflict",
+                //         message: "Slot conflict",
+                //         conflict: { target_room: room_id, show_date: date, movie_screen_id, conflicting: confRow },
+                //     },
+                //     { status: 409 }
+                // );
+                throw new Error(
+                    `Trùng suất chiếu`
                 );
             }
         }
@@ -69,7 +76,7 @@ export async function POST(req: Request) {
         );
         showtimeId = Number((ins as any).insertId);
 
-        const [seats] = await conn.query(`SELECT seat_id FROM seats WHERE room_id = ?`, [room_id]);
+        const [seats]: any = await conn.query(`SELECT seat_id FROM seats WHERE room_id = ?`, [room_id]);
         if (Array.isArray(seats) && seats.length > 0) {
             const params: any[] = [];
             const placeholders: string[] = [];
@@ -82,12 +89,8 @@ export async function POST(req: Request) {
             await conn.query(sql, params);
         }
         //Tạo giá
-        const cinemaIdraw = await getCinemaFromRoom(room_id);
-        const cinemaId = cinemaIdraw?.data?.[0]?.cinema_id ?? null;
-        const d = new Date(date);
-        const dayBinary = DAY_TO_BINARY[d.getDay()];
-        const isHoliday = (await checkIsHoliday(date))?.data ? 1 : 0;
-        const [normalRows] = await conn.query(`SELECT price FROM price_fixed 
+
+        const [normalRows]: any = await conn.query(`SELECT price FROM price_fixed 
                 WHERE
                 cinema_id = ?
                 AND ticket_type_id = ?
@@ -107,7 +110,7 @@ export async function POST(req: Request) {
                 LIMIT 1;
                 `, [cinemaId, 1, dayBinary, 0, isHoliday, date, date]);
         const priceNormal = normalRows?.[0]?.price;
-        const [studentRows] = await conn.query(`SELECT price FROM price_fixed 
+        const [studentRows]: any = await conn.query(`SELECT price FROM price_fixed 
                 WHERE
                 cinema_id = ?
                 AND ticket_type_id = ?

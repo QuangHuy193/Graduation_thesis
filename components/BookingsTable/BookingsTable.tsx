@@ -16,7 +16,12 @@ type SeatLite = {
     seat_row: string;
     seat_column: string;
 }
+type MovieScreenLite = {
+    start_time: string;
+    end_time: string;
+}
 export type BookingItem = {
+    movie_screening?: MovieScreenLite;
     movie?: string;
     room?: string;
     cinema?: string;
@@ -266,7 +271,7 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                 <table className="w-full table-auto">
                     <thead className="bg-slate-50">
                         <tr>
-                            <th className="text-left px-4 py-3">Mã</th>
+                            {/* <th className="text-left px-4 py-3">Mã</th> */}
                             <th className="text-left px-4 py-3">Phim / Suất</th>
                             <th className="text-left px-4 py-3">Ghế</th>
                             <th className="text-left px-4 py-3">Giá</th>
@@ -284,7 +289,7 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                             <tr><td colSpan={8} className="p-6 text-center text-slate-500">Không có đặt vé</td></tr>
                         ) : paginated.map(b => (
                             <tr key={b.booking_id} className="border-t hover:bg-slate-50">
-                                <td className="px-4 py-3">{b.booking_id}</td>
+                                {/* <td className="px-4 py-3">{b.booking_id}</td> */}
                                 <td className="px-4 py-3 max-w-[320px]">
                                     {/* Tên phim */}
                                     <div className="font-medium truncate">
@@ -302,11 +307,11 @@ export default function BookingsTable({ bookings: propBookings = [], initial = [
                                             {getDateOnly(b.showtime?.date || "")}
                                         </span>
 
-                                        {/* {b.showtime?.start_time && (
+                                        {b.movie_screening?.start_time && b.movie_screening?.end_time && (
                                             <span className="px-2 py-0.5 rounded bg-blue-50 text-[11px] text-blue-700">
-                                                {b.showtime.start_time.slice(0, 5)}
+                                                {b.movie_screening.start_time.slice(0, 5)}- {b.movie_screening.end_time.slice(0, 5)}
                                             </span>
-                                        )} */}
+                                        )}
                                     </div>
                                 </td>
 

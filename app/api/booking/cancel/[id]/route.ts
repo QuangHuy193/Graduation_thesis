@@ -1,4 +1,4 @@
-import { refundPayOS, triggerRefund } from "@/lib/axios/paymentAPI";
+import { refundPayOS } from "@/lib/axios/paymentAPI";
 import { db } from "@/lib/db";
 import {
   errorResponse,
@@ -20,7 +20,7 @@ export async function DELETE(
       return errorResponse("percent không hợp lệ", 400);
     }
     // (1) Lấy booking
-    const [bookingRows] = await db.execute(
+    const [bookingRows]: any = await db.execute(
       "SELECT payment_method, status, showtime_id, user_id FROM booking WHERE booking_id = ?",
       [id]
     );
@@ -37,7 +37,7 @@ export async function DELETE(
     await db.query(`UPDATE booking SET status = 3 WHERE booking_id = ?`, [id]);
 
     // lấy ra payment
-    const [pmRows] = await db.execute(
+    const [pmRows]: any = await db.execute(
       "SELECT amount FROM payment WHERE booking_id = ?",
       [id]
     );
@@ -81,7 +81,7 @@ export async function DELETE(
         const showtime_id = booking.showtime_id;
         console.log("showtime_id: ", showtime_id);
         /// Lấy danh sách seat_id
-        const [ticketRows] = await db.execute(
+        const [ticketRows]: any = await db.execute(
           "SELECT seat_id FROM ticket WHERE booking_id = ?",
           [id]
         );
@@ -107,7 +107,7 @@ export async function DELETE(
         ]);
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     return errorResponse("Hủy booking thất bại", 500, error.message);
   }

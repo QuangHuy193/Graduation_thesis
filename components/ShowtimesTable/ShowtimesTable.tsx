@@ -559,7 +559,7 @@ export default function ShowtimeTimetable({
         try {
           onLoadingChange?.(true);
 
-          await createShowtimeBulk({
+          const res = await createShowtimeBulk({
             from_date: bulkApply.from_date,
             to_date: resDate.value,
             items: bulkContexts,
@@ -571,7 +571,19 @@ export default function ShowtimeTimetable({
 
           if (onBulkApplied) await onBulkApplied();
           onSuccess?.("Áp dụng suất chiếu thành công");
-        } finally {
+        } catch (err: any) {
+          const msg =
+            err?.response?.data?.message ||
+            err?.message ||
+            "Không thể áp dụng suất chiếu";
+
+          await Swal.fire({
+            icon: "error",
+            title: "Tạo suất chiếu thất bại",
+            text: msg,
+          });
+        }
+        finally {
           onLoadingChange?.(false);
         }
 

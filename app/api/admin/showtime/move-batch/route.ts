@@ -50,9 +50,14 @@ export async function POST(request: Request) {
         }
 
         // console.log("move-batch payload validated, count:", moves.length);
-
+        const mailQueue: {
+            to: string;
+            subject: string;
+            html: string;
+        }[] = [];
         const conn = await db.getConnection();
         try {
+
             await conn.beginTransaction();
 
             const results: any[] = [];
@@ -74,13 +79,103 @@ export async function POST(request: Request) {
                     room_id: oldRoomId,
                     movie_screen_id: oldMovieScreenId,
                 } = existing;
-
+                const [emails]: any[] = await conn.query(`select email from booking where showtime_id=? and status=1`, [m.showtime_id]);
                 // If payload includes key "date" and it's explicitly null -> DELETE the showtime
                 if (Object.prototype.hasOwnProperty.call(m, "date") && m.date === null) {
+
                     await conn.query(`DELETE FROM price_reality WHERE showtime_id=?`, [m.showtime_id]);
+
+                    // await conn.query(`INSERT INTO refund (percent, amount, time, reason, booking_id) VALUES (?, ?,?,'Hủy từ hệ thống',? )`, [refundPercent, totalRefund, currentTime, id]);
+                    const [bookingRows] = await conn.query(`SELECT booking_id from booking WHERE showtime_id=?`, [m.showtime_id]);
+                    for (const br of bookingRows as any[]) {
+                        const bookingId = br.booking_id;
+
+                        const [existRefund]: any[] = await conn.query(
+                            `SELECT 1 FROM refund WHERE booking_id=? LIMIT 1`,
+                            [bookingId]
+                        );
+
+                        if (existRefund.length) continue; // đã hoàn rồi → bỏ qua
+
+                        const [paymentRows]: any = await conn.query(
+                            `SELECT amount FROM payment WHERE booking_id=?`,
+                            [bookingId]
+                        );
+
+                        const amount = paymentRows[0]?.amount ?? 0;
+                        const currentTime = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+                        await conn.query(
+                            `INSERT INTO refund (percent, amount, time, reason, booking_id)
+     VALUES (?, ?, ?, 'Hoàn tiền do hủy suất chiếu', ?)`,
+                            [100, amount, currentTime, bookingId]
+                        );
+                    }
+
+                    await conn.query(`UPDATE booking set status =4 WHERE showtime_id=?`, [m.showtime_id]);
                     await conn.query(`UPDATE booking SET showtime_id = NULL WHERE showtime_id=?`, [m.showtime_id]);
                     await conn.query(`DELETE FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
+
                     results.push({ ok: true, action: "deleted", input: m });
+                    if (emails.length > 0) {
+
+
+                        const [movieRows]: any[] = await conn.query(`select name from movies where movie_id=?`, [MovieId]);
+                        const movieName = movieRows[0].name ?? "Không xác định";
+
+                        const transporter = nodemailer.createTransport({
+                            service: "gmail",
+                            auth: {
+                                user: process.env.EMAIL_USER,
+                                pass: process.env.EMAIL_PASS,
+                            },
+                        });
+
+                        for (const { email } of emails) {
+                            if (!email) continue;
+                            mailQueue.push({
+                                to: email,
+                                subject: "Thông báo hủy suất chiếu | CineGO",
+                                html: `<p>Kính gửi Quý khách,</p>
+                              <p>
+                                Chúng tôi rất tiếc phải thông báo rằng suất chiếu phim
+                                <strong>${movieName}</strong> mà Quý khách đã đặt
+                                vào ngày <strong>${oldDate}</strong>
+                                đã <strong>bị hủy</strong> do điều chỉnh lịch chiếu từ hệ thống.
+                              </p>
+
+                              <p>
+                                Đối với vé đã thanh toán, hệ thống <strong>CineGO</strong> đã
+                                <strong>tự động hoàn tiền</strong> về tài khoản mà Quý khách đã sử dụng
+                                khi thanh toán.
+                              </p>
+
+                              <p>
+                                Thời gian tiền được ghi nhận vào tài khoản có thể dao động từ
+                                <strong>1–3 ngày làm việc</strong>, tùy theo ngân hàng.
+                              </p>
+
+                              <p>
+                                Quý khách vui lòng đăng nhập hệ thống <strong>CineGO</strong>
+                                để kiểm tra lại thông tin hoàn tiền và lựa chọn suất chiếu khác phù hợp.
+                              </p>
+
+                              <p>
+                                Chúng tôi chân thành xin lỗi vì sự bất tiện này và rất mong nhận được
+                                sự thông cảm từ Quý khách.
+                              </p>
+
+                              <br/>
+
+                              <p>
+                                Trân trọng,<br/>
+                                <strong>CineGO</strong>
+                              </p>`
+                            });
+                        }
+
+
+                    }
                     continue;
                 }
 
@@ -128,14 +223,14 @@ export async function POST(request: Request) {
                         room_id: newRoomId,
                         movie_screen_id: newMovieScreenId,
                     } = rows[0];
-                    const [emails]: any[] = await conn.query(`select email from booking where showtime_id=? and status=1`, [m.showtime_id]);
+
                     if (emails.length > 0) {
                         // tạo transporter 1 lần (KHÔNG để trong loop)
-                        const [movieRows] = await conn.query(`select name from movies where movie_id=?`, [MovieId]);
+                        const [movieRows]: any[] = await conn.query(`select name from movies where movie_id=?`, [MovieId]);
                         const movieName = movieRows[0].name ?? "Không xác định";
-                        const [roomRows] = await conn.query(`SELECT name from rooms WHERE room_id=?`, [newRoomId]);
+                        const [roomRows]: any[] = await conn.query(`SELECT name from rooms WHERE room_id=?`, [newRoomId]);
                         const roomName = roomRows[0].name ?? "Không xác định";
-                        const [movieSceenRows] = await conn.query(`SELECT start_time,end_time from movie_screenings WHERE movie_screen_id=?`, [newMovieScreenId]);
+                        const [movieSceenRows]: any[] = await conn.query(`SELECT start_time,end_time from movie_screenings WHERE movie_screen_id=?`, [newMovieScreenId]);
                         const start = movieSceenRows[0].start_time ?? "Không xác định";
                         const end = movieSceenRows[0].end_time ?? "Không xác định";
                         const transporter = nodemailer.createTransport({
@@ -192,6 +287,28 @@ export async function POST(request: Request) {
             } // end for
 
             await conn.commit();
+            if (mailQueue.length) {
+                const transporter = nodemailer.createTransport({
+                    service: "gmail",
+                    auth: {
+                        user: process.env.EMAIL_USER,
+                        pass: process.env.EMAIL_PASS,
+                    },
+                });
+
+                for (const mail of mailQueue) {
+                    try {
+                        await transporter.sendMail({
+                            from: `"CineGO" <${process.env.EMAIL_USER}>`,
+                            to: mail.to,
+                            subject: mail.subject,
+                            html: mail.html,
+                        });
+                    } catch (mailErr) {
+                        console.error("Send mail failed:", mailErr, mail.to);
+                    }
+                }
+            }
             return NextResponse.json({ ok: true, results }, { status: 200 });
         } catch (err) {
             try {

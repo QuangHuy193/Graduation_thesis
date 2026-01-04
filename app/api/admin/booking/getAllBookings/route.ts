@@ -31,7 +31,10 @@ export async function GET() {
 		c.name as cinema_name,
 		
 		g.seat_column,
-		g.seat_row
+		g.seat_row,
+		
+		ms.start_time,
+		ms.end_time
       FROM booking b
       LEFT JOIN users u ON u.user_id = b.user_id
       LEFT JOIN vouchers v ON v.voucher_id = b.voucher_id
@@ -41,6 +44,7 @@ export async function GET() {
       left join cinemas c on c.cinema_id=r.cinema_id
 	  left join ticket t on t.booking_id=b.booking_id
 	  left join seats g on g.seat_id=t.seat_id
+	  left join movie_screenings ms on ms.movie_screen_id=s.movie_screen_id
     `;
 
         const [rows] = await pool.query(query);
@@ -82,7 +86,10 @@ export async function GET() {
                             status: r.showtime_status !== null ? Number(r.showtime_status) : null,
                         }
                         : null,
-
+                    movie_screening: {
+                        start_time: r.start_time,
+                        end_time: r.end_time
+                    },
                     movie: r.movie_title ?? null,
                     room: r.room_name ?? null,
                     cinema: r.cinema_name ?? null,

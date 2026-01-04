@@ -97,9 +97,14 @@ export async function createShowtimeBulk(payload: {
         movie_screen_id: number;
     }>;
 }) {
-    const res = await axiosInstance.post(
-        "/api/admin/showtime/createShowtimeBulkAuto",
-        payload
-    );
-    return res.data;
+    try {
+        const res = await axiosInstance.post(
+            "/api/admin/showtime/createShowtimeBulkAuto",
+            payload
+        );
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
+
 }

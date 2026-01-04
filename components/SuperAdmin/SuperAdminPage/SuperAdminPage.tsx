@@ -1,8 +1,10 @@
 "use client";
 import { MENUSUPERADMIN } from "@/lib/constant";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import RevenueChart from "../RevenueChart/RevenueChart";
-
+import PromotionTable, { PromotionRule } from "@/components/PromotionTable/PromotionTable";
+import { getAllPromotions } from "@/lib/axios/admin/promotion_ruleAPI";
+import { useSession } from "next-auth/react";
 function SuperAdminPage() {
   const [state, setState] = useState({
     pageTitle: 0,
@@ -11,7 +13,32 @@ function SuperAdminPage() {
       year: 2025,
     },
   });
+  const { data: session } = useSession();
+  const user = session?.user;
+  //Lấy khuyến mãi
+  const [promotions, setPromotions] = useState<PromotionRule[]>([]);
+  const loaded = useRef({
+    promotions: false,
+  });
+  async function fetchPromotion() {
+    try {
+      const data = await getAllPromotions();
+      setPromotions(data);
+    } catch (error) {
+      console.error(error);
+      setPromotions([]);
+    }
+  }
+  function handleReloadPromotion() {
+    fetchPromotion();
+  }
+  useEffect(() => {
+    if (state.pageTitle === 2 && !loaded.current.promotions) {
+      fetchPromotion();
+      loaded.current.promotions = true;
+    }
 
+  }, [state.pageTitle]);
   return (
     <div className="flex h-[515px] relative bg-gray-50 rounded-md">
       {/* ASIDE */}
@@ -32,11 +59,10 @@ function SuperAdminPage() {
             }
             className={`
                 px-3 py-2 rounded-md  cursor-pointer transition-all
-                ${
-                  state.pageTitle === m.index
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-gray-700"
-                }
+                ${state.pageTitle === m.index
+                ? "bg-blue-600 text-white"
+                : "hover:bg-gray-700"
+              }
               `}
           >
             {m.title}
@@ -79,6 +105,18 @@ function SuperAdminPage() {
                 }}
               />
             )}
+            {state.pageTitle === 1 && (<div> Lịch sử chỉnh sửa lịch chiếu </div>
+            )}
+            {state.pageTitle === 2 &&
+              <div className="mt-4">
+                <PromotionTable
+                  promotion={promotions}
+                  onEdit={handleReloadPromotion}
+                  onAdd={handleReloadPromotion}
+                  user={user}
+                />
+              </div>
+            }
           </div>
         </main>
       </div>

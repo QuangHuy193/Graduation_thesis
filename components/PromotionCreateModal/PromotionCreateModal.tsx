@@ -1,36 +1,87 @@
+import { addPromotion } from "@/lib/axios/admin/promotion_ruleAPI";
 import React from "react";
+import Swal from "sweetalert2";
 
 type Props = {
     open: boolean;
     onClose: () => void;
-    onSubmit: (payload: any) => void;
+    onSubmit: () => void;
+    setLoading?: (v: boolean) => void;
+    loading?: boolean;
 };
 
 export default function PromotionCreateModal({
     open,
     onClose,
     onSubmit,
+    setLoading,
+    loading,
 }: Props) {
     if (!open) return null;
+    const [isUnlimited, setIsUnlimited] = React.useState(true);
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const [form, setForm] = React.useState<{
+        start_time: string | null;
+        end_time: string | null;
+    }>({
+        start_time: null,
+        end_time: null,
+    });
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const form = new FormData(e.currentTarget);
 
-        const payload = {
-            name: form.get("name"),
-            image: form.get("image"),
-            start_time: form.get("start_time") || null,
-            end_time: form.get("end_time") || null,
-            priority: Number(form.get("priority") || 1),
-            enable: form.get("enable") ? 1 : 0,
-            display: form.get("display") ? 1 : 0,
-            isHoliday: form.get("isHoliday") ? 1 : 0,
-            description: form.get("description"),
-        };
+        try {
+            setLoading?.(true);
 
-        onSubmit(payload);
+            const fd = new FormData(e.currentTarget);
+
+            const payload = {
+                name: fd.get("name"),
+                start_time: isUnlimited ? null : form.start_time,
+                end_time: isUnlimited ? null : form.end_time,
+                priority: Number(fd.get("priority") || 1),
+                isHoliday: fd.get("isHoliday") ? 1 : 0,
+                description: fd.get("description"),
+            };
+
+
+            await addPromotion(payload);
+
+            Swal.fire({
+                icon: "success",
+                title: "Đã thêm chương trình khuyến mãi",
+            });
+
+            onSubmit();
+        } catch (err: any) {
+            console.error(err);
+
+            const msg =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Vui lòng thử lại sau";
+
+            Swal.fire({
+                icon: "error",
+                title: "Thêm chương trình khuyến mãi thất bại",
+                text: msg,
+            });
+        } finally {
+            setLoading?.(false); // 🔥 LUÔN TẮT SPINNER
+        }
     };
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const { name, value } = e.target;
+
+        setForm((prev) => ({
+            ...prev,
+            [name]: value || null,
+        }));
+    };
+
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -47,7 +98,6 @@ export default function PromotionCreateModal({
                     </button>
                 </div>
 
-                {/* ===== Form ===== */}
                 <form
                     onSubmit={handleSubmit}
                     className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"
@@ -66,7 +116,7 @@ export default function PromotionCreateModal({
                     </div>
 
                     {/* Ảnh */}
-                    <div className="md:col-span-2">
+                    {/* <div className="md:col-span-2">
                         <label className="block text-xs text-slate-500 mb-1">
                             Ảnh (URL)
                         </label>
@@ -75,10 +125,10 @@ export default function PromotionCreateModal({
                             className="w-full border rounded-lg px-3 py-2"
                             placeholder="https://..."
                         />
-                    </div>
+                    </div> */}
 
                     {/* Thời gian */}
-                    <div>
+                    {/* <div>
                         <label className="block text-xs text-slate-500 mb-1">
                             Ngày bắt đầu
                         </label>
@@ -98,10 +148,60 @@ export default function PromotionCreateModal({
                             name="end_time"
                             className="w-full border rounded-lg px-3 py-2 cursor-pointer"
                         />
+                    </div> */}
+                    {/* ===== Thời gian ===== */}
+                    <div className="md:col-span-2 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="unlimited"
+                                checked={isUnlimited}
+                                onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setIsUnlimited(checked);
+
+                                    if (checked) {
+                                        setForm({
+                                            start_time: null,
+                                            end_time: null,
+                                        });
+                                    }
+                                }}
+                            />
+                            <label htmlFor="unlimited" className="text-sm">
+                                Hiệu lực vô thời hạn
+                            </label>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium">Bắt đầu</label>
+                                <input
+                                    type="datetime-local"
+                                    name="start_time"
+                                    value={form.start_time?.slice(0, 16) ?? ""}
+                                    onChange={handleChange}
+                                    disabled={isUnlimited}
+                                    className="w-full border px-3 py-2 rounded text-sm disabled:bg-gray-100"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium">Kết thúc</label>
+                                <input
+                                    type="datetime-local"
+                                    name="end_time"
+                                    value={form.end_time?.slice(0, 16) ?? ""}
+                                    onChange={handleChange}
+                                    disabled={isUnlimited}
+                                    className="w-full border px-3 py-2 rounded text-sm disabled:bg-gray-100"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     {/* Priority */}
-                    <div>
+                    {/* <div>
                         <label className="block text-xs text-slate-500 mb-1">
                             Độ ưu tiên
                         </label>
@@ -116,11 +216,11 @@ export default function PromotionCreateModal({
                             <option value={4}>4</option>
                             <option value={5}>5 - Thấp nhất</option>
                         </select>
-                    </div>
+                    </div> */}
 
                     {/* Switch */}
                     <div className="flex items-center gap-4 mt-6">
-                        <label className="flex items-center gap-2">
+                        {/* <label className="flex items-center gap-2">
                             <input type="checkbox" name="enable" defaultChecked />
                             <span>Kích hoạt</span>
                         </label>
@@ -128,7 +228,7 @@ export default function PromotionCreateModal({
                         <label className="flex items-center gap-2">
                             <input type="checkbox" name="display" defaultChecked />
                             <span>Hiển thị</span>
-                        </label>
+                        </label> */}
 
                         <label className="flex items-center gap-2">
                             <input type="checkbox" name="isHoliday" />
