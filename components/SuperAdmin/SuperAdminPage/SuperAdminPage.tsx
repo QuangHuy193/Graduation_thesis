@@ -14,7 +14,7 @@ function SuperAdminPage() {
   const [state, setState] = useState({
     pageTitle: 0,
     selected: {
-      type: "year",
+      type: "month",
       month: new Date().getMonth() + 1, // 1–12
       year: new Date().getFullYear(),
     },

@@ -3,7 +3,11 @@ import {
   getRevenueMonthYearAPI,
   getRevenueYearAPI,
 } from "@/lib/axios/sadmin/revenueAPI";
-import { faRefresh } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChartColumn,
+  faLineChart,
+  faRefresh,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "antd";
 import { useEffect, useState } from "react";
@@ -15,11 +19,14 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  LineChart,
+  Line,
 } from "recharts";
 
 function RevenueChart({ selected, setSelected, setType }) {
   const [state, setState] = useState({
     revenue: [],
+    chartType: "line", // line | bar
   });
 
   const monthOptions = Array.from({ length: 12 }, (_, i) => ({
@@ -135,41 +142,100 @@ function RevenueChart({ selected, setSelected, setType }) {
         <div className="mt-1 h-1 w-20 mx-auto rounded-full bg-blue-500" />
       </div>
 
+      {/* chuyển loại biểu đồ */}
+      <div className="flex justify-end">
+        <button
+          onClick={() =>
+            setState((prev) => ({
+              ...prev,
+              chartType: prev.chartType === "line" ? "bar" : "line",
+            }))
+          }
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold
+          text-gray-800 bg-gray-50 border border-gray-400 rounded-lg shadow
+          hover:bg-gray-100 hover:border-gray-500 hover:shadow-md transition-all
+          select-none cursor-pointer"
+        >
+          <FontAwesomeIcon
+            icon={state.chartType === "line" ? faChartColumn : faLineChart}
+            className="text-gray-700"
+          />
+          <span>Biểu đồ {state.chartType === "line" ? "cột" : "đường"}</span>
+        </button>
+      </div>
+
       {/* ---- Biểu đồ ---- */}
       <div className="">
         <div className="w-full h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="label"
-                interval={0} // ép hiện TẤT CẢ nhãn, không bỏ bớt
-                tick={{ fontSize: 10 }}
-              />
-              <YAxis
-                tickFormatter={(v) =>
-                  v.toLocaleString("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  })
-                }
-                tick={{ fontSize: 11 }}
-              />
-              <Tooltip
-                labelFormatter={(label) => {
-                  return state.revenue.length === 12
-                    ? label // "Tháng 1"
-                    : `Ngày ${label}`; // "Ngày 5"
-                }}
-                formatter={(value: number) =>
-                  value.toLocaleString("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  })
-                }
-              />
-              <Bar dataKey="value" fill="#4f46e5" radius={[6, 6, 0, 0]} />
-            </BarChart>
+            {state.chartType === "line" ? (
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" interval={0} tick={{ fontSize: 10 }} />
+                <YAxis
+                  tickFormatter={(v) =>
+                    v.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    })
+                  }
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip
+                  labelFormatter={(label) =>
+                    state.revenue.length === 12 ? label : `Ngày ${label}`
+                  }
+                  formatter={(value) => [
+                    value.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }),
+                    "Doanh thu",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#4f46e5"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            ) : (
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="label"
+                  interval={0} // ép hiện TẤT CẢ nhãn, không bỏ bớt
+                  tick={{ fontSize: 10 }}
+                />
+                <YAxis
+                  tickFormatter={(v) =>
+                    v.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    })
+                  }
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip
+                  labelFormatter={(label) => {
+                    return state.revenue.length === 12
+                      ? label // "Tháng 1"
+                      : `Ngày ${label}`; // "Ngày 5"
+                  }}
+                  formatter={(value) => [
+                    value.toLocaleString("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }),
+                    "Doanh thu",
+                  ]}
+                />
+                <Bar dataKey="value" fill="#6d66f6" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            )}
           </ResponsiveContainer>
         </div>
       </div>
