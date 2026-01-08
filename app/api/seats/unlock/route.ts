@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   const key = `seat_lock_${seat_id}_${showtime_id}`;
 
   await redis.del(key);
-  console.log(`đã unlock ghế: seat_lock_${seat_id}_${showtime_id}`);
+
   return Response.json({
     success: true,
   });

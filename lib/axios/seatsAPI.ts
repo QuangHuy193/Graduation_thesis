@@ -36,7 +36,6 @@ export async function unlockSeatAPI(seat_id: number, showtime_id: number) {
       seat_id,
       showtime_id,
     });
-
     return response.data;
   } catch (error: any) {
     console.error("Error unlock seat:", error);

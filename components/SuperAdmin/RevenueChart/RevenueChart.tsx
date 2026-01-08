@@ -3,6 +3,8 @@ import {
   getRevenueMonthYearAPI,
   getRevenueYearAPI,
 } from "@/lib/axios/sadmin/revenueAPI";
+import { faRefresh } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "antd";
 import { useEffect, useState } from "react";
 import {
@@ -15,9 +17,8 @@ import {
   CartesianGrid,
 } from "recharts";
 
-function RevenueChart({ selected, setSelected }) {
+function RevenueChart({ selected, setSelected, setType }) {
   const [state, setState] = useState({
-    chartType: "year",
     revenue: [],
   });
 
@@ -55,12 +56,12 @@ function RevenueChart({ selected, setSelected }) {
       }
     };
 
-    if (state.chartType === "month") {
+    if (selected.type === "month") {
       getRevenueMonth();
-    } else if (state.chartType === "year") {
+    } else if (selected.type === "year") {
       getRevenueYear();
     }
-  }, [selected, state.chartType]);
+  }, [selected, selected.type]);
 
   // map dữ liệu cho recharts
   const chartData =
@@ -76,28 +77,33 @@ function RevenueChart({ selected, setSelected }) {
 
   return (
     <div>
-      <div className="flex items-center gap-6 bg-white pb-2 shadow-md">
+      <div className="flex items-center gap-6 pb-2">
         {/* Nút đổi loại thống kê */}
-        <div
-          onClick={() =>
-            setState((prev) => ({
-              ...prev,
-              chartType: prev.chartType === "month" ? "year" : "month",
-            }))
-          }
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer 
-               hover:bg-blue-700 transition select-none"
+        <button
+          onClick={() => {
+            const newType = selected.type === "month" ? "year" : "month";
+            setType(newType);
+          }}
+          className={`px-4 py-2 rounded-lg cursor-pointer transition flex 
+            items-center gap-1 ${
+              selected.type === "year"
+                ? `bg-orange-100 text-orange-700 hover:bg-orange-200 border border-orange-300`
+                : `bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border border-indigo-300`
+            }`}
         >
-          Thống kê theo {state.chartType === "year" ? "năm" : "tháng"}
-        </div>
+          <span>
+            Thống kê theo {selected.type === "year" ? "năm" : "tháng"}
+          </span>
+          <FontAwesomeIcon icon={faRefresh} />
+        </button>
 
         {/* Select tháng */}
         <div className="flex items-center gap-2">
           <span>Tháng:</span>
           <div className="w-32">
             <Select
-              disabled={state.chartType === "year"}
-              placeholder="Chọn tháng"
+              disabled={selected.type === "year"}
+              value={selected.month}
               options={monthOptions}
               onChange={(v) => setSelected("month", v)}
             />
@@ -118,8 +124,19 @@ function RevenueChart({ selected, setSelected }) {
         </div>
       </div>
 
+      {/* tên biểu đồ */}
+      <div className="text-center mb-4">
+        <h2 className="text-lg font-semibold uppercase tracking-wide text-gray-700">
+          {selected.type === "year"
+            ? `Biểu đồ tổng doanh thu 12 tháng trong năm ${selected.year}`
+            : `Biểu đồ tổng doanh thu các ngày trong tháng ${selected.month}/${selected.year}`}
+        </h2>
+
+        <div className="mt-1 h-1 w-20 mx-auto rounded-full bg-blue-500" />
+      </div>
+
       {/* ---- Biểu đồ ---- */}
-      <div className="bg-white  shadow-md">
+      <div className="">
         <div className="w-full h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>

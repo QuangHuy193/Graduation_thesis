@@ -207,11 +207,12 @@ function MovieDetail({
       const res = await unlockSeatAPI(seat_id, state.timesSelected.showtime_id);
       if (res.success) {
         console.log("Đã mở lại ghế");
+        setState((prev) => ({
+          ...prev,
+          seatSelected: prev.seatSelected.filter((s) => s.seat_id !== seat_id),
+        }));
       }
-      setState((prev) => ({
-        ...prev,
-        seatSelected: prev.seatSelected.filter((s) => s.seat_id !== seat_id),
-      }));
+
       return;
     }
 
@@ -427,16 +428,6 @@ function MovieDetail({
     };
   }, []);
 
-  // unlock khi reload
-  useEffect(() => {
-    window.addEventListener("beforeunload", handleUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleUnload);
-      handleUnload();
-    };
-  }, [state.seatSelected, state.timesSelected]);
-
   // hàm tăng giảm chọn bắp nước
   const handleSelectedFood = (name: string, price: number, inc: boolean) => {
     setState((prev) => {
@@ -646,6 +637,7 @@ function MovieDetail({
       {/* hiện lịch chiếu */}
       <div>
         <ShowTime
+          // mở tất cả
           unlockseats={(showtime_id) => {
             handleUnlocks(
               state.seatSelected.map((s) => s.seat_id),
