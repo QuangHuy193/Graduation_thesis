@@ -46,8 +46,6 @@ export async function GET(
        ORDER BY c.cinema_id, r.room_id`,
       [date, id]
     );
-    console.log(date, id);
-    console.log("row", rows);
 
     const cinemasMap = new Map<string | number, any>();
 

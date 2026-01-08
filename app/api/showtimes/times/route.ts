@@ -14,7 +14,19 @@ export async function GET(req: Request) {
       JOIN showtime st ON st.movie_screen_id = ms.movie_screen_id
       JOIN movies m ON st.movie_id = m.movie_id
       JOIN rooms r ON r.room_id = st.room_id
-      WHERE m.movie_id = ? AND r.cinema_id = ? AND st.date = ?`,
+      WHERE m.movie_id = ? 
+        AND r.cinema_id = ? 
+        AND st.date = ?
+        AND st.status = 1
+        AND (
+          -- ngày tương lai
+          DATE(st.date) > CURDATE()
+          -- hôm nay thì lọc giờ
+          OR (
+            DATE(st.date) = CURDATE()
+            AND ms.start_time > DATE_FORMAT(CURTIME(), '%H:%i')
+          )
+        )`,
       [movie_id, cinema_id, date]
     );
 

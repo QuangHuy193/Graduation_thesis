@@ -16,7 +16,23 @@ export async function GET(
       FROM showtime st
       JOIN movies m ON st.movie_id = m.movie_id
       JOIN rooms r ON r.room_id = st.room_id
-      WHERE m.movie_id = ? AND r.cinema_id = ?`,
+      JOIN movie_screenings ms ON ms.movie_screen_id = st.movie_screen_id
+      WHERE m.movie_id = ? 
+        AND r.cinema_id = ? 
+        AND st.status = 1
+        AND DATE(st.date) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ${
+          LIMITDAY - 1
+        } DAY)
+        AND (
+          -- ngày tương lai
+          DATE(st.date) > CURDATE()
+          -- hôm nay thì lọc giờ
+          OR (
+            DATE(st.date) = CURDATE()
+            AND ms.start_time > DATE_FORMAT(CURTIME(), '%H:%i')
+          )
+        )
+      `,
       [id, cinema_id]
     );
 
