@@ -31,6 +31,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
         subtitle: "",
         duration: 0,
         status: 1,
+        vip: 0,
         genresCSV: "",
         actorsCSV: "",
     });
@@ -65,6 +66,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                 subtitle: "",
                 duration: 0,
                 status: 1,
+                vip: 0,
                 genresCSV: "",
                 actorsCSV: "",
             });
@@ -84,6 +86,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
             subtitle: movie.subtitle || "",
             duration: movie.duration ?? 0,
             status: movie.status ?? 1,
+            vip: 0,
             genresCSV: Array.isArray(movie.genres) ? movie.genres.join(", ") : (movie.genres as any) || "",
             actorsCSV: Array.isArray(movie.actors) ? movie.actors.join(", ") : (movie.actors as any) || "",
         });
@@ -129,6 +132,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
             subtitle: form.subtitle.trim(),
             duration: Number(form.duration) || 0,
             status: Number(form.status) || 0,
+            vip: Number(form.vip) || 0,
             genres: parseCSV(form.genresCSV),
             actors: parseCSV(form.actorsCSV),
         };
@@ -201,7 +205,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                                     subtitle: "",
                                     duration: 0,
                                     status: 1,
-
+                                    vip: 0,
                                     genresCSV: "",
                                     actorsCSV: "",
                                 });
@@ -295,7 +299,14 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                         <label className={`${styles.label} text-xs`}>Mô tả</label>
                         <textarea rows={4} className={`${styles.textarea} w-full`} value={form.description} onChange={(e) => update({ description: e.target.value })} />
                     </div>
-
+                    {/* <div>
+                        <label className={`${styles.label} text-xs`}>VIP</label>
+                        <select className={`${styles.select} w-full`} value={String(form.status)} onChange={(e) => update({ status: Number(e.target.value) })}>
+                            <option value={1}>Đang chiếu</option>
+                            <option value={0}>Sắp chiếu</option>
+                            <option value={-1}>Ẩn</option>
+                        </select>
+                    </div> */}
                     <div>
                         <label className={`${styles.label} text-xs`}>Trạng thái</label>
                         <select className={`${styles.select} w-full`} value={String(form.status)} onChange={(e) => update({ status: Number(e.target.value) })}>

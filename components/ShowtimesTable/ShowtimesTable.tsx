@@ -30,6 +30,7 @@ type Props = {
   onCommit?: (changes: PendingSlotUpdate[]) => Promise<any>;
   onSelect?: (s: ShowtimeDay) => void;
   externalMovies?: ExternalMovie[];
+  movieScreeningsByCinema?: Record<number, MovieScreenSlot[]>;
   onLoadingChange?: (v: boolean) => void;
   onBulkApplied?: () => Promise<any> | void;
   onSuccess?: (msg?: string) => void;
@@ -50,6 +51,7 @@ export default function ShowtimeTimetable({
   movieScreenings,
   roomsList = [],
   cinemasMap,
+  movieScreeningsByCinema,
   initialDate = null,
   onCommit,
   externalMovies = [],
@@ -660,6 +662,10 @@ export default function ShowtimeTimetable({
             {Object.entries(filteredRoomsByCinema).map(([cinemaKey, rooms]) => {
               const cinemaId = cinemaKey === "no-cinema" ? null : Number(cinemaKey);
               const cinemaName = (cinemaId && cinemasMap?.[cinemaId]?.name) || `Rạp ${cinemaId ?? ""}`;
+              const cinemaSlots =
+                cinemaId && movieScreeningsByCinema[cinemaId]
+                  ? movieScreeningsByCinema[cinemaId]
+                  : [];
               return (
                 <div key={cinemaKey} className="border rounded p-3">
                   <div className="font-medium mb-3">{cinemaName}</div>
@@ -676,9 +682,10 @@ export default function ShowtimeTimetable({
                           <div key={room.room_id} className="border p-3 rounded">
                             <div className="font-medium mb-2">{room.name}</div>
                             <div className="space-y-2">
-                              {movieScreenings.map(slot => {
+                              {cinemaSlots.map(slot => {
                                 const existing = roomShow[slot.movie_screen_id] || null;
                                 return (
+
                                   <div
                                     key={slot.movie_screen_id}
                                     className={`border rounded p-2 bg-gray-50 transition-all

@@ -165,12 +165,11 @@ export default function FormLogin({
         window.dispatchEvent(new Event("auth-changed"));
       }
 
-      // user_id có thể ở session.user.user_id (theo callback bạn đã cấu hình)
+      // user_id có thể ở session.user.user_id (theo callback đã cấu hình)
       const userIdRaw = sessUser?.user_id ?? sessUser?.id ?? null;
       // console.log("userIdRaw: ", userIdRaw);
       const userId = Number(userIdRaw);
       if (!userId || Number.isNaN(userId)) {
-        // nếu không lấy được user_id từ session, vẫn có thể lấy từ loginData nếu bạn thay đổi authorize để return user_id
         setMsg({ type: "error", text: "Không xác định được user_id." });
         setLoading(false);
         return;
@@ -201,6 +200,7 @@ export default function FormLogin({
 
       // Redirect theo role
       const userRole: string = sessUser.role ?? "";
+      // console.log("userRole:", userRole);
       if (userRole === "admin" || userRole === "superadmin") {
         if (!state.saveLogin) {
           await Swal.fire({
@@ -216,9 +216,9 @@ export default function FormLogin({
           router.push("/admin");
         } else if (userRole === "superadmin") {
           router.push("/sadmin");
-        } else {
-          router.push("/");
         }
+      } else {
+        router.push("/");
       }
       return;
     } catch (err) {
@@ -303,9 +303,8 @@ export default function FormLogin({
               onClick={() => handleToggleVisibility("saveLogin")}
             >
               <div
-                className={`w-3.5 h-3.5  rounded-xs border border-black relative ${
-                  state.saveLogin === true ? "bg-orange-300" : ""
-                }`}
+                className={`w-3.5 h-3.5  rounded-xs border border-black relative ${state.saveLogin === true ? "bg-orange-300" : ""
+                  }`}
               >
                 {state.saveLogin && (
                   <FontAwesomeIcon

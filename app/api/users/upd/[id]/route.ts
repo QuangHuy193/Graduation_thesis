@@ -19,7 +19,7 @@ export async function PUT(
             name: "name",
             birthday: "birthday", // expect yyyy-mm-dd
             phone: "phone_number",
-            email: "email",
+            // email: "email",
         };
 
         const sets: string[] = [];

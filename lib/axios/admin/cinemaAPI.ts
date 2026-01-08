@@ -21,3 +21,11 @@ export const deleteCinemaAPI = async (cinema_id, type) => {
     return null;
   }
 };
+export const getCinemaScreeningAPI = async () => {
+  try {
+    const res = await axiosInstance.get("/api/admin/cinema/getCinemaScreening");
+    return res.data;
+  } catch (error) {
+    return null;
+  }
+};

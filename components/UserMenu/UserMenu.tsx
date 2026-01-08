@@ -30,7 +30,8 @@ export default function UserMenu({ user, handleLogout }) {
     <>
       <div className="relative flex items-center gap-2">
         <span className="font-medium text-(--color-yellow) cursor-pointer select-none group relative">
-          {userLogin.name}
+
+          <div className="w-10 overflow-hidden text-ellipsis whitespace-nowrap">{userLogin.name}</div>
           <div className="absolute right-0 top-full pt-2 pointer-events-none group-hover:pointer-events-auto">
             <div
               className="bg-gray-800 rounded shadow-md

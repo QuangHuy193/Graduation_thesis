@@ -60,7 +60,7 @@ export async function POST(req: Request) {
             `UPDATE otps SET consumed = 1, consumed_at = NOW() WHERE id = ? AND consumed = 0`,
             [record.id]
         ) as any;
-        console.log("[verify-otp] success-update affectedRows:", markRes.affectedRows);
+        // console.log("[verify-otp] success-update affectedRows:", markRes.affectedRows);
 
         if (markRes.affectedRows === 0) {
             // Đã bị tiêu thụ bởi request khác

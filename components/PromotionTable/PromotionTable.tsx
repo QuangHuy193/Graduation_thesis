@@ -5,6 +5,7 @@ import Spinner from "../Spinner/Spinner";
 import PromotionFormEdit from "../PromotionFormEdit/PromotionFormEdit";
 import PromotionCreateModal from "../PromotionCreateModal/PromotionCreateModal";
 import { on } from "events";
+import UploadPicture from "../UploadPicture/UploadPicture";
 
 export type PromotionRule = {
     rule_id: number;
@@ -32,6 +33,7 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
     const [loading, setLoading] = useState(false);
     const [editingPromotion, setEditingPromotion] = useState<PromotionRule | null>(null);
     const [openAddForm, setOpenAddForm] = useState(false);
+    const [openUpload, setOpenUpload] = useState(false);
     const holidayList = dataList.filter((p) => p.isHoliday === 1);
     const promotionList = dataList.filter((p) => !p.isHoliday);
 
@@ -68,6 +70,9 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
             <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                     <tr>
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700">
+                            Hình ảnh
+                        </th>
                         <th className="px-3 py-2 text-left font-semibold text-gray-700">
                             Tên
                         </th>
@@ -106,8 +111,55 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
                             key={item.rule_id}
                             className="border-t border-b border-gray-700 hover:bg-gray-100 transition"
                         >
+                            {/* Hình ảnh */}
+                            <td className="px-3 py-2">
+                                {item.image ? (
+                                    <div className="relative group inline-block">
+                                        <img
+                                            src={item.image}
+                                            alt="Promotion"
+                                            className="w-16 h-16 object-cover rounded cursor-pointer border"
+                                        />
+
+                                        {/* Ảnh phóng to khi hover */}
+                                        <div
+                                            className="fixed hidden group-hover:block z-9999"
+                                            style={{
+                                                top: "50%",
+                                                left: "50%",
+                                                transform: "translate(-50%, -50%)",
+                                            }}
+                                        >
+
+                                            <img
+                                                src={item.image}
+                                                alt="Preview"
+                                                className="w-180 h-90 object-contain rounded-lg shadow-xl border bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded border cursor-pointer">
+                                        <span className="text-gray-400 text-sm" onClick={() => setOpenUpload(true)}>No Image</span>
+                                    </div>
+                                )}
+                                {
+                                    openUpload && (
+                                        <div>
+                                            <UploadPicture
+                                                open={openUpload}
+                                                onClose={() => setOpenUpload(false)}
+                                                target={{ type: "promotion", id: item.rule_id }}
+                                                defaultCaption={item.name}
+                                            // onSuccess={(img) => setImage(img.url)}
+                                            />
+                                        </div>
+                                    )
+                                }
+                            </td>
+
                             {/* Tên */}
-                            <td className="px-3 py-2 font-medium text-gray-800">
+                            < td className="px-3 py-2 font-medium text-gray-800" >
                                 {item.name}
                             </td>
 
@@ -183,10 +235,10 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </table >
 
 
-        </div>
+        </div >
 
 
     );
@@ -283,6 +335,7 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
                     </div>
                 )
             }
+
         </div>
     );
 }

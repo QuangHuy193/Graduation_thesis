@@ -26,7 +26,8 @@ export async function GET() {
         enable,
         display,
         description,
-        isHoliday
+        isHoliday,
+        image
       FROM promotion_rule
       ORDER BY priority ASC, rule_id DESC
     `);

@@ -25,6 +25,7 @@ function shallowMovieComparable(m: MovieFullITF) {
         country: m.country ?? "",
         subtitle: m.subtitle ?? "",
         duration: m.duration ?? null,
+        vip: m.vip ?? null,
         // genres & actors so sánh dưới dạng string chuẩn
         genres: Array.isArray(m.genres) ? m.genres.join(",") : (m.genres || ""),
         actors: Array.isArray(m.actors) ? m.actors.join(",") : (m.actors || "")
@@ -326,6 +327,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                 <th className="text-left px-4 py-3">Độ tuổi</th>
                                 <th className="text-left px-4 py-3">Tổng doanh thu</th>
                                 <th className="text-left px-4 py-3">Trạng thái</th>
+                                <th className="text-left px-4 py-3">VIP</th>
                                 <th className="text-right px-4 py-3">Hành động</th>
                             </tr>
                         </thead>
@@ -403,7 +405,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                             </span>
                                         )}
                                     </td>
-
+                                    <td className="px-4 py-3">{m.vip}</td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="inline-flex gap-2">
                                             <Button onClick={() => handleOpenEdit(m)} className="px-3 py-1 rounded border text-sm">Sửa</Button>

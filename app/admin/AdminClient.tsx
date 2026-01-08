@@ -28,7 +28,7 @@ import {
   createShowtimeWithDay,
 } from "@/lib/axios/admin/showtimeAPI";
 import { getAllRooms } from "@/lib/axios/admin/roomAPI";
-import { getAllCinemas } from "@/lib/axios/admin/cinemaAPI";
+import { getAllCinemas, getCinemaScreeningAPI } from "@/lib/axios/admin/cinemaAPI";
 import { getScreenings } from "@/lib/axios/admin/movie_screenAPI";
 import { getAllUsers } from "@/lib/axios/admin/userAPI";
 import ExcelImportMovies from "@/components/ExcelImportMovies/ExcelImportMovies";
@@ -49,6 +49,7 @@ import {
 import CinemaList from "@/components/CinemaList/CinemaList";
 import MovieScreening from "@/components/CinemaList/MovieScreening";
 import QrScanner from "@/components/QrScanner/QrScanner";
+import { set } from "nprogress";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
@@ -102,6 +103,7 @@ export default function AdminDashboard() {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null
   );
+  const [cinemaScreeningsMap, setCinemaScreeningsMap] = useState<Record<number, any[]>>({});
   const [dashboardWarnings, setDashboardWarnings] =
     useState<DashboardWarnings | null>(null);
   const [roomsList, setRoomsList] = React.useState<RoomEntry[]>([]);
@@ -132,6 +134,7 @@ export default function AdminDashboard() {
         fetchRooms(),
         fetchScreenings(),
         fetchMovies(),
+        fetchCinemaScreening(),
       ]);
     } finally {
       setLoading(false);
@@ -210,6 +213,14 @@ export default function AdminDashboard() {
       // console.error(e);
       // fallback: mock
       setScreenings([]);
+    }
+  }
+  async function fetchCinemaScreening() {
+    try {
+      const data = await getCinemaScreeningAPI();
+      setCinemaScreeningsMap(data?.data ?? {});
+    } catch (error) {
+      setCinemaScreeningsMap({});
     }
   }
   async function fetchCinemas() {
@@ -727,6 +738,7 @@ export default function AdminDashboard() {
                   showtimes={showtimes}
                   onCommit={handleCommit}
                   cinemasMap={cinemasMap}
+                  movieScreeningsByCinema={cinemaScreeningsMap}
                   roomsList={roomsList}
                   movieScreenings={screenings}
                   externalMovies={moviesEx}

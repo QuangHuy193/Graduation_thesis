@@ -35,9 +35,10 @@ export default function ProfileForm({ id, initialData = {}, onSave = () => { } }
 
     function validate() {
         if (!form.name.trim()) return "Họ và tên không được để trống.";
-        if (!form.email.trim()) return "Email không được để trống.";
-        // basic email check
-        if (!/^\S+@\S+\.\S+$/.test(form.email)) return "Email không hợp lệ.";
+        if (!form.phone.trim()) return "Số điện thoại không được để trống";
+        // if (!form.email.trim()) return "Email không được để trống.";
+        // // basic email check
+        // if (!/^\S+@\S+\.\S+$/.test(form.email)) return "Email không hợp lệ.";
         return "";
     }
 
@@ -54,12 +55,12 @@ export default function ProfileForm({ id, initialData = {}, onSave = () => { } }
         setSaving(true);
         const userId = Number(id);
         try {
-            // 🔥 GỌI API UPDATE USER
+            //  GỌI API UPDATE USER
             const response = await updateUser(userId, {
                 name: form.name,
                 birthday: form.birthday,
                 phone: form.phone,
-                email: form.email,
+                // email: form.email,
             });
 
             // Nếu bạn muốn callback lên parent
@@ -128,6 +129,7 @@ export default function ProfileForm({ id, initialData = {}, onSave = () => { } }
                         placeholder="you@example.com"
                         type="email"
                         autoComplete="email"
+                    // disabled={true}
                     />
                 </label>
             </div>

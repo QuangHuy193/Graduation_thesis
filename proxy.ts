@@ -5,7 +5,7 @@ import { authOptions } from "./app/api/auth/[...nextauth]/route";
 export async function proxy(req: NextRequest) {
   // const { pathname } = req.nextUrl;
   // if (pathname.startsWith("/api/admin")) {
-  //     // Lấy role từ cookie (ví dụ)
+  //     // Lấy role từ cookie
   //     // const role = req.cookies.get("role")?.value;
   //     const session = await getServerSession(authOptions);
   //     // ❌ Không có role
@@ -25,14 +25,14 @@ export async function proxy(req: NextRequest) {
   //     }
   // }
   // if (pathname.startsWith("/api/sadmin")) {
-  //     // Lấy role từ cookie (ví dụ)
+  //     // Lấy role từ cookie
   //     // const role = req.cookies.get("role")?.value;
   //     const session = await getServerSession(authOptions);
   //     // ❌ Không có role
   //     if (!session) {
   //         return errorResponse("Chưa đăng nhập", 401);
   //     }
-  //     // ❌ Không phải admin
+  //     // ❌ Không phải sadmin
   //     const role = (session as any).user?.role ?? null;
   //     if (role !== "superadmin") {
   //         return errorResponse("Không có quyền truy cập", 403);
