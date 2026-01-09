@@ -43,3 +43,23 @@ export async function getRevenueMovieAPI(year: number, month?: number) {
     throw error.response?.data || error;
   }
 }
+
+// revenue liên quan rạp
+export async function getRevenueCinemaAPI(year: number, month?: number) {
+  try {
+    const params = new URLSearchParams();
+
+    params.append("year", year.toString());
+    if (month) {
+      params.append("month", month.toString());
+    }
+
+    const response = await axiosInstance.get(
+      `/api/sadmin/revenue/cinema?${params.toString()}`
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error fetching revenue:", error);
+    throw error.response?.data || error;
+  }
+}

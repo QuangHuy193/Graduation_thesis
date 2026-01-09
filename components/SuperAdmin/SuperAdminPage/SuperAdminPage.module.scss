@@ -1,10 +1,14 @@
 .div_line {
   display: flex;
-  justify-content: center;
-  padding: 6px;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
 
-  div {
-    width: 90%;
-    border: 1px solid #99a1af;
-  }
+.div_line::before,
+.div_line::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #d1d5db;
 }

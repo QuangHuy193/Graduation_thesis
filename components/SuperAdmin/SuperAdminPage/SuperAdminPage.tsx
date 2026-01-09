@@ -7,8 +7,8 @@ import PromotionTable, {
 } from "@/components/PromotionTable/PromotionTable";
 import { getAllPromotions } from "@/lib/axios/admin/promotion_ruleAPI";
 import { useSession } from "next-auth/react";
-import MovieRevenue from "@/components/MovieRevenue/MovieRevenue";
 import styles from "./SuperAdminPage.module.scss";
+import ItemRevenue from "../ItemRevenue/ItemRevenue";
 
 function SuperAdminPage() {
   const [state, setState] = useState({
@@ -121,12 +121,29 @@ function SuperAdminPage() {
                     }));
                   }}
                 />
-                <div className={`${styles.div_line}`}>
-                  <div></div>
+
+                <div className={styles.div_line}>
+                  <span>📊</span>
                 </div>
 
                 {/* doanh thu phim */}
-                <MovieRevenue selected={state.selected} />
+                <ItemRevenue
+                  selected={state.selected}
+                  itemType="movie"
+                  itemTitle="Doanh thu phim"
+                  itemSubTitle="Phim"
+                />
+                <div className={styles.div_line}>
+                  <span>📊</span>
+                </div>
+
+                {/* doanh thu rạp */}
+                <ItemRevenue
+                  selected={state.selected}
+                  itemType="cinema"
+                  itemTitle="Doanh thu rạp"
+                  itemSubTitle="Rạp"
+                />
               </div>
             )}
             {state.pageTitle === 1 && <div> Lịch sử chỉnh sửa lịch chiếu </div>}
