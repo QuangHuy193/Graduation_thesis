@@ -33,7 +33,9 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
     const [loading, setLoading] = useState(false);
     const [editingPromotion, setEditingPromotion] = useState<PromotionRule | null>(null);
     const [openAddForm, setOpenAddForm] = useState(false);
-    const [openUpload, setOpenUpload] = useState(false);
+    // const [openUpload, setOpenUpload] = useState(false);
+    const [uploadTarget, setUploadTarget] = useState<PromotionRule | null>(null);
+
     const holidayList = dataList.filter((p) => p.isHoliday === 1);
     const promotionList = dataList.filter((p) => !p.isHoliday);
 
@@ -119,6 +121,7 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
                                             src={item.image}
                                             alt="Promotion"
                                             className="w-16 h-16 object-cover rounded cursor-pointer border"
+                                            onClick={() => setUploadTarget(item)}
                                         />
 
                                         {/* Ảnh phóng to khi hover */}
@@ -140,22 +143,12 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
                                     </div>
                                 ) : (
                                     <div className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded border cursor-pointer">
-                                        <span className="text-gray-400 text-sm" onClick={() => setOpenUpload(true)}>No Image</span>
+                                        <span className="text-gray-400 text-sm" onClick={() => setUploadTarget(item)}>No Image</span>
                                     </div>
-                                )}
-                                {
-                                    openUpload && (
-                                        <div>
-                                            <UploadPicture
-                                                open={openUpload}
-                                                onClose={() => setOpenUpload(false)}
-                                                target={{ type: "promotion", id: item.rule_id }}
-                                                defaultCaption={item.name}
-                                            // onSuccess={(img) => setImage(img.url)}
-                                            />
-                                        </div>
-                                    )
+                                )
+
                                 }
+
                             </td>
 
                             {/* Tên */}
@@ -335,7 +328,22 @@ function PromotionTable({ promotion, onEdit, onAdd, user }: Props) {
                     </div>
                 )
             }
-
+            {
+                uploadTarget && (
+                    <div>
+                        <UploadPicture
+                            open={true}
+                            onClose={() => setUploadTarget(null)}
+                            target={{ type: "promotion", id: uploadTarget.rule_id }}
+                            defaultCaption={uploadTarget.name}
+                            onSuccess={() => {
+                                setUploadTarget(null);
+                                onEdit(); // reload lại danh sách
+                            }}
+                        />
+                    </div>
+                )
+            }
         </div>
     );
 }
