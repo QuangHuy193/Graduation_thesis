@@ -107,8 +107,16 @@ export async function POST(req: Request) {
                 is_blockbuster DESC,
                 day_of_week DESC,
                 time_from DESC
-                LIMIT 1;
+                LIMIT 1
                 `, [cinemaId, 1, dayBinary, 0, isHoliday, date, date]);
+        // console.log("cinemaId =", cinemaId);
+        // console.log("ticket_type_id =", 1);
+        // console.log("day_of_week =", dayBinary);
+        // console.log("is_blockbuster =", 0);
+        // console.log("is_holiday =", isHoliday);
+        // console.log("date (time check 1) =", date);
+        // console.log("date (time check 2) =", date);
+
         const priceNormal = normalRows?.[0]?.price;
         const [studentRows]: any = await conn.query(`SELECT price FROM price_fixed 
                 WHERE
@@ -127,7 +135,7 @@ export async function POST(req: Request) {
                 is_blockbuster DESC,
                 day_of_week DESC,
                 time_from DESC
-                LIMIT 1;
+                LIMIT 1
                 `, [cinemaId, 2, dayBinary, 0, isHoliday, date, date]);
         const priceStudent = studentRows?.[0]?.price;
         await conn.query(`INSERT INTO price_reality (

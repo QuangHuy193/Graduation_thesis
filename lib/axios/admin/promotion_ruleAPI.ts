@@ -44,3 +44,11 @@ export const addPromotion = async (data: any) => {
     }
 
 }
+export const insertPictureToPromotion = async (data: { url: string; target_id: number; public_id: string }) => {
+    try {
+        const res = await axiosInstance.post(`/api/cloudinary/saveToPromotion`, data);
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
+};

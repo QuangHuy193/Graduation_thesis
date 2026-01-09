@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { uploadToCloudinary } from "@/lib/axios/uploadCloudinaryAPI";
 import { saveImageToDB } from "@/lib/axios/saveImageToDB";
+import { insertPictureToPromotion } from "@/lib/axios/admin/promotion_ruleAPI";
 
 type Props = {
     open: boolean;
@@ -69,13 +70,17 @@ export default function UploadPicture({
 
             const payload = {
                 url: cloud.secure_url,
-                public_id: cloud.public_id,
-                target_type: target?.type ?? null,
                 target_id: target?.id ?? null,
-                caption: caption || null,
+                public_id: cloud.public_id,
+                // target_type: target?.type ?? null,
+
+                // caption: caption || null,
             };
 
-            await saveImageToDB(payload);
+            // await saveImageToDB(payload);
+            if (target?.type === "promotion") {
+                await insertPictureToPromotion(payload);
+            }
 
             onSuccess?.({ url: cloud.secure_url });
             onClose();

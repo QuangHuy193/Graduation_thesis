@@ -31,6 +31,7 @@ import { getAllRooms } from "@/lib/axios/admin/roomAPI";
 import { getAllCinemas, getCinemaScreeningAPI } from "@/lib/axios/admin/cinemaAPI";
 import { getScreenings } from "@/lib/axios/admin/movie_screenAPI";
 import { getAllUsers } from "@/lib/axios/admin/userAPI";
+import { getAllFoods } from "@/lib/axios/admin/foodAPI";
 import ExcelImportMovies from "@/components/ExcelImportMovies/ExcelImportMovies";
 import Spinner from "@/components/Spinner/Spinner";
 import RoomList from "@/components/RoomList/RoomList";
@@ -50,6 +51,8 @@ import CinemaList from "@/components/CinemaList/CinemaList";
 import MovieScreening from "@/components/CinemaList/MovieScreening";
 import QrScanner from "@/components/QrScanner/QrScanner";
 import { set } from "nprogress";
+import FoodManager, { Food } from "@/components/FoodbeverageTable/FoodbeverageTable";
+import FoodbeverageTable from "@/components/FoodbeverageTable/FoodbeverageTable";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
@@ -68,7 +71,8 @@ type AdminTab =
   | "promotions"
   | "aside"
   | "moviescreen"
-  | "cinemas";
+  | "cinemas"
+  | "foodbeverage";
 
 export default function AdminDashboard() {
   //Chọn tab quản lý
@@ -80,6 +84,8 @@ export default function AdminDashboard() {
     }
     return "dashboard";
   });
+  //Lấy toàn bộ food
+  const [foodbeverage, setFoodbeverage] = useState<Food[]>([]);
   //Lấy toàn bộ phim
   const [movies, setMovies] = useState<MovieFullITF[]>([]);
   //Lấy phim đang chiếu
@@ -124,6 +130,7 @@ export default function AdminDashboard() {
     showtimes: false,
     rooms: false,
     users: false,
+    foodbeverage: false,
   });
   async function fetchShowtimeBundle() {
     setLoading(true);
@@ -172,6 +179,10 @@ export default function AdminDashboard() {
       fetchUser();
       loaded.current.users = true;
     }
+    if (activeTab === "foodbeverage" && !loaded.current.foodbeverage) {
+      fetchFood();
+      loaded.current.foodbeverage = true;
+    }
   }, [activeTab]);
 
   async function fetchUser() {
@@ -181,6 +192,16 @@ export default function AdminDashboard() {
     } catch (error) {
       console.log(error);
       setUsers([]);
+    }
+  }
+  async function fetchFood() {
+    try {
+      const data = await getAllFoods();
+      // console.log("Fetched foodbeverage:", data);
+      setFoodbeverage(data);
+    } catch (error) {
+      console.error(error);
+      setFoodbeverage([]);
     }
   }
   async function fetchPromotion() {
@@ -530,6 +551,7 @@ export default function AdminDashboard() {
     aside: "Danh sách phòng - Sơ đồ phòng",
     users: "Người dùng",
     scanner: "Quét mã vé",
+    foodbeverage: "Đồ ăn & thức uống",
   };
 
   function handleOpenAdd() {
@@ -618,6 +640,13 @@ export default function AdminDashboard() {
               }`}
           >
             Sự kiện & CTKM
+          </button>
+          <button
+            onClick={() => setActiveTab("foodbeverage")}
+            className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "foodbeverage" ? "bg-slate-100" : "hover:bg-slate-50"
+              }`}
+          >
+            Đồ ăn & thức uống
           </button>
         </nav>
       </aside>
@@ -769,6 +798,12 @@ export default function AdminDashboard() {
                 <UserTable users={users} onEdit={handleEditUser} />
               </div>
             )}
+            {
+              activeTab === "foodbeverage" && (
+                <div className="mt-4">
+                  <FoodbeverageTable foodbeverage={foodbeverage} />
+                </div>
+              )}
           </>
         )}
       </main>
