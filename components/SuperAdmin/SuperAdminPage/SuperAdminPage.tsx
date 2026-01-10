@@ -9,6 +9,7 @@ import { getAllPromotions } from "@/lib/axios/admin/promotion_ruleAPI";
 import { useSession } from "next-auth/react";
 import styles from "./SuperAdminPage.module.scss";
 import ItemRevenue from "../ItemRevenue/ItemRevenue";
+import ShowtimeAudit from "../ShowtimeAudit/ShowtimeAudit";
 
 function SuperAdminPage() {
   const [state, setState] = useState({
@@ -146,7 +147,7 @@ function SuperAdminPage() {
                 />
               </div>
             )}
-            {state.pageTitle === 1 && <div> Lịch sử chỉnh sửa lịch chiếu </div>}
+            {state.pageTitle === 1 && <ShowtimeAudit />}
             {state.pageTitle === 2 && (
               <div className="mt-4">
                 <PromotionTable

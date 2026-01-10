@@ -163,7 +163,7 @@ export const MENUSUPERADMIN = [
   },
   {
     index: 1,
-    title: "Lịch sử chỉnh sửa lịch chiếu",
+    title: "Lịch sử thao tác lịch chiếu",
   },
   {
     index: 2,

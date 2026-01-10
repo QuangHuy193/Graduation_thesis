@@ -41,7 +41,7 @@ export async function GET(
        JOIN cinemas c ON c.cinema_id = r.cinema_id
        WHERE s.status = 1
          AND DATE(s.date) = ?
-         AND s.movie_id = ?
+         AND s.movie_id = ?         
        GROUP BY s.showtime_id, c.cinema_id, r.room_id
        ORDER BY c.cinema_id, r.room_id`,
       [date, id]
