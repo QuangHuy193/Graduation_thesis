@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         const status = body.status != null ? Number(body.status) : null;
         const age_require = body.age_require != null ? Number(body.age_require) : null;
         const duration = body.duration != null ? Number(body.duration) : null;
-
+        const user_id = body.user_id != null ? Number(body.user_id) : null;
         const genres = Array.isArray(body.genres) ? body.genres.map(String).map(s => s.trim()).filter(Boolean) : [];
         const actors = Array.isArray(body.actors) ? body.actors.map(String).map(s => s.trim()).filter(Boolean) : [];
 
@@ -115,8 +115,8 @@ export async function POST(req: NextRequest) {
             // Note: if your movies table doesn't have `image`/`genres`/`actors` columns, we don't try to write them here.
             const insertSql = `
         INSERT INTO movies
-          (name, description, trailer_url, release_date, status, age_require, country_id, subtitle_id, duration)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (name, description, trailer_url, release_date, status, age_require, country_id, subtitle_id, duration,user_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
             const params = [
                 name,
@@ -128,6 +128,7 @@ export async function POST(req: NextRequest) {
                 country_id,
                 subtitle_id,
                 duration,
+                user_id,
             ];
 
             const [result]: any = await connection.execute(insertSql, params);

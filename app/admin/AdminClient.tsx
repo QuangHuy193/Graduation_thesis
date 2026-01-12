@@ -197,7 +197,7 @@ export default function AdminDashboard() {
   async function fetchFood() {
     try {
       const data = await getAllFoods();
-      // console.log("Fetched foodbeverage:", data);
+      // console.log("Fetched foodbeverage:", data)
       setFoodbeverage(data);
     } catch (error) {
       console.error(error);
@@ -439,44 +439,29 @@ export default function AdminDashboard() {
 
       // Step B: build payloadMoves for commitShowtimeMoves
       // For each normalized move, prefer server id resolved from tempMap (if was temp), else use existing showtime_id
-      const payloadMoves: any[] = normalized.map(({ pending, u }) => {
-        // If temp and created, use created server id
-        const clientTempId = Number(u.showtime_id ?? u.id ?? NaN);
-        if (tempMap.has(clientTempId)) {
-          const server = tempMap.get(clientTempId);
+      const payloadMoves = normalized
+        .filter(({ u }) => {
+          const tempId = Number(u.showtime_id ?? u.id ?? NaN);
+          return !tempMap.has(tempId); // ❌ bỏ item đã create
+        })
+        .map(({ u }) => {
+          const stId =
+            typeof u.showtime_id === "number" && u.showtime_id > 0
+              ? u.showtime_id
+              : typeof u.id === "number" && u.id > 0
+                ? u.id
+                : null;
+
           return {
-            showtime_id: server.showtime_id,
-            date: server.date,
-            to_room: server.room_id ?? u.room_id ?? u.to_room ?? null,
-            to_movie_screen_id:
-              server.movie_screen_id ??
-              u.movie_screen_id ??
-              u.movieScreenId ??
-              null,
-            movie_id: server.movie_id ?? u.movie_id ?? u.movieId ?? null,
-            status: 1,
+            showtime_id: stId,
+            date: u.date ?? u.show_date ?? null,
+            to_room: u.room_id ?? null,
+            to_movie_screen_id: u.movie_screen_id ?? null,
+            movie_id: u.movie_id ?? null,
+            status: u.status,
           };
-        }
+        });
 
-        // not a temp
-        const stId =
-          typeof u.showtime_id === "number" && u.showtime_id > 0
-            ? u.showtime_id
-            : typeof u.id === "number" && u.id > 0
-              ? u.id
-              : null;
-
-        const date = u.date ?? u.show_date ?? u.showDate ?? null;
-
-        return {
-          showtime_id: stId,
-          date,
-          to_room: u.room_id ?? u.to_room ?? null,
-          to_movie_screen_id: u.movie_screen_id ?? u.movieScreenId ?? null,
-          movie_id: u.movie_id ?? u.movieId ?? null,
-          status: u.status,
-        };
-      });
 
       // Filter out any moves that still don't have showtime_id (shouldn't happen but be defensive)
       const filteredPayload = payloadMoves.filter(
@@ -484,15 +469,11 @@ export default function AdminDashboard() {
       );
 
       if (filteredPayload.length === 0) {
-        Swal.fire({
-          icon: "warning",
-          title: "Không có thay đổi để lưu",
-          text: "Không có showtime_id hợp lệ để commit.",
-        });
-        // Optionally refresh to canonical state
+        // Chỉ có CREATE, không có MOVE → hoàn toàn hợp lệ
         await fetchShowtimes();
-        return { ok: true, message: "No server-side moves to commit" };
+        return { ok: true, message: "Created only, no moves to commit" };
       }
+
 
       // Step C: call commitShowtimeMoves to apply updates in batch
       const data = await commitShowtimeMoves(filteredPayload);
@@ -574,8 +555,8 @@ export default function AdminDashboard() {
     }
   }
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex">
-      <aside className="w-45 bg-white shadow-md p-6">
+    <div className="h-screen bg-slate-50 text-slate-900 flex overflow-hidden">
+      <aside className="w-55 bg-white shadow-md p-6  overflow-y-auto">
         <h2 className="text-xl font-semibold mb-6">Quản trị</h2>
         <nav className="space-y-2">
           <button
@@ -651,7 +632,7 @@ export default function AdminDashboard() {
         </nav>
       </aside>
 
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 overflow-auto">
         {loading ? (
           <div className="py-10 flex justify-center">
             <Spinner text="Đang xử lý..." />
@@ -801,7 +782,12 @@ export default function AdminDashboard() {
             {
               activeTab === "foodbeverage" && (
                 <div className="mt-4">
-                  <FoodbeverageTable foodbeverage={foodbeverage} />
+                  <FoodbeverageTable
+                    foodbeverage={foodbeverage}
+                    onAddSuccess={() => { fetchFood(); }}
+                    onDeleteSuccess={() => { fetchFood(); }}
+                    onInsertPictureToFoodSuccess={() => { fetchFood(); }}
+                  />
                 </div>
               )}
           </>

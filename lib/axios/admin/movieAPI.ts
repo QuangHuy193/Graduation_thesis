@@ -28,9 +28,9 @@ export async function createMovie(data: MovieFullITF) {
         throw error;
     }
 }
-export async function deleteMovie(movie_id: number) {
+export async function deleteMovie(movie_id: number, user_id: string) {
     try {
-        const res = await axiosInstance.delete(`/api/admin/movies/delMovie/${movie_id}`);
+        const res = await axiosInstance.delete(`/api/admin/movies/delMovie/${movie_id}`, { data: { user_id } });
         console.log("Xoá movie thành công:", res.data);
         return res.data;
     } catch (error: any) {

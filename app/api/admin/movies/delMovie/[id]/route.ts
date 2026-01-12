@@ -10,7 +10,8 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id?:
         if (!idRaw || !Number.isInteger(id) || id <= 0) {
             return NextResponse.json({ success: false, error: "movie_id không hợp lệ" }, { status: 400 });
         }
-
+        const body = await req.json().catch(() => ({}));
+        const user_id = body?.user_id;
         const connection = await db.getConnection();
         try {
             // kiểm tra tồn tại
@@ -20,7 +21,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id?:
             }
 
             await connection.beginTransaction();
-
+            await connection.execute(`UPDATE movies SET user_id = ? WHERE movie_id = ?`, [user_id, id]);
             // xóa liên kết trong movie_genres và movie_actors trước
             await connection.execute("DELETE FROM movie_genre WHERE movie_id = ?", [id]);
             await connection.execute("DELETE FROM movie_actor WHERE movie_id = ?", [id]);

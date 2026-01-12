@@ -12,6 +12,7 @@ export interface MovieFullITF {
   duration: number;
   status: number;
   vip: string;
+  user_id: number;
   genres?: string[] | [];
   actors?: string[] | [];
 }

@@ -7,6 +7,7 @@ import Button from "../Button/Button";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import Spinner from "../Spinner/Spinner";
+import { useSession } from "next-auth/react";
 type Props = {
     movies: MovieFullITF[];
     onEdit: (m: MovieFullITF) => void;
@@ -43,6 +44,8 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
     const [selectedTrailer, setSelectedTrailer] = useState<string | null>(null);
     const [editing, setEditing] = useState<MovieFullITF | null>(null);
     const [editOpen, setEditOpen] = useState(false);
+    const { data: session } = useSession();
+    const userID = session?.user?.user_id || "";
     const router = useRouter();
     useEffect(() => {
         setLocalMovies(movies || []);
@@ -137,7 +140,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
 
         try {
             setLoading(true);
-            const res = await deleteMovie(id);
+            const res = await deleteMovie(id, userID);
 
             if (res?.success) {
                 await Swal.fire("Xóa phim thành công!");

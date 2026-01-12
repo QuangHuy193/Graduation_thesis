@@ -45,6 +45,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id?: string
             "country_id",
             "subtitle_id",
             "duration",
+            "user_id",
         ];
 
         const setParts: string[] = [];

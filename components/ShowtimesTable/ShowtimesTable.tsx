@@ -6,6 +6,8 @@ import { PendingSlotUpdate } from "@/app/admin/AdminClient";
 import { createShowtimeBulk } from "@/lib/axios/admin/showtimeAPI";
 export type MovieScreenSlot = { movie_screen_id: number; start_time: string; end_time: string };
 export type ShowtimeDay = {
+  available_seats: ReactNode;
+  total_seats: ReactNode;
   showtime_id: number;
   movie_id: number | null;
   room_id: number;
@@ -70,7 +72,6 @@ export default function ShowtimeTimetable({
     }
     return initialDate
   }
-
   );
   //Trạng thái kiểm tra đã có suất chiếu từ parent chưa
   const originalRef = useRef<ShowtimeDay[] | null>(null);
@@ -705,7 +706,9 @@ export default function ShowtimeTimetable({
                                     }}
                                   >
                                     <div className="text-xs text-gray-600 mb-1">{slot.start_time} – {slot.end_time}</div>
+
                                     {existing ? (
+
                                       <div
                                         className={`p-2 bg-white border rounded cursor-move ${styles.dragItem}
     ${draggingId === existing.showtime_id ? styles.dragging : ""}
@@ -715,6 +718,21 @@ export default function ShowtimeTimetable({
                                         onDragStart={(e) => handleDragStart(e, existing)}
                                         onDragEnd={handleDragEndLocal}
                                       >
+                                        <div className="float-right w-20">
+                                          <div className="text-[10px] text-gray-500 text-right mb-0.5">
+                                            {existing.available_seats}/{existing.total_seats}
+                                          </div>
+                                          <div className="h-1 bg-gray-200 rounded">
+                                            <div
+                                              className="h-1 bg-green-500 rounded"
+                                              style={{
+                                                width: `${(existing.available_seats / existing.total_seats) * 100}%`
+                                              }}
+                                            />
+                                          </div>
+                                        </div>
+
+
                                         <div className="font-medium">{existing.movie_title}</div>
                                       </div>
                                     ) : (
@@ -736,7 +754,7 @@ export default function ShowtimeTimetable({
           </div>
         </div>
 
-        <div className="w-72 border-l pl-4 sticky top-50 self-start">
+        <div className="w-72 border-l pl-4 sticky top-30 self-start">
           <div className="font-medium mb-2 ">Danh sách phim đang chiếu</div>
           <div className="space-y-2 max-h-[70vh] overflow-auto pr-2 ">
             {externalMovies.length === 0 && <div className="text-sm text-gray-500 italic">Không có phim.</div>}

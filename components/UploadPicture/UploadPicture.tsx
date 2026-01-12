@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { uploadToCloudinary } from "@/lib/axios/uploadCloudinaryAPI";
 import { saveImageToDB } from "@/lib/axios/saveImageToDB";
 import { insertPictureToPromotion } from "@/lib/axios/admin/promotion_ruleAPI";
+import { insertPictureToFood } from "@/lib/axios/foodAPI";
 
 type Props = {
     open: boolean;
@@ -68,7 +69,7 @@ export default function UploadPicture({
                 },
             });
 
-            const payload = {
+            const payload: any = {
                 url: cloud.secure_url,
                 target_id: target?.id ?? null,
                 public_id: cloud.public_id,
@@ -81,7 +82,10 @@ export default function UploadPicture({
             if (target?.type === "promotion") {
                 await insertPictureToPromotion(payload);
             }
-
+            if (target?.type === "food") {
+                //Thêm hàm insertPictureToFood
+                await insertPictureToFood(payload);
+            }
             onSuccess?.({ url: cloud.secure_url });
             onClose();
         } finally {

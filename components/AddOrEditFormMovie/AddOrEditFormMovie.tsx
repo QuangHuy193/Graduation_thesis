@@ -4,6 +4,7 @@ import { getCountries } from "@/lib/axios/admin/countryAPI";
 import { createMovie, updateMovie } from "@/lib/axios/admin/movieAPI";
 import styles from "./AddOrEditFormMovie.module.scss";
 import Swal from "sweetalert2";
+import { useSession } from "next-auth/react";
 type Props = {
     movie: MovieFullITF | null; // null = tạo mới
     open: boolean;
@@ -38,6 +39,8 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
     const [submitting, setSubmitting] = useState(false);
     const [countries, setCountries] = useState<any[]>([]);
     const [subtiles, setSubtitles] = useState<any[]>([]);
+    const { data: session } = useSession();
+    const userID = session?.user?.user_id || "";
     // Khi open thay đổi: nếu có movie -> populate, nếu null -> reset (dùng cho add)
     useEffect(() => {
         if (!open) return;
@@ -135,6 +138,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
             vip: Number(form.vip) || 0,
             genres: parseCSV(form.genresCSV),
             actors: parseCSV(form.actorsCSV),
+            user_id: userID,
         };
         const isEdit = Boolean(payload.movie_id && payload.movie_id > 0);
         setSubmitting(true);
