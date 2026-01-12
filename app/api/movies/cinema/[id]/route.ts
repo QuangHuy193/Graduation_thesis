@@ -10,8 +10,7 @@ export async function GET(
 
   try {
     const [rows] = await db.query(
-      `
-      SELECT DISTINCT
+      `SELECT DISTINCT
         m.movie_id,
         m.name
       FROM movies m
@@ -29,11 +28,10 @@ export async function GET(
           -- hôm nay thì lọc giờ
           OR (
             DATE(st.date) = CURDATE()
-            AND ms.start_time > DATE_FORMAT(CURTIME(), '%H:%i')
+            AND ms.start_time > DATE_FORMAT(CURTIME(), '%H:%i') + 7
           )
         )
-      ORDER BY m.name
-      `,
+      ORDER BY m.name`,
       [id]
     );
 

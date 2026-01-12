@@ -50,10 +50,10 @@ export default function Login() {
 
   return (
     <div
-      className=" text-black pb-20
+      className=" text-black pb-5 pt-5 md:pb-20 md:pt-0
       bg-[linear-gradient(180deg,var(--color-blue-black)_0%,#2b3b5e_100%)]"
     >
-      <div className="w-[500px]">
+      <div className="w-full md:w-[500px]">
         <div className="flex w-full ">
           <div
             className={`flex-1 p-1.5 ${

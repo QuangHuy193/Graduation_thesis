@@ -7,6 +7,7 @@ import {
   faTicket,
   faCircleUser,
   faList,
+  faXmarkCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styles from "./Header.module.scss";
@@ -26,9 +27,12 @@ function Header() {
   const [cinemas, setCinemas] = useState<CinemaOnlyCity[]>([]);
   // rạp dc chọn khi ở menu mobile
   const [cinema, setCinema] = useState(-1);
+  // mở menu mobile
+  const [openMenuMobile, setOpenMenuMobile] = useState(false);
 
   const { data: session } = useSession();
   const [user, setUser] = useState<any>(null);
+
   useEffect(() => {
     if (session?.user) {
       setUser(session.user);
@@ -78,8 +82,8 @@ function Header() {
       h-(--height-header-mobile)"
     >
       <div
-        className="flex items-center justify-between border-b px-3 md:px-10
-       border-b-gray-500 py-1"
+        className={`flex items-center justify-between px-3 md:px-10
+       ${!openMenuMobile && "border-b-gray-500 border-b"} py-1`}
       >
         <div className="flex gap-5">
           <div className="flex items-center gap-3">
@@ -146,19 +150,139 @@ function Header() {
               options={
                 cinemas?.length > 0
                   ? cinemas.map((c: CinemaOnlyCity) => {
-                    return {
-                      value: c.cinema_id,
-                      label: c.name + " (" + c.province + ")",
-                    };
-                  })
+                      return {
+                        value: c.cinema_id,
+                        label: c.name + " (" + c.province + ")",
+                      };
+                    })
                   : []
               }
             />
           </div>
           {/*icon menu mobile */}
-          <div>
-            <FontAwesomeIcon className="text-xl" icon={faList} />
+          <div
+            onClick={() => {
+              setOpenMenuMobile(!openMenuMobile);
+            }}
+          >
+            <FontAwesomeIcon
+              className="text-2xl"
+              icon={openMenuMobile ? faXmarkCircle : faList}
+            />
           </div>
+          {/* menu mobile */}
+          {openMenuMobile && (
+            <div
+              className={`fixed top-(--height-header-mobile) bottom-0 left-0 right-0 
+            bg-(--color-blue-black) pt-4 transition-all duration-500 ease-in-out
+            ${
+              openMenuMobile
+                ? "opacity-100 translate-y-0 pointer-events-auto"
+                : "opacity-0 -translate-y-4 pointer-events-none"
+            }`}
+            >
+              <div
+                className={`${styles.item_menu_mobile} text-(--color-yellow)`}
+                onClick={() => {
+                  setOpenMenuMobile(false);
+                  router.push("/");
+                }}
+              >
+                trang chủ
+              </div>
+              {!user && (
+                <div
+                  className={`${styles.item_menu_mobile}`}
+                  onClick={() => {
+                    setOpenMenuMobile(false);
+                    router.push("/login");
+                  }}
+                >
+                  đăng nhập
+                </div>
+              )}
+
+              {/* user */}
+              {(!user || (user && user.role === "user")) && (
+                <>
+                  <div
+                    className={`${styles.item_menu_mobile}`}
+                    onClick={() => {
+                      setOpenMenuMobile(false);
+                      router.push("/movie");
+                    }}
+                  >
+                    đặt vé ngay
+                  </div>
+                  <div
+                    className={`${styles.item_menu_mobile}`}
+                    onClick={() => {
+                      setOpenMenuMobile(false);
+                      router.push("/showtimes");
+                    }}
+                  >
+                    lịch chiếu
+                  </div>
+                  <div
+                    className={`${styles.item_menu_mobile}`}
+                    onClick={() => {
+                      setOpenMenuMobile(false);
+                      router.push("/promotions");
+                    }}
+                  >
+                    khuyến mãi
+                  </div>
+                </>
+              )}
+
+              {/* admin và sadmin */}
+              {user && (
+                <>
+                  <div
+                    className={`${styles.item_menu_mobile}`}
+                    onClick={() => {
+                      setOpenMenuMobile(false);
+                      router.push("/user-info");
+                    }}
+                  >
+                    thông tin cá nhân
+                  </div>
+
+                  {user.role === "admin" ? (
+                    <div
+                      className={`${styles.item_menu_mobile}`}
+                      onClick={() => {
+                        setOpenMenuMobile(false);
+                        router.push("/admin");
+                      }}
+                    >
+                      Trang quản trị
+                    </div>
+                  ) : (
+                    <div
+                      className={`${styles.item_menu_mobile}`}
+                      onClick={() => {
+                        setOpenMenuMobile(false);
+                        router.push("/sadmin");
+                      }}
+                    >
+                      Trang thống kê
+                    </div>
+                  )}
+
+                  <div
+                    className={`${styles.item_menu_mobile}`}
+                    onClick={() => {
+                      setOpenMenuMobile(false);
+                      handleLogout();
+                    }}
+                  >
+                    Đăng xuất
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

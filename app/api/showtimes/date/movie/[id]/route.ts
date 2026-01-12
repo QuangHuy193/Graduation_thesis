@@ -29,7 +29,7 @@ export async function GET(
           -- hôm nay thì lọc giờ
           OR (
             DATE(st.date) = CURDATE()
-            AND ms.start_time > DATE_FORMAT(CURTIME(), '%H:%i')
+            AND ms.start_time > DATE_FORMAT(CURTIME(), '%H:%i') + 7
           )
         )
       `,

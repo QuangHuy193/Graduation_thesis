@@ -24,10 +24,11 @@ function Footer() {
   }, []);
   return (
     <footer
-      className="text-white px-10 w-full pt-[70px] pb-5
-    bg-[linear-gradient(90deg,#62368e_0%,#5395e1_100%)]"
+      className="text-white px-10 w-full pt-5 md:pt-[70px] pb-5 bg-(--color-blue-black)
+    md:bg-[linear-gradient(90deg,#62368e_0%,#5395e1_100%)]"
     >
-      <div className="grid grid-cols-4 gap-2">
+      {/* footer destop */}
+      <div className="hidden md:grid grid-cols-4 gap-2">
         <div>
           <div>
             <LoadingLink href="/" className="flex items-center ">
@@ -108,6 +109,58 @@ function Footer() {
                   {cinema.name}
                 </LoadingLink>
               ))}
+          </div>
+        </div>
+      </div>
+
+      {/* footer mobile */}
+      <div className="flex flex-col justify-center items-center md:hidden">
+        <div>
+          <LoadingLink href="/" className="flex items-center ">
+            <Image
+              src="/logo.png"
+              alt="CineGo"
+              width={120}
+              height={40}
+              className="w-[150px] h-20"
+            />
+          </LoadingLink>
+        </div>
+        <div className=" text-xl font-bold">YOUR STORY, YOUR SCREEN</div>
+        <LoadingLink className={`${styles.ft_item_m}`} href={"/login"}>
+          Đăng nhập
+        </LoadingLink>
+        <LoadingLink className={`${styles.ft_item_m}`} href={"/register"}>
+          Đăng ký
+        </LoadingLink>
+        <LoadingLink className={`${styles.ft_item_m}`} href={"/membership"}>
+          Thành viên
+        </LoadingLink>
+        <LoadingLink className={`${styles.ft_item_m}`} href={"/movie"}>
+          Đặt vé nhanh
+        </LoadingLink>
+        <LoadingLink className={`${styles.ft_item_m}`} href={"/movie/showing"}>
+          Phim đang chiếu
+        </LoadingLink>
+        <LoadingLink className={`${styles.ft_item_m}`} href={"/movie/upcoming"}>
+          Phim sắp chiếu
+        </LoadingLink>
+
+        <div className="flex gap-2 py-2">
+          <div>
+            <a href="https://facebook.com" target="_blank" className="text-2xl">
+              <FontAwesomeIcon icon={faFacebook} />
+            </a>
+          </div>
+          <div>
+            <a href="https://tiktok.com" target="_blank" className="text-2xl">
+              <FontAwesomeIcon icon={faTiktok} />
+            </a>
+          </div>
+          <div>
+            <a href="https://youtube.com" target="_blank" className="text-2xl">
+              <FontAwesomeIcon icon={faYoutube} />
+            </a>
           </div>
         </div>
       </div>
