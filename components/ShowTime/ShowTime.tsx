@@ -1,9 +1,8 @@
 "use client";
 import { getCityAPI } from "@/lib/axios/cinemasAPI";
 import { weekdays } from "@/lib/constant";
-import { faLocationDot, faVideoSlash } from "@fortawesome/free-solid-svg-icons";
+import { faVideoSlash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Select } from "antd";
 import { useEffect, useState } from "react";
 import styles from "./ShowTime.module.scss";
 import ShowTimeCard from "../ShowTimeCard/ShowTimeCard";
@@ -40,12 +39,10 @@ function ShowTime({
     return d;
   });
 
-  const [citys, setCitys] = useState([]);
   const [showTimes, setShowtimes] = useState({
     dataApi: {},
   });
   const [selected, setSelected] = useState({
-    provinceSelected: "",
     dateSelected: 0,
   });
 
@@ -65,67 +62,33 @@ function ShowTime({
     }
   }, []);
 
-  // lấy tỉnh
-  useEffect(() => {
-    const getCitys = async () => {
-      try {
-        const res = await getCityAPI();
-        setCitys(res);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getCitys();
-  }, []);
-
   useEffect(() => {
     setDateSelected(selected.dateSelected);
   }, [selected.dateSelected]);
 
-  // lọc showtime lấy rạp, giờ theo tỉnh của rạp
-  const filterByProvince = (data: any[], province: string) => {
-    if (province === "") return data;
-
-    return data.filter((item) => item.province === province);
-  };
   // đổi ngày
   useEffect(() => {
-    // xóa giờ, loại vé đã chọn gây lỗi khi đặt vé nhanh
-    // setTimesSelect({
-    //   showtime_id: -1,
-    //   room_id: -1,
-    //   cinema_name: "",
-    //   cinema_address: "",
-    //   room_name: "",
-    //   time: "",
-    // });
+    // xóa giờ, loại vé đã chọn gây lỗi khi đặt vé nhanh - đã test lại k có lỗi
+    setTimesSelect({
+      showtime_id: -1,
+      room_id: -1,
+      cinema_name: "",
+      cinema_address: "",
+      room_name: "",
+      time: "",
+    });
     // gọi api lấy showtime
     const getShowtime = async (day: number) => {
       setToggle((prev) => ({ ...prev, fetchData: true }));
       try {
         const res = await getShowtimeByDateAPI(day, movie_id);
 
-        if (selected.provinceSelected === "") {
-          if (res.length > 0) {
-            setSelected((prev) => ({
-              ...prev,
-              provinceSelected: res[0].province,
-            }));
-          } else {
-            setSelected((prev) => ({
-              ...prev,
-              provinceSelected: "TP. Hồ Chí Minh",
-            }));
-          }
-        }
-
-        const filtered = filterByProvince(res, selected.provinceSelected);
         await setShowtimes((prev) => ({
           ...prev,
           dataApi: {
             ...prev.dataApi,
             [day]: {
-              data: filtered,
+              data: res,
             },
           },
         }));
@@ -139,34 +102,6 @@ function ShowTime({
     const day = selected.dateSelected ? selected.dateSelected : 0;
     getShowtime(day);
   }, [selected.dateSelected]);
-
-  // đổi tỉnh
-  useEffect(() => {
-    const getShowtime = async (day: number) => {
-      setToggle((prev) => ({ ...prev, fetchData: true }));
-      try {
-        const res = await getShowtimeByDateAPI(day, movie_id);
-
-        const filtered = filterByProvince(res, selected.provinceSelected);
-        await setShowtimes((prev) => ({
-          ...prev,
-          dataApi: {
-            ...prev.dataApi,
-            [day]: {
-              data: filtered,
-            },
-          },
-        }));
-        setToggle((prev) => ({ ...prev, fetchData: false }));
-      } catch (error) {
-        console.log(error);
-        setToggle((prev) => ({ ...prev, fetchData: false }));
-      }
-    };
-
-    const day = selected.dateSelected ? selected.dateSelected : 0;
-    getShowtime(day);
-  }, [selected.provinceSelected]);
 
   useEffect(() => {
     // gọi api lấy ds loại vé và giá theo showtime và ngày
@@ -217,32 +152,6 @@ function ShowTime({
         <div className="text-lg md:text-2xl lg:text-4xl font-bold">
           DANH SÁCH RẠP
         </div>
-        <Select
-          onChange={(value) => {
-            setSelected((prev) => ({ ...prev, provinceSelected: value }));
-          }}
-          notFoundContent={"Đang tải dữ liệu..."}
-          className={`${styles.select} w-[180px]`}
-          value={selected.provinceSelected}
-          options={
-            citys?.length
-              ? citys.map((city) => ({
-                  label: (
-                    <div className="flex items-center gap-2">
-                      <span>{city.province}</span>
-                    </div>
-                  ),
-                  value: city.province,
-                }))
-              : []
-          }
-          labelRender={(value) => (
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faLocationDot} />
-              <span>{value.value}</span>
-            </div>
-          )}
-        />
       </div>
 
       <div className="pb-4">
@@ -275,7 +184,6 @@ function ShowTime({
                     <FontAwesomeIcon icon={faVideoSlash} /> HIỆN CHƯA CÓ LỊCH
                     CHIẾU
                   </div>
-                  <span>CHO RẠP Ở {selected.provinceSelected}</span>
                 </span>
               </div>
             )}
