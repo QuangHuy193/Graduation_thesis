@@ -138,6 +138,7 @@ function Checkout() {
   //   }
   //   setState((prev) => ({ ...prev, step: 3 }));
   // }, [paymentStatus]);
+
   useEffect(() => {
     if ((status === "authenticated" && user) || userSes) {
       setAuth(true);
@@ -157,19 +158,7 @@ function Checkout() {
       console.error("Không tìm thấy bookingData");
       return;
     }
-    if (verifying) {
-      return (
-        <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-          <Spinner />
-          <p className="text-lg font-semibold text-yellow-500">
-            Đang xác nhận thanh toán
-          </p>
-          <p className="text-sm text-gray-500">
-            Vui lòng không tắt trình duyệt
-          </p>
-        </div>
-      );
-    }
+
 
     // Chuẩn hóa ngày để phù hợp MySQL DATE
     const normalizedDate = toMySQLDate(bookingData.date);
@@ -204,7 +193,19 @@ function Checkout() {
     return res.data.data.booking_id;
     // TODO: redirect sang Payment
   }
-
+  if (verifying) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <Spinner />
+        <p className="text-lg font-semibold text-yellow-500">
+          Đang xác nhận thanh toán
+        </p>
+        <p className="text-sm text-gray-500">
+          Vui lòng không tắt trình duyệt
+        </p>
+      </div>
+    );
+  }
   return (
     <div>
       <div className="text-3xl font-bold pb-8">TRANG THANH TOÁN</div>
