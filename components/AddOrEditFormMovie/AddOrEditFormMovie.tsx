@@ -316,7 +316,7 @@ export default function AddOrEditMovieModal({ movie, open, onClose, onSave }: Pr
                         <select className={`${styles.select} w-full`} value={String(form.status)} onChange={(e) => update({ status: Number(e.target.value) })}>
                             <option value={1}>Đang chiếu</option>
                             <option value={0}>Sắp chiếu</option>
-                            <option value={-1}>Ẩn</option>
+                            <option value={-1} disabled>Ẩn</option>
                         </select>
                     </div>
 

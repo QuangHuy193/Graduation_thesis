@@ -103,3 +103,11 @@ export async function getPrice() {
     const res = await axiosInstance.get(`/api/admin/movies/getTotalRevenue`);
     return res.data.data;
 }
+export async function toggleHiddenMovie(id: number, user_id: string) {
+    try {
+        const res = await axiosInstance.patch(`/api/admin/movies/${id}/toggleHidMovie`, { user_id });
+        return true;
+    } catch (error) {
+        throw error;
+    }
+}

@@ -9,6 +9,7 @@ type MoveItemInput = {
     to_movie_screen_id?: number | null;
     movie_id?: number | null;
     status?: 0 | 1 | null;
+    user_id?: number | null;
 };
 
 export async function POST(request: Request) {
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
                     await conn.query(`DELETE FROM price_reality WHERE showtime_id=?`, [m.showtime_id]);
 
                     // await conn.query(`INSERT INTO refund (percent, amount, time, reason, booking_id) VALUES (?, ?,?,'Hủy từ hệ thống',? )`, [refundPercent, totalRefund, currentTime, id]);
-                    const [bookingRows] = await conn.query(`SELECT booking_id from booking WHERE showtime_id=?`, [m.showtime_id]);
+                    const [bookingRows]: any[] = await conn.query(`SELECT booking_id from booking WHERE showtime_id=?`, [m.showtime_id]);
                     for (const br of bookingRows as any[]) {
                         const bookingId = br.booking_id;
 
@@ -111,10 +112,14 @@ export async function POST(request: Request) {
                             [100, amount, currentTime, bookingId]
                         );
                     }
-
                     await conn.query(`UPDATE booking set status =4 WHERE showtime_id=?`, [m.showtime_id]);
-                    await conn.query(`UPDATE booking SET showtime_id = NULL WHERE showtime_id=?`, [m.showtime_id]);
-                    await conn.query(`DELETE FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
+                    if (bookingRows.length > 0) {
+                        await conn.query(`Update showtime set status =0 WHERE showtime_id=?`, [m.showtime_id]);
+                    } else {
+                        await conn.query(`DELETE FROM showtime WHERE showtime_id = ?`, [m.showtime_id]);
+                    }
+                    // await conn.query(`UPDATE booking SET showtime_id = NULL WHERE showtime_id=?`, [m.showtime_id]);
+
 
                     results.push({ ok: true, action: "deleted", input: m });
                     if (emails.length > 0) {
@@ -203,7 +208,10 @@ export async function POST(request: Request) {
                     updates.push("date = ?");
                     params.push(m.date);
                 }
-
+                if (Object.prototype.hasOwnProperty.call(m, "user_id")) {
+                    updates.push("user_id = ?");
+                    params.push(m.user_id);
+                }
                 if (updates.length) {
                     // push where param
                     params.push(m.showtime_id);

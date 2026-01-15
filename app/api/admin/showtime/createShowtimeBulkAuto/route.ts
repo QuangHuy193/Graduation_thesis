@@ -18,6 +18,7 @@ export async function POST(req: Request) {
         to_date,
         status = 1,
         _temp_client_id = null,
+        user_id,
     } = body as {
         from_date?: string;
         to_date?: string;
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
         }>;
         status?: number;
         _temp_client_id?: number | null;
+        user_id?: number;
     };
 
 
@@ -83,7 +85,7 @@ export async function POST(req: Request) {
                 // 1️⃣ CHECK CONFLICT
                 const [conf] = await conn.query(
                     `SELECT showtime_id FROM showtime
-       WHERE room_id = ? AND date = ? AND movie_screen_id = ?
+       WHERE room_id = ? AND date = ? AND movie_screen_id = ? AND status = 1
        LIMIT 1 FOR UPDATE`,
                     [room_id, date, movie_screen_id]
                 );
@@ -104,9 +106,9 @@ export async function POST(req: Request) {
 
                 // 2️⃣ INSERT SHOWTIME
                 const [ins] = await conn.query(
-                    `INSERT INTO showtime (date, status, movie_id, room_id, movie_screen_id)
-       VALUES (?, ?, ?, ?, ?)`,
-                    [date, status, movie_id, room_id, movie_screen_id]
+                    `INSERT INTO showtime (date, status, movie_id, room_id, movie_screen_id,user_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+                    [date, status, movie_id, room_id, movie_screen_id, user_id]
                 );
 
                 const showtimeId = Number((ins as any).insertId);

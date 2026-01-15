@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { use, useEffect, useRef, useState } from "react";
 import {
   getAllMovies,
   callBulkApi,
@@ -53,6 +53,7 @@ import QrScanner from "@/components/QrScanner/QrScanner";
 import { set } from "nprogress";
 import FoodManager, { Food } from "@/components/FoodbeverageTable/FoodbeverageTable";
 import FoodbeverageTable from "@/components/FoodbeverageTable/FoodbeverageTable";
+import { useSession } from "next-auth/react";
 export type PendingSlotUpdate = {
   showtime_day_id: number;
   from_slot: number | null;
@@ -121,7 +122,8 @@ export default function AdminDashboard() {
   const [editingMovie, setEditingMovie] = useState<MovieFullITF | null>(null);
   // loading
   const [loading, setLoading] = useState(false);
-
+  const { data: session } = useSession();
+  const userId = session?.user?.user_id as number;
   const loaded = useRef({
     dashboard: false,
     movies: false,
@@ -393,6 +395,7 @@ export default function AdminDashboard() {
                 : u.status === "active"
                   ? 1
                   : 1,
+            user_id: userId,
           };
 
           const res = await createShowtimeWithDay(createPayload);
@@ -459,6 +462,7 @@ export default function AdminDashboard() {
             to_movie_screen_id: u.movie_screen_id ?? null,
             movie_id: u.movie_id ?? null,
             status: u.status,
+            user_id: userId,
           };
         });
 

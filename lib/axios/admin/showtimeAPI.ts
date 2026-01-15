@@ -36,6 +36,7 @@ export type MovePayloadItem = {
     screening_start?: string | null;
     screening_end?: string | null;
     movie_screen_id?: number | null;
+    user_id?: number | null;
 };
 
 export type CommitShowtimeResult = {
@@ -84,6 +85,7 @@ export async function createShowtimeWithDay(payload: {
     date: string;
     reuse_showtime?: boolean;
     _temp_client_id?: number;
+    user_id?: number;
 }) {
     const res = await axiosInstance.post("/api/admin/showtime/createShowtimeAuto", payload);
     return res.data;
@@ -96,6 +98,7 @@ export async function createShowtimeBulk(payload: {
         room_id: number;
         movie_screen_id: number;
     }>;
+    user_id?: number;
 }) {
     try {
         const res = await axiosInstance.post(

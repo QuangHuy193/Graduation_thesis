@@ -19,6 +19,7 @@ export async function POST(req: Request) {
         date, // expected 'YYYY-MM-DD'
         _temp_client_id = null,
         status = 1, // default active
+        user_id,
     } = body as {
         movie_id?: number;
         room_id?: number | null;
@@ -27,6 +28,7 @@ export async function POST(req: Request) {
         reuse_showtime?: boolean;
         _temp_client_id?: number | null;
         status?: number | null;
+        user_id?: number;
     };
 
     // Basic validation
@@ -49,7 +51,7 @@ export async function POST(req: Request) {
         if (room_id != null && movie_screen_id != null) {
             const [conf] = await conn.query(
                 `SELECT showtime_id, date, room_id, movie_screen_id FROM showtime
-         WHERE room_id = ? AND date = ? AND movie_screen_id = ? LIMIT 1 FOR UPDATE`,
+         WHERE room_id = ? AND date = ? AND movie_screen_id = ? AND status = 1 LIMIT 1 FOR UPDATE`,
                 [room_id, date, movie_screen_id]
             );
             const confRow = (conf as any[])[0];
@@ -70,9 +72,9 @@ export async function POST(req: Request) {
             }
         }
         const [ins] = await conn.query(
-            `INSERT INTO showtime (date, status, movie_id, room_id, movie_screen_id)
-         VALUES (?, ?, ?, ?, ?)`,
-            [date, status, movie_id, room_id, movie_screen_id]
+            `INSERT INTO showtime (date, status, movie_id, room_id, movie_screen_id,user_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+            [date, status, movie_id, room_id, movie_screen_id, user_id]
         );
         showtimeId = Number((ins as any).insertId);
 

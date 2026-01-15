@@ -71,3 +71,14 @@ export async function refundPayOS(payload: RefundPayload) {
         throw err.response?.data || err;
     }
 }
+export async function getPayOSInvoice(orderCode: number) {
+    const resp = await axiosInstance.get(
+        `/api/payos/invoice?orderCode=${orderCode}`
+    );
+
+    if (!resp.data?.ok) {
+        throw new Error("PayOS invoice fetch failed");
+    }
+
+    return resp.data.invoice;
+}

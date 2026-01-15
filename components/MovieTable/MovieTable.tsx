@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { MovieFullITF } from "@/lib/interface/movieInterface";
 import AddOrEditMovieModal from "@/components/AddOrEditFormMovie/AddOrEditFormMovie";
-import { getPrice } from "@/lib/axios/admin/movieAPI";
+import { getPrice, toggleHiddenMovie } from "@/lib/axios/admin/movieAPI";
 import { deleteMovie } from "@/lib/axios/admin/movieAPI";
 import Button from "../Button/Button";
 import { useRouter } from "next/navigation";
@@ -118,35 +118,34 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
         setEditOpen(false);
         setEditing(null);
     };
-    const handleDel = async (id: number) => {
+    const handleDel = async (id: number, user_id: number | string) => {
         if (!id || id <= 0) {
             await Swal.fire("ID không hợp lệ");
             return;
         }
+        // const result = await Swal.fire({
+        //     title: "Xóa phim !",
+        //     text: "Bạn có chắc muốn xoá phim này ?",
+        //     icon: "warning",
+        //     showCancelButton: true,
+        //     confirmButtonColor: "#3085d6",
+        //     cancelButtonColor: "#d33",
+        //     confirmButtonText: "Có, hãy xóa nó !"
+        // });
 
-        const result = await Swal.fire({
-            title: "Xóa phim !",
-            text: "Bạn có chắc muốn xoá phim này ?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Có, hãy xóa nó !"
-        });
-
-        if (!result.isConfirmed) {
-            return;
-        }
+        // if (!result.isConfirmed) {
+        //     return;
+        // }
 
         try {
             setLoading(true);
-            const res = await deleteMovie(id, userID);
+            const res = await toggleHiddenMovie(id, user_id);
 
-            if (res?.success) {
-                await Swal.fire("Xóa phim thành công!");
+            if (res) {
+                await Swal.fire("Ẩn phim thành công!");
                 onDelete(id);
             } else {
-                await Swal.fire("Xóa thất bại", res?.error || "Không rõ lỗi", "error");
+                await Swal.fire("Ẩn thất bại", res || "Không rõ lỗi", "error");
             }
         } catch (error: any) {
             console.error("Lỗi xóa movie:", error);
@@ -330,7 +329,7 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                 <th className="text-left px-4 py-3">Độ tuổi</th>
                                 <th className="text-left px-4 py-3">Tổng doanh thu</th>
                                 <th className="text-left px-4 py-3">Trạng thái</th>
-                                <th className="text-left px-4 py-3">VIP</th>
+                                {/* <th className="text-left px-4 py-3">VIP</th> */}
                                 <th className="text-right px-4 py-3">Hành động</th>
                             </tr>
                         </thead>
@@ -408,16 +407,19 @@ export default function AdminMovieTable({ movies, onEdit, onDelete }: Props) {
                                             </span>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3">{m.vip}</td>
+                                    {/* <td className="px-4 py-3">{m.vip}</td> */}
                                     <td className="px-4 py-3 text-right">
                                         <div className="inline-flex gap-2">
                                             <Button onClick={() => handleOpenEdit(m)} className="px-3 py-1 rounded border text-sm">Sửa</Button>
-                                            <Button
-                                                onClick={() => handleDel(m.movie_id)}
-                                                className="px-3 py-1 rounded border text-sm text-red-600"
-                                            >
-                                                Xóa
-                                            </Button>
+                                            {m.status !== -1 && (
+                                                <Button
+                                                    onClick={() => handleDel(m.movie_id, userID)}
+                                                    className="px-3 py-1 rounded border text-sm text-red-600"
+                                                >
+                                                    Ẩn
+                                                </Button>
+                                            )}
+
                                         </div>
                                     </td>
                                 </tr>

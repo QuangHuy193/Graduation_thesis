@@ -4,10 +4,11 @@ import Swal from "sweetalert2";
 import styles from "./ShowtimesTable.module.scss"
 import { PendingSlotUpdate } from "@/app/admin/AdminClient";
 import { createShowtimeBulk } from "@/lib/axios/admin/showtimeAPI";
+import { useSession } from "next-auth/react";
 export type MovieScreenSlot = { movie_screen_id: number; start_time: string; end_time: string };
 export type ShowtimeDay = {
-  available_seats: ReactNode;
-  total_seats: ReactNode;
+  available_seats: number;
+  total_seats: number;
   showtime_id: number;
   movie_id: number | null;
   room_id: number;
@@ -73,6 +74,7 @@ export default function ShowtimeTimetable({
     return initialDate
   }
   );
+
   //Trạng thái kiểm tra đã có suất chiếu từ parent chưa
   const originalRef = useRef<ShowtimeDay[] | null>(null);
   //Hoạt ảnh thùng rác
@@ -86,6 +88,8 @@ export default function ShowtimeTimetable({
     }
     return "all";
   });
+  const { data: session } = useSession();
+  const userId = session?.user?.user_id as number;
   //Thêm hàng loạt
   const [bulkApply, setBulkApply] = useState<{
     from_date: string;
@@ -566,6 +570,7 @@ export default function ShowtimeTimetable({
             from_date: bulkApply.from_date,
             to_date: resDate.value,
             items: bulkContexts,
+            user_id: userId,
           });
 
           setBulkApply(null);

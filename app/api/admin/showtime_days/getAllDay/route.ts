@@ -32,7 +32,7 @@ LEFT JOIN seats s ON s.room_id = sd.room_id
 LEFT JOIN showtime_seat ss 
        ON ss.showtime_id = sd.showtime_id 
       AND ss.seat_id = s.seat_id
-
+WHERE sd.status=1
 GROUP BY
     sd.showtime_id,
     sd.movie_id,
