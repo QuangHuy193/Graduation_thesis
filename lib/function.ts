@@ -139,21 +139,19 @@ export function isSingleGap(
       });
     });
   }
-  console.log("Sau rowSeats", seats);
-  console.log("Sau col", col);
-  console.log("aside", aside);
+
   const get = (c: number) => seats.find((s) => s.col === c);
 
   // chống ghế sát trái
   const minCol = seats[0].col;
   if (col === minCol + 1 && !get(minCol)?.booked && !get(minCol + 2)?.booked) {
-    // console.log("SÁT TRÁI");
+    console.warn("SÁT TRÁI");
     return true;
   }
   // sát phải
   const maxCol = seats[seats.length - 1].col;
   if (col === maxCol - 1 && !get(maxCol)?.booked && !get(maxCol - 2)?.booked) {
-    // console.log("SÁT PHẢI");
+    console.warn("SÁT PHẢI");
     return true;
   }
 
@@ -168,27 +166,26 @@ export function isSingleGap(
   for (const gap of aside) {
     const leftOfAisle = gap.gap_index - 1 + gap.gap_width - 1;
     const rightOfAisle = gap.gap_index - 1 + gap.gap_width + 1;
-    console.log("l", leftOfAisle);
-    console.log("r", rightOfAisle);
+
     const leftSeat = get(leftOfAisle);
     const rightSeat = get(rightOfAisle);
 
     // chọn ghế làm trống ghế sát lối đi bên trái
     if (col === leftOfAisle - 1 && leftSeat && !leftSeat.booked) {
-      console.log("TRỐNG GHẾ SÁT LỐI ĐI (BÊN TRÁI)");
+      console.warn("TRỐNG GHẾ SÁT LỐI ĐI (BÊN TRÁI)");
       return true;
     }
 
     // chọn ghế làm trống ghế sát lối đi bên phải
     if (col === rightOfAisle + 1 && rightSeat && !rightSeat.booked) {
-      console.log("TRỐNG GHẾ SÁT LỐI ĐI (BÊN PHẢI)");
+      console.warn("TRỐNG GHẾ SÁT LỐI ĐI (BÊN PHẢI)");
       return true;
     }
   }
 
   // hàng còn đúng 3 ghế liên tiếp
   if (left && right && !right.booked && !left.booked && !left2 && !right2) {
-    // console.log("CÒN ĐÚNG 3 GHẾ LIÊN TIẾP");
+    console.warn("CÒN ĐÚNG 3 GHẾ LIÊN TIẾP");
     return true;
   }
 
@@ -204,12 +201,23 @@ export function isSingleGap(
   //   return true;
   // }
 
-  if (left && !left.booked && left2?.booked) {
+  if (
+    left &&
+    !left.booked &&
+    left2?.booked &&
+    (!right || (right && !right.booked))
+  ) {
     // RULE 1: CHỐNG LẺ 1 GHẾ
-    console.log("CHỐNG LẺ 1");
+    console.warn("CHỐNG LẺ 1 LEFT");
     return true;
   }
-  if (right && !right.booked && right2?.booked) {
+  if (
+    right &&
+    !right.booked &&
+    right2?.booked &&
+    (!left || (left && !left.booked))
+  ) {
+    console.warn("CHỐNG LẺ 1 RIGHT");
     return true;
   }
 
@@ -498,7 +506,7 @@ export async function downloadElementAsImage(
     if (document.fonts && typeof document.fonts.ready?.then === "function") {
       try {
         await document.fonts.ready;
-      } catch { }
+      } catch {}
     }
 
     const rect = el.getBoundingClientRect();

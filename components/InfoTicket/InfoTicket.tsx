@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { getTicketByBokingIdAPI } from "@/lib/axios/ticketAPI";
 import { downloadElementAsImage, fmtCurrency } from "@/lib/function";
 import Image from "next/image";
+import Swal from "sweetalert2";
 
 type TicketItem = {
   showtime_date: string;
@@ -103,14 +104,6 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
     downloadElementAsImage(el, `ticket-${seatLabel}.png`);
   };
 
-  const handleDownloadAll = () => {
-    if (!wrapRef.current) return alert("Không tìm thấy nội dung để tải.");
-    downloadElementAsImage(
-      wrapRef.current,
-      `tickets-${bookingId ?? "list"}.png`
-    );
-  };
-
   // Render ticket card (dùng <img> thay vì next/image để dom-to-image-more chụp chính xác)
   function TicketCard({ t, idx }: { t: TicketItem; idx: number }) {
     const seat = `${t.seat_row}${t.seat_column}`;
@@ -167,6 +160,50 @@ export default function InfoTicket({ bookingId }: { bookingId: number }) {
       </div>
     );
   }
+
+  // handle khi tắt trình duyệt
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ""; // bắt buộc
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  // handle khi back/chuyển router
+  useEffect(() => {
+    const handlePopState = async () => {
+      const result = await Swal.fire({
+        title: "LƯU Ý!",
+        text: "Hãy chắc chắn rằng bạn đã tải vé trước khi rời đi!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Rời trang",
+        cancelButtonText: "Ở lại",
+        allowOutsideClick: false,
+        buttonsStyling: false,
+        customClass: {
+          popup: "popup_alert",
+          confirmButton: "btn_alert",
+        },
+      });
+
+      if (!result.isConfirmed) {
+        history.pushState(null, "", location.href);
+      }
+    };
+
+    history.pushState(null, "", location.href);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
 
   return (
     <div className="p-4">
