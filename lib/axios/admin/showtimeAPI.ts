@@ -119,3 +119,11 @@ export async function getAvailableSeats(showtime_id: number) {
         throw error;
     }
 }
+export async function updatePrice(showtime_id: number, payload: { normal: number, student: number }) {
+    try {
+        const res = await axiosInstance.put(`/api/admin/showtime/${showtime_id}/updatePrice`, payload);
+        return res.data;
+    } catch (error) {
+        throw error;
+    }
+}

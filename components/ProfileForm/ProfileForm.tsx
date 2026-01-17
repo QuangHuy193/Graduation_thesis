@@ -129,7 +129,7 @@ export default function ProfileForm({ id, initialData = {}, onSave = () => { } }
                         placeholder="you@example.com"
                         type="email"
                         autoComplete="email"
-                    // disabled={true}
+                        disabled={true}
                     />
                 </label>
             </div>

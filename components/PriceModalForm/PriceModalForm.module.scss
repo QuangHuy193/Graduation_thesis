@@ -1,0 +1,82 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 1000;
+}
+
+.modal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 300px;
+
+    h2 {
+        margin: 0 0 10px 0;
+        text-align: center;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        // margin-top: 10px;
+        font-size: 16px;
+
+        border: 1.5px solid #d0d0d0;
+        border-radius: 6px;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &:focus {
+            border-color: #4caf50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.15);
+        }
+    }
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    gap: 10px;
+
+    .btnCancel {
+        padding: 8px 12px;
+        background: #e0e0e0;
+        border: none;
+        cursor: pointer;
+        border-radius: 10%;
+
+        &:hover {
+            background: #d5d5d5;
+        }
+    }
+
+    .btnSave {
+        padding: 8px 12px;
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        border-radius: 10%;
+
+        &:hover {
+            background-color: #43a047;
+        }
+    }
+}
+
+.priceInput {
+    // width: 100%;
+    // padding: 8px;
+    // margin-top: 10px;
+    // font-size: 16px;
+}

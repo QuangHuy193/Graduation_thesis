@@ -1,10 +1,11 @@
 "use client";
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, use } from "react";
 import Swal from "sweetalert2";
 import styles from "./ShowtimesTable.module.scss"
 import { PendingSlotUpdate } from "@/app/admin/AdminClient";
 import { createShowtimeBulk } from "@/lib/axios/admin/showtimeAPI";
 import { useSession } from "next-auth/react";
+import PriceModalForm from "../PriceModalForm/PriceModalForm";
 export type MovieScreenSlot = { movie_screen_id: number; start_time: string; end_time: string };
 export type ShowtimeDay = {
   available_seats: number;
@@ -18,6 +19,8 @@ export type ShowtimeDay = {
   movie_screen_id: number | null;
   cinema_id?: number | null;
   cinema_name?: string | null;
+  price_normal?: number;
+  price_student?: number;
 };
 
 export type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null };
@@ -74,7 +77,10 @@ export default function ShowtimeTimetable({
     return initialDate
   }
   );
-
+  const [openPriceModal, setOpenPriceModal] = useState<boolean>(false);
+  const [IdEditPrice, setIdEditPrice] = useState<number | null>(null);
+  const [priceNormal, setPriceNormal] = useState(0);
+  const [priceStudent, setPriceStudent] = useState(0);
   //Trạng thái kiểm tra đã có suất chiếu từ parent chưa
   const originalRef = useRef<ShowtimeDay[] | null>(null);
   //Hoạt ảnh thùng rác
@@ -522,7 +528,19 @@ export default function ShowtimeTimetable({
     dragData.current = null;
   };
 
-
+  const handleOpenCustomPriceModal = (id, normal, student) => {
+    setIdEditPrice(id);
+    setPriceNormal(normal);
+    setPriceStudent(student);
+    console.log("id:", id);
+    setOpenPriceModal(true);
+  }
+  const handleClosePriceModal = () => {
+    setIdEditPrice(null);
+    setPriceNormal(0);
+    setPriceStudent(0);
+    setOpenPriceModal(false);
+  }
   const commit = async () => {
     const changes = Object.values(pending);
     if (!changes.length) return;
@@ -609,7 +627,10 @@ export default function ShowtimeTimetable({
     await commit();
   };
 
-
+  async function handleSavePrice() {
+    if (onBulkApplied) await onBulkApplied();
+    handleClosePriceModal();
+  }
 
 
   const discard = () => {
@@ -722,6 +743,7 @@ export default function ShowtimeTimetable({
                                         draggable
                                         onDragStart={(e) => handleDragStart(e, existing)}
                                         onDragEnd={handleDragEndLocal}
+                                        onClick={() => { handleOpenCustomPriceModal(existing.showtime_id, existing.price_normal, existing.price_student) }}
                                       >
                                         <div className="float-right w-20">
                                           <div className="text-[10px] text-gray-500 text-right mb-0.5">
@@ -757,6 +779,11 @@ export default function ShowtimeTimetable({
               );
             })}
           </div>
+          {openPriceModal && (
+            <div>
+              <PriceModalForm isOpen={openPriceModal} onClose={handleClosePriceModal} currentPriceNormal={priceNormal} currentPriceStudent={priceStudent} onSave={handleSavePrice} currentId={IdEditPrice} />
+            </div>
+          )}
         </div>
 
         <div className="w-72 border-l pl-4 sticky top-30 self-start">
