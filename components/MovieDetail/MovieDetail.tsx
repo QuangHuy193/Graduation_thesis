@@ -17,6 +17,7 @@ import {
   isSingleGap,
   isSingleGapRemove,
   scrollToPosition,
+  showToast,
 } from "@/lib/function";
 import LoadingPage from "../LoadingPage/LoadingPage";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -85,7 +86,7 @@ function MovieDetail({
     const tickets = state.ticketSelected ?? {}; // fallback object
     return Object.values(tickets).reduce(
       (sum, item) => sum + (item?.quantity ?? 0),
-      0
+      0,
     );
   }, [state.ticketSelected]);
 
@@ -94,7 +95,7 @@ function MovieDetail({
     const getDataQuickTicket = async (
       movie_id: number,
       date: Date,
-      time_id: number
+      time_id: number,
     ) => {
       try {
         const res = await getShowtimeDetailAPI(movie_id, date, time_id);
@@ -163,7 +164,7 @@ function MovieDetail({
     label: string,
     rowSeat: [],
     colSeat: number,
-    aside: []
+    aside: [],
   ) => {
     const { ticketSelected, seatSelected } = state;
 
@@ -254,10 +255,13 @@ function MovieDetail({
 
       // tự động phân loại theo thứ tự loại vé
       let typeToUse = "";
-      const countByType = seatSelected.reduce((acc, s) => {
-        acc[s.type] = (acc[s.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      const countByType = seatSelected.reduce(
+        (acc, s) => {
+          acc[s.type] = (acc[s.type] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       for (const type in ticketSelected) {
         if ((countByType[type] || 0) < ticketSelected[type]) {
@@ -334,7 +338,7 @@ function MovieDetail({
   useEffect(() => {
     handleUnlocks(
       state.seatSelected?.map((s) => s.seat_id),
-      state.timesSelected?.showtime_id
+      state.timesSelected?.showtime_id,
     );
   }, [state.dateSelected]);
 
@@ -345,7 +349,7 @@ function MovieDetail({
     }
     handleUnlocks(
       state.seatSelected?.map((s) => s.seat_id),
-      state.timesSelected?.showtime_id
+      state.timesSelected?.showtime_id,
     );
     setState((prev) => ({ ...prev, seatSelected: [] }));
   }, [state.ticketSelected]);
@@ -354,7 +358,7 @@ function MovieDetail({
   const handleTimerEnd = async () => {
     unlocksSeatAPI(
       state.seatSelected.map((s) => s.seat_id),
-      state.timesSelected.showtime_id
+      state.timesSelected.showtime_id,
     );
     setState((prev) => ({
       ...prev,
@@ -595,11 +599,16 @@ function MovieDetail({
               <h3 className={`${styles.sub_title}`}>NỘI DUNG</h3>
               <div>{data[0].description}</div>
             </div>
+
             <div
               className="my-2 w-fit"
-              onClick={() =>
-                setState((prev) => ({ ...prev, watchTrailer: true }))
-              }
+              onClick={() => {
+                if (data[0].trailer_url) {
+                  setState((prev) => ({ ...prev, watchTrailer: true }));
+                } else {
+                  showToast("info", "Hiện chưa có trailer cho phim này!");
+                }
+              }}
             >
               <WatchTrailer size="m" />
             </div>
@@ -641,7 +650,7 @@ function MovieDetail({
           unlockseats={(showtime_id) => {
             handleUnlocks(
               state.seatSelected.map((s) => s.seat_id),
-              showtime_id
+              showtime_id,
             );
           }}
           movie_id={movie_id}
@@ -768,7 +777,7 @@ function MovieDetail({
                           label,
                           rowSeat,
                           colSeat,
-                          aside
+                          aside,
                         );
                       }}
                       seatSelected={state.seatSelected}
@@ -879,22 +888,20 @@ function MovieDetail({
             <div className="flex justify-between">
               <span>Tạm tính:</span>
               <span className="font-bold">
-                {
-                  // tổng tiền vé
-                  (
-                    state.ticketSelected &&
-                    state.foodSelected &&
-                    Object.keys(state.ticketSelected).reduce((sum, key) => {
-                      const item = state.ticketSelected[key];
+                {// tổng tiền vé
+                (
+                  state.ticketSelected &&
+                  state.foodSelected &&
+                  Object.keys(state.ticketSelected).reduce((sum, key) => {
+                    const item = state.ticketSelected[key];
+                    return sum + item.quantity * item.price;
+                  }, 0) +
+                    // tổng tiền combo / food
+                    Object.keys(state.foodSelected).reduce((sum, key) => {
+                      const item = state.foodSelected[key];
                       return sum + item.quantity * item.price;
-                    }, 0) +
-                      // tổng tiền combo / food
-                      Object.keys(state.foodSelected).reduce((sum, key) => {
-                        const item = state.foodSelected[key];
-                        return sum + item.quantity * item.price;
-                      }, 0)
-                  )?.toLocaleString("vi-VN")
-                }{" "}
+                    }, 0)
+                )?.toLocaleString("vi-VN")}{" "}
                 VNĐ
               </span>
             </div>
