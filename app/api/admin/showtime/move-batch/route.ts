@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import nodemailer from "nodemailer";
+import { error } from "console";
+import { errorResponse } from "@/lib/function";
 type MoveItemInput = {
     showtime_id: number;
     date?: string | null; // allow null to indicate deletion
@@ -213,25 +215,98 @@ export async function POST(request: Request) {
                     params.push(m.user_id);
                 }
                 if (updates.length) {
-                    // push where param
-                    params.push(m.showtime_id);
-                    const sql = `UPDATE showtime SET ${updates.join(", ")} WHERE showtime_id = ?`;
-                    await conn.query(sql, params);
-                    // fetch fresh row
-                    const [rows]: any[] = await conn.query(
-                        `SELECT date, movie_id, room_id, movie_screen_id
-   FROM showtime
-   WHERE showtime_id = ?`,
-                        [m.showtime_id]
-                    );
-                    if (!rows.length) {
-                        throw new Error(`Showtime ${m.showtime_id} không tồn tại`);
-                    }
-                    const {
-                        room_id: newRoomId,
-                        movie_screen_id: newMovieScreenId,
-                    } = rows[0];
+                    const newRoomId =
+                        Object.prototype.hasOwnProperty.call(m, "to_room")
+                            ? m.to_room
+                            : oldRoomId;
 
+                    const newMovieScreenId =
+                        Object.prototype.hasOwnProperty.call(m, "to_movie_screen_id")
+                            ? m.to_movie_screen_id
+                            : oldMovieScreenId;
+
+                    if (newRoomId !== oldRoomId) {
+                        const [seatPaid]: any = await conn.query(`SELECT COUNT(*) 
+FROM ticket t
+JOIN booking b ON b.booking_id = t.booking_id
+WHERE b.showtime_id = ?
+  AND b.status = 1;
+`, [m.showtime_id]);
+                        const [newTotalSeats]: any = await conn.query(`SELECT COUNT(*) FROM seats WHERE room_id = ?`, [newRoomId]);
+                        const paidCount = seatPaid[0]['COUNT(*)'];
+                        const totalCount = newTotalSeats[0]['COUNT(*)'];
+
+                        if (paidCount > totalCount) {
+                            throw new Error("Phòng không đáp ứng đủ số ghế yêu cầu");
+                        }
+
+                        const [InfoSeatPaid]: any = await conn.query(`SELECT 
+  t.ticket_id,
+  t.seat_id,
+  s.seat_row,
+  s.seat_column
+FROM ticket t
+JOIN booking b ON b.booking_id = t.booking_id
+JOIN seats s ON s.seat_id = t.seat_id
+WHERE b.showtime_id = ?
+  AND b.status = 1;
+`, m.showtime_id);
+                        for (const seat of InfoSeatPaid) {
+                            const [mapped]: any = await conn.query(
+                                `SELECT seat_id
+     FROM seats
+     WHERE room_id = ?
+       AND seat_row = ?
+       AND seat_column = ?`,
+                                [newRoomId, seat.seat_row, seat.seat_column]
+                            );
+
+                            if (!mapped.length) {
+                                throw new Error(`Không tìm thấy ghế ${seat.seat_row}${seat.seat_column} trong phòng mới`);
+                            }
+
+                            await conn.query(
+                                `UPDATE ticket SET seat_id = ? WHERE ticket_id = ?`,
+                                [mapped[0].seat_id, seat.ticket_id]
+                            );
+                        }
+                        // push where param
+                        params.push(m.showtime_id);
+                        const sql = `UPDATE showtime SET ${updates.join(", ")} WHERE showtime_id = ?`;
+                        await conn.query(sql, params);
+                        await conn.query(
+                            `DELETE FROM showtime_seat WHERE showtime_id = ?`,
+                            [m.showtime_id]
+                        );
+
+                        const [seats]: any = await conn.query(
+                            `SELECT seat_id FROM seats WHERE room_id = ?`,
+                            [newRoomId]
+                        );
+
+                        if (Array.isArray(seats) && seats.length > 0) {
+                            await conn.query(`
+INSERT INTO showtime_seat (seat_id, showtime_id, status)
+SELECT 
+  s.seat_id,
+  ?,
+  CASE
+    WHEN EXISTS (
+      SELECT 1
+      FROM ticket t
+      JOIN booking b ON b.booking_id = t.booking_id
+      WHERE t.seat_id = s.seat_id
+        AND b.showtime_id = ?
+        AND b.status = 1
+    )
+    THEN 1 ELSE 0
+  END
+FROM seats s
+WHERE s.room_id = ?;
+`, [m.showtime_id, m.showtime_id, newRoomId]);
+
+                        }
+                    }
                     if (emails.length > 0) {
                         // tạo transporter 1 lần (KHÔNG để trong loop)
                         const [movieRows]: any[] = await conn.query(`select name from movies where movie_id=?`, [MovieId]);
@@ -241,53 +316,59 @@ export async function POST(request: Request) {
                         const [movieSceenRows]: any[] = await conn.query(`SELECT start_time,end_time from movie_screenings WHERE movie_screen_id=?`, [newMovieScreenId]);
                         const start = movieSceenRows[0].start_time ?? "Không xác định";
                         const end = movieSceenRows[0].end_time ?? "Không xác định";
-                        const transporter = nodemailer.createTransport({
-                            service: "gmail",
-                            auth: {
-                                user: process.env.EMAIL_USER,
-                                pass: process.env.EMAIL_PASS,
-                            },
-                        });
+                        // const transporter = nodemailer.createTransport({
+                        //     service: "gmail",
+                        //     auth: {
+                        //         user: process.env.EMAIL_USER,
+                        //         pass: process.env.EMAIL_PASS,
+                        //     },
+                        // });
 
                         for (const { email } of emails) {
                             if (!email) continue;
+                            const [userSeat]: any = await conn.query(`SELECT s.seat_row,s.seat_column,u.email from seats s
+	left join ticket t on t.seat_id=s.seat_id
+    LEFT join booking b on b.booking_id=t.booking_id
+    JOIN users u on u.user_id=b.user_id
+    WHERE u.email=? and b.showtime_id=? and b.status=1`, [email, m.showtime_id]);
+                            const seatText =
+                                userSeat.length > 0
+                                    ? userSeat.map(s => `${s.seat_row}${s.seat_column}`).join(", ")
+                                    : "Không xác định";
 
-                            await transporter.sendMail({
-                                from: `"CineGO" <${process.env.EMAIL_USER}>`,
+                            mailQueue.push({
                                 to: email,
                                 subject: "Thông báo thay đổi suất chiếu | CineGO",
                                 html: `
-        <h3>Xin chào,</h3>
+    <h3>Xin chào,</h3>
+    <p>
+      Suất chiếu phim <strong>${movieName}</strong>
+      vào ngày <strong>${oldDate}</strong>
+      vừa có sự thay đổi.
+    </p>
 
-        <p>
-          Suất chiếu phim <strong>${movieName}</strong> mà bạn đã đặt
-          vào ngày <strong>${oldDate}</strong>
-          vừa có sự thay đổi từ hệ thống.
-        </p>
+    <ul>
+      <li><strong>Phòng:</strong> ${roomName}</li>
+      <li><strong>Thời gian:</strong> ${start} – ${end}</li>
+      <li><strong>Ghế:</strong> ${seatText} </li>
+    </ul>
 
-        <h4>📌 Thông tin suất chiếu mới</h4>
-        <ul>
-          <li><strong>Phòng chiếu:</strong> ${roomName}</li>
-          <li><strong>Thời gian:</strong> ${start} – ${end}</li>
-        </ul>
-
-        <p>
-          Vui lòng đăng nhập <strong>CineGO</strong> để kiểm tra lại thông tin
-          suất chiếu và ghế ngồi của bạn.
-        </p>
-
-        <br/>
-
-        <p>
-          Trân trọng,<br/>
-          <strong>CineGO</strong>
-        </p>
-      `,
+    <p>
+      Vui lòng đăng nhập CineGO để kiểm tra lại thông tin.
+    </p>
+  `
                             });
+
                         }
                     }
+                    const [updatedRows]: any[] = await conn.query(
+                        `SELECT showtime_id, date, movie_id, room_id, movie_screen_id, status
+   FROM showtime
+   WHERE showtime_id = ?`,
+                        [m.showtime_id]
+                    );
 
-                    results.push({ ok: true, action: "updated", row: rows[0] });
+                    results.push({ ok: true, action: "updated", row: updatedRows[0] });
                 } else {
                     // nothing to update
                     results.push({ ok: true, action: "noop", row: existing });

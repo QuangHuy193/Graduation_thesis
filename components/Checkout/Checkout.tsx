@@ -76,68 +76,68 @@ function Checkout() {
       console.warn("Không tìm thấy bookingData");
     }
   }, []);
-  //* Theo orderCode
-  useEffect(() => {
-    if (!orderCode) return;
-
-    const verifyAndUpdate = async () => {
-      try {
-        setVerifying(true);
-        // 1️⃣ Verify thật từ backend
-        const invoice = await getPayOSInvoice(Number(orderCode));
-
-        if (invoice.status !== "PAID") {
-          console.warn("Payment not completed:", invoice.status);
-          return;
-        }
-
-        // 2️⃣ Lấy booking info (frontend chỉ giữ tạm)
-        const bookingID = Number(sessionStorage.getItem("booking_id"));
-        const bookingData = sessionStorage.getItem("bookingData");
-
-        if (!bookingID || !bookingData) return;
-
-        const tickets = convertToTickets(JSON.parse(bookingData));
-
-        // 3️⃣ Gọi backend update booking
-        await updateBookingToPaid(bookingID, tickets);
-
-        // 4️⃣ UI step success
-        setState((prev) => ({ ...prev, step: 3 }));
-      } catch (err) {
-        console.error("Verify payment failed", err);
-      } finally {
-        setVerifying(false);
-      }
-    };
-
-    verifyAndUpdate();
-  }, [orderCode]);
-
-  //Theo statusPayment
+  // //* Theo orderCode
   // useEffect(() => {
-  //   if (paymentStatus !== "PAID") return;
+  //   if (!orderCode) return;
 
-  //   const updateBooking = async (bookingID, data) => {
-  //     await updateBookingToPaid(bookingID, data); // ⬅ Gọi API /booking/[id]
+  //   const verifyAndUpdate = async () => {
+  //     try {
+  //       setVerifying(true);
+  //       // 1️⃣ Verify thật từ backend
+  //       const invoice = await getPayOSInvoice(Number(orderCode));
+
+  //       if (invoice.status !== "PAID") {
+  //         console.warn("Payment not completed:", invoice.status);
+  //         return;
+  //       }
+
+  //       // 2️⃣ Lấy booking info (frontend chỉ giữ tạm)
+  //       const bookingID = Number(sessionStorage.getItem("booking_id"));
+  //       const bookingData = sessionStorage.getItem("bookingData");
+
+  //       if (!bookingID || !bookingData) return;
+
+  //       const tickets = convertToTickets(JSON.parse(bookingData));
+
+  //       // 3️⃣ Gọi backend update booking
+  //       await updateBookingToPaid(bookingID, tickets);
+
+  //       // 4️⃣ UI step success
+  //       setState((prev) => ({ ...prev, step: 3 }));
+  //     } catch (err) {
+  //       console.error("Verify payment failed", err);
+  //     } finally {
+  //       setVerifying(false);
+  //     }
   //   };
 
-  //   if (paymentStatus === "PAID") {
-  //     const bookingIDRaw = sessionStorage.getItem("booking_id");
-  //     const bookingID = Number(bookingIDRaw);
-  //     // console.log("Thanh toán thành công" + paymentStatus);
+  //   verifyAndUpdate();
+  // }, [orderCode]);
 
-  //     if (bookingID) {
-  //       const bookingData = sessionStorage.getItem("bookingData");
-  //       if (bookingData) {
-  //         const data = JSON.parse(bookingData);
-  //         const tickets = convertToTickets(data);
-  //         updateBooking(bookingID, tickets);
-  //       }
-  //     }
-  //   }
-  //   setState((prev) => ({ ...prev, step: 3 }));
-  // }, [paymentStatus]);
+  // Theo statusPayment
+  useEffect(() => {
+    if (paymentStatus !== "PAID") return;
+
+    const updateBooking = async (bookingID, data) => {
+      await updateBookingToPaid(bookingID, data); // ⬅ Gọi API /booking/[id]
+    };
+
+    if (paymentStatus === "PAID") {
+      const bookingIDRaw = sessionStorage.getItem("booking_id");
+      const bookingID = Number(bookingIDRaw);
+      // console.log("Thanh toán thành công" + paymentStatus);
+
+      if (bookingID) {
+        const bookingData = sessionStorage.getItem("bookingData");
+        if (bookingData) {
+          const data = JSON.parse(bookingData);
+          const tickets = convertToTickets(data);
+          updateBooking(bookingID, tickets);
+        }
+      }
+    }
+    setState((prev) => ({ ...prev, step: 3 }));
+  }, [paymentStatus]);
 
   useEffect(() => {
     if ((status === "authenticated" && user) || userSes) {
@@ -172,8 +172,8 @@ function Checkout() {
     const currentUserId = user?.user_id
       ? Number(user.user_id)
       : userSes?.id
-      ? Number(userSes.id)
-      : null;
+        ? Number(userSes.id)
+        : null;
 
     if (!currentUserId) {
       console.error("Không có user_id");
@@ -217,18 +217,16 @@ function Checkout() {
             -{" "}
           </div>
           <div
-            className={`${styles.step_title} ${
-              (state.step === 2 || state.step === 3) && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${(state.step === 2 || state.step === 3) && "text-(--color-yellow)"
+              }`}
           >
             <div>2</div>
             <span>THANH TOÁN</span>
           </div>
           <div> - </div>
           <div
-            className={`${styles.step_title} ${
-              state.step === 3 && "text-(--color-yellow)"
-            }`}
+            className={`${styles.step_title} ${state.step === 3 && "text-(--color-yellow)"
+              }`}
           >
             <div>3</div>
             <span>THÔNG TIN VÉ</span>

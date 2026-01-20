@@ -287,6 +287,7 @@ export default function AdminDashboard() {
           room_id: Number(r.room_id),
           name: r.name ?? undefined,
           cinema_id: r.cinema_id == null ? null : Number(r.cinema_id),
+          total_seats: Number(r.total_seats),
         }))
         .filter((r) => Number.isFinite(r.room_id));
       setRoomsList(rList);

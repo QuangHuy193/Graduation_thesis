@@ -23,7 +23,7 @@ export type ShowtimeDay = {
   price_student?: number;
 };
 
-export type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null };
+export type RoomEntry = { room_id: number; name?: string; cinema_id?: number | null; total_seats?: string | number };
 export type CinemaEntry = { cinema_id: number; name?: string };
 type ExternalMovie = { movie_id?: number; id?: number; movieId?: number; name?: string | null; title?: string | null };
 
@@ -114,7 +114,7 @@ export default function ShowtimeTimetable({
   const [justInserted, setJustInserted] = useState<string | null>(null);
 
   // Biến dữ liệu khi kéo
-  const dragData = useRef<{ type: "existing"; id: number } | { type: "external"; movie_id: number; movie_name?: string } | null>(null);
+  const dragData = useRef<{ type: "existing"; id: number; total_seats: number } | { type: "external"; movie_id: number; movie_name?: string } | null>(null);
 
   //Lấy showtime từ parent
   useEffect(() => {
@@ -290,10 +290,10 @@ export default function ShowtimeTimetable({
   }
 
 
-  const handleDragStart = (e: React.DragEvent, st: ShowtimeDay) => {
+  const handleDragStart = (e: React.DragEvent, st: ShowtimeDay, total_seats: number) => {
     setDraggingId(st.showtime_id);
     e.dataTransfer.effectAllowed = "move";
-    dragData.current = { type: "existing", id: st.showtime_id };
+    dragData.current = { type: "existing", id: st.showtime_id, total_seats };
 
     // Ẩn ghost image mặc định
     const img = new Image();
@@ -330,10 +330,24 @@ export default function ShowtimeTimetable({
   //khởi tạo id tạm để hiển thị các suất chiếu trước khi lưu vào db
   const genTempId = () => -(Math.floor(Math.random() * 1_000_000) + 1);
 
-  const handleDropSlot = async (roomId: number, slotId: number, e: React.DragEvent) => {
+  const handleDropSlot = async (roomId: number, total_seats: number, slotId: number, e: React.DragEvent) => {
     e.preventDefault();
     const d = dragData.current;
     if (!d) return;
+    if (d.type === "existing") {
+      const requireSeats = d.total_seats ?? 0;
+      const roomTotalSeats = total_seats ?? 0;
+      if (requireSeats > roomTotalSeats) {
+        Swal.fire({
+          icon: "warning",
+          title: "Không đủ điều kiện đổi phòng",
+          text: `Phòng này chỉ có ${roomTotalSeats} ghế, không đáp ứng suất chiếu cần ${requireSeats} ghế.`,
+          confirmButtonText: "Đã hiểu",
+        });
+        dragData.current = null;
+        return;
+      }
+    }
     const roomShow = grouped[activeDate ?? ""]?.[String(roomId)] ?? {};
     const currentOccupant = roomShow[slotId] || null;
     //Nếu thả movie vào slot hiện tại có movie đó
@@ -687,6 +701,7 @@ export default function ShowtimeTimetable({
 
           <div className="space-y-6">
             {Object.entries(filteredRoomsByCinema).map(([cinemaKey, rooms]) => {
+              console.log("roomsmap:", rooms);
               const cinemaId = cinemaKey === "no-cinema" ? null : Number(cinemaKey);
               const cinemaName = (cinemaId && cinemasMap?.[cinemaId]?.name) || `Rạp ${cinemaId ?? ""}`;
               const cinemaSlots =
@@ -705,9 +720,14 @@ export default function ShowtimeTimetable({
                     <div className="grid md:grid-cols-2 gap-4">
                       {rooms.map(room => {
                         const roomShow = grouped[activeDate]?.[room.room_id] || {};
+                        console.log("room:", room);
                         return (
                           <div key={room.room_id} className="border p-3 rounded">
-                            <div className="font-medium mb-2">{room.name}</div>
+                            <div className="flex justify-between">
+                              <div className="font-medium mb-2">{room.name}</div>
+                              <div className="text-slate-600 mb-2">{room.total_seats} ghế</div>
+                            </div>
+
                             <div className="space-y-2">
                               {cinemaSlots.map(slot => {
                                 const existing = roomShow[slot.movie_screen_id] || null;
@@ -728,7 +748,7 @@ export default function ShowtimeTimetable({
                                       setHoverSlot(null);
                                       setJustInserted(`${room.room_id}-${slot.movie_screen_id}`);
                                       setTimeout(() => setJustInserted(null), 400);
-                                      void handleDropSlot(room.room_id, slot.movie_screen_id, e);
+                                      void handleDropSlot(room.room_id, room.total_seats, slot.movie_screen_id, e);
                                     }}
                                   >
                                     <div className="text-xs text-gray-600 mb-1">{slot.start_time} – {slot.end_time}</div>
@@ -741,7 +761,7 @@ export default function ShowtimeTimetable({
     ${justInserted === `${room.room_id}-${slot.movie_screen_id}` ? styles.fadeIn : ""}
   `}
                                         draggable
-                                        onDragStart={(e) => handleDragStart(e, existing)}
+                                        onDragStart={(e) => handleDragStart(e, existing, Number(room.total_seats))}
                                         onDragEnd={handleDragEndLocal}
                                         onClick={() => { handleOpenCustomPriceModal(existing.showtime_id, existing.price_normal, existing.price_student) }}
                                       >
@@ -786,7 +806,7 @@ export default function ShowtimeTimetable({
           )}
         </div>
 
-        <div className="w-72 border-l pl-4 sticky top-30 self-start">
+        <div className="w-72 border-l pl-4 sticky top-0 self-start">
           <div className="font-medium mb-2 ">Danh sách phim đang chiếu</div>
           <div className="space-y-2 max-h-[70vh] overflow-auto pr-2 ">
             {externalMovies.length === 0 && <div className="text-sm text-gray-500 italic">Không có phim.</div>}
