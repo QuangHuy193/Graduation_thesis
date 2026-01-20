@@ -10,6 +10,8 @@ import { useSession } from "next-auth/react";
 import styles from "./SuperAdminPage.module.scss";
 import ItemRevenue from "../ItemRevenue/ItemRevenue";
 import ShowtimeAudit from "../ShowtimeAudit/ShowtimeAudit";
+import { getAllUsers } from "@/lib/axios/admin/userAPI";
+import UserTable from "@/components/UserTable/UserTable";
 
 function SuperAdminPage() {
   const [state, setState] = useState({
@@ -24,8 +26,10 @@ function SuperAdminPage() {
   const user = session?.user;
   //Lấy khuyến mãi
   const [promotions, setPromotions] = useState<PromotionRule[]>([]);
+  const [users, setUsers] = useState([]);
   const loaded = useRef({
     promotions: false,
+    users: false,
   });
   async function fetchPromotion() {
     try {
@@ -34,6 +38,17 @@ function SuperAdminPage() {
     } catch (error) {
       console.error(error);
       setPromotions([]);
+    }
+  }
+  function handleEditUser() {
+    fetchUsers();
+  }
+  async function fetchUsers() {
+    try {
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch (error) {
+      setUsers([]);
     }
   }
   function handleReloadPromotion() {
@@ -45,6 +60,12 @@ function SuperAdminPage() {
       loaded.current.promotions = true;
     }
   }, [state.pageTitle]);
+  useEffect(() => {
+    if (state.pageTitle === 3 && !loaded.current.users) {
+      fetchUsers();
+      loaded.current.users = true;
+    }
+  }, [state.pageTitle])
   return (
     <div className="flex h-[515px] relative bg-gray-50 rounded-md">
       {/* ASIDE */}
@@ -65,11 +86,10 @@ function SuperAdminPage() {
             }
             className={`
                 px-3 py-2 rounded-md  cursor-pointer transition-all
-                ${
-                  state.pageTitle === m.index
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-gray-700"
-                }
+                ${state.pageTitle === m.index
+                ? "bg-blue-600 text-white"
+                : "hover:bg-gray-700"
+              }
               `}
           >
             {m.title}
@@ -158,6 +178,13 @@ function SuperAdminPage() {
                 />
               </div>
             )}
+            {
+              state.pageTitle === 3 && (
+                <div className="mt-4">
+                  <UserTable users={users} onEdit={handleEditUser} />
+                </div>
+              )
+            }
             <div className="flex items-center gap-3 my-6">
               <div className="flex-1 h-px bg-gray-300" />
               <div className="text-center text-sm text-gray-400 italic">

@@ -8,12 +8,20 @@ import { getNameAdminAPI } from "@/lib/axios/sadmin/userAPI";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRefresh, faX } from "@fortawesome/free-solid-svg-icons";
 
-const getChangedFields = (oldData: any, newData: any) => {
-  if (!oldData || !newData) return [];
+const getChangedFields = (oldData: any, newData: any, type: string) => {
+  if (type === "create") return Object.keys(newData || {});
+  if (type === "delete") return Object.keys(oldData || {});
 
   return Object.keys({ ...oldData, ...newData }).filter(
-    (key) => oldData[key] !== newData[key]
+    (key) => oldData?.[key] !== newData?.[key]
   );
+};
+
+const FIELD_LABEL: Record<string, string> = {
+  movie_id: "Phim",
+  room_id: "Phòng",
+  movie_screen_id: "Suất chiếu",
+  date: "Ngày chiếu",
 };
 
 const formatDate = (dateStr: string) => {
@@ -29,7 +37,7 @@ const formatDate = (dateStr: string) => {
 };
 
 function ShowtimeAudit() {
-  const [state, setState] = useState({
+  const [state, setState] = useState<any>({
     showtimeAudit: [],
     showtimeAuditDisplay: [],
     total: 0,
@@ -57,22 +65,42 @@ function ShowtimeAudit() {
     getNameAdmin();
   }, []);
 
+  // useEffect(() => {
+  //   const getShowtimeAudit = async () => {
+  //     try {
+  //       const res = await getAuditShowtimeAPI(state.limit, state.page);
+  //       // lọc nếu có
+  //       let filter = [];
+  //       if (state.filter.type !== "") {
+  //         filter = res.filter((s) => s.type_audit === state.filter.type);
+  //       }
+  //       if (state.filter.user_name !== "") {
+  //         filter = res.filter((s) => s.user === state.filter.user_name);
+  //       }
+  //       setState((prev) => ({
+  //         ...prev,
+  //         showtimeAudit: res.audits,
+  //         showtimeAuditDisplay: filter.length > 0 ? filter : res,
+  //         total: res.total,
+  //       }));
+  //     } catch (e) {
+  //       console.log(e);
+  //     }
+  //   };
+
+  //   getShowtimeAudit();
+  // }, [state.page, state.limit]);
+
+  // lọc
   useEffect(() => {
     const getShowtimeAudit = async () => {
       try {
         const res = await getAuditShowtimeAPI(state.limit, state.page);
-        // lọc nếu có
-        let filter = [];
-        if (state.filter.type !== "") {
-          filter = res.filter((s) => s.type_audit === state.filter.type);
-        }
-        if (state.filter.user_name !== "") {
-          filter = res.filter((s) => s.user === state.filter.user_name);
-        }
+
         setState((prev) => ({
           ...prev,
           showtimeAudit: res.audits,
-          showtimeAuditDisplay: filter.length > 0 ? filter : res,
+          showtimeAuditDisplay: res.audits,
           total: res.total,
         }));
       } catch (e) {
@@ -83,29 +111,53 @@ function ShowtimeAudit() {
     getShowtimeAudit();
   }, [state.page, state.limit]);
 
-  // lọc
+  // useEffect(() => {
+  //   let filter = [...state.showtimeAudit];
+  //   if (state.filter.type !== "") {
+  //     filter = filter.filter((s) => s.type_audit === state.filter.type);
+  //     console.log("lọc type", filter);
+  //   }
+  //   if (state.filter.user_name !== "") {
+  //     filter = filter.filter((s) => s.user === state.filter.user_name);
+  //     console.log("lọc name", filter);
+  //   }
+  //   if (state.filter.type !== "" || state.filter.user_name !== "") {
+  //     setState((prev) => ({
+  //       ...prev,
+  //       showtimeAuditDisplay: filter,
+  //     }));
+  //   } else {
+  //     setState((prev) => ({
+  //       ...prev,
+  //       showtimeAuditDisplay: prev.showtimeAudit,
+  //     }));
+  //   }
+  // }, [state.filter.type, state.filter.user_name]);
   useEffect(() => {
-    let filter = [...state.showtimeAudit];
-    if (state.filter.type !== "") {
-      filter = filter.filter((s) => s.type_audit === state.filter.type);
-      console.log("lọc type", filter);
+    let filtered = [...state.showtimeAudit];
+
+    if (state.filter.type) {
+      filtered = filtered.filter(
+        (s) => s.type_audit === state.filter.type
+      );
     }
-    if (state.filter.user_name !== "") {
-      filter = filter.filter((s) => s.user === state.filter.user_name);
-      console.log("lọc name", filter);
+
+    if (state.filter.user_name) {
+      filtered = filtered.filter(
+        (s) => s.user_name === state.filter.user_name
+      );
     }
-    if (state.filter.type !== "" || state.filter.user_name !== "") {
-      setState((prev) => ({
-        ...prev,
-        showtimeAuditDisplay: filter,
-      }));
-    } else {
-      setState((prev) => ({
-        ...prev,
-        showtimeAuditDisplay: prev.showtimeAudit,
-      }));
-    }
-  }, [state.filter.type, state.filter.user_name]);
+
+    setState((prev) => ({
+      ...prev,
+      showtimeAuditDisplay: filtered,
+    }));
+  }, [
+    state.filter.type,
+    state.filter.user_name,
+    state.showtimeAudit,
+  ]);
+
   return (
     <div>
       {/* action */}
@@ -189,7 +241,7 @@ function ShowtimeAudit() {
 
         {state.showtimeAuditDisplay.length > 0 ? (
           state.showtimeAuditDisplay.map((s, ind) => {
-            const changedFields = getChangedFields(s.old_data, s.new_data);
+            const changedFields = getChangedFields(s.old_data, s.new_data, s.type_audit);
 
             return (
               <div
@@ -200,19 +252,18 @@ function ShowtimeAudit() {
                 <div>
                   <span
                     className={`inline-block rounded-full px-3 py-1 font-medium
-              ${
-                s.type_audit === "create"
-                  ? "bg-green-100 text-green-700"
-                  : s.type_audit === "update"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-red-100 text-red-700"
-              }`}
+              ${s.type_audit === "create"
+                        ? "bg-green-100 text-green-700"
+                        : s.type_audit === "update"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
                   >
                     {s.type_audit === "update"
                       ? "Cập nhật"
                       : s.type_audit === "create"
-                      ? "Thêm mới"
-                      : "Xóa"}
+                        ? "Thêm mới"
+                        : "Xóa"}
                   </span>
                 </div>
 
@@ -226,18 +277,25 @@ function ShowtimeAudit() {
                     changedFields.map((key) => (
                       <div key={key} className="flex gap-1">
                         <span className="font-semibold text-gray-700">
-                          {key === "movie" && "Phim"}
-                          {key === "room" && "Phòng"}
-                          {key === "screen_time" && "Giờ chiếu"}
+                          {FIELD_LABEL[key] || key}
                         </span>
                         :
-                        <span className="text-red-500 ml-1">
-                          {s.old_data[key]}
-                        </span>
-                        <span className="mx-1 text-gray-400">→</span>
-                        <span className="text-green-600">
-                          {s.new_data[key]}
-                        </span>
+                        {s.type_audit === "create" && (
+                          <span className="text-green-600">{s.new_data?.[key]}</span>
+                        )}
+
+                        {s.type_audit === "delete" && (
+                          <span className="text-red-500">{s.old_data?.[key]}</span>
+                        )}
+
+                        {s.type_audit === "update" && (
+                          <>
+                            <span className="text-red-500">{s.old_data?.[key]}</span>
+                            <span className="mx-1 text-gray-400">→</span>
+                            <span className="text-green-600">{s.new_data?.[key]}</span>
+                          </>
+                        )}
+
                       </div>
                     ))
                   )}

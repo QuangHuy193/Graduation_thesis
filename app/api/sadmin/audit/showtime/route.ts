@@ -10,23 +10,51 @@ export async function GET(req: Request) {
     const offset = (page - 1) * limit;
 
     const [audits] = await db.query(
-      `SELECT sa.show_audit_id, sa.type_audit, sa.old_data, sa.new_data, sa.showtime_id, 
-      sa.created_at,
-      sa.user_id,  u.name AS user_name,
-      m1.name AS old_movie_name, m2.name AS new_movie_name,
-      r1.name AS old_room_name, r2.name AS new_room_name,
-      ms1.start_time AS old_screen_time, ms2.start_time AS new_screen_time
-      FROM showtime_audit sa
-      JOIN users u ON sa.user_id = u.user_id
-      LEFT JOIN movies m1 ON JSON_EXTRACT(sa.old_data, '$.movie_id') = m1.movie_id
-      LEFT JOIN movies m2 ON JSON_EXTRACT(sa.new_data, '$.movie_id') = m2.movie_id
-      LEFT JOIN rooms r1 ON JSON_EXTRACT(sa.old_data, '$.room_id') = r1.room_id
-      LEFT JOIN rooms r2 ON JSON_EXTRACT(sa.new_data, '$.room_id') = r2.room_id
-      LEFT JOIN movie_screenings ms1 
-        ON JSON_EXTRACT(sa.old_data, '$.movie_screen_id') = ms1.movie_screen_id
-      LEFT JOIN movie_screenings ms2 
-        ON JSON_EXTRACT(sa.new_data, '$.movie_screen_id') = ms2.movie_screen_id
-      ORDER BY show_audit_id DESC
+      `SELECT 
+    sa.show_audit_id,
+    sa.type_audit,
+    sa.created_at,
+
+    sa.user_id,
+    u.name AS user_name,
+
+    -- Movie
+    m_old.name AS old_movie_name,
+    m_new.name AS new_movie_name,
+
+    -- Room
+    r_old.name AS old_room_name,
+    r_new.name AS new_room_name,
+
+    -- Screening time
+    ms_old.start_time AS old_screen_time,
+    ms_new.start_time AS new_screen_time
+
+FROM showtime_audit sa
+JOIN users u 
+    ON sa.user_id = u.user_id
+
+-- OLD DATA
+LEFT JOIN movies m_old 
+    ON JSON_EXTRACT(sa.old_data, '$.movie_id') = m_old.movie_id
+
+LEFT JOIN rooms r_old 
+    ON JSON_EXTRACT(sa.old_data, '$.room_id') = r_old.room_id
+
+LEFT JOIN movie_screenings ms_old
+    ON JSON_EXTRACT(sa.old_data, '$.movie_screen_id') = ms_old.movie_screen_id
+
+-- NEW DATA
+LEFT JOIN movies m_new 
+    ON JSON_EXTRACT(sa.new_data, '$.movie_id') = m_new.movie_id
+
+LEFT JOIN rooms r_new 
+    ON JSON_EXTRACT(sa.new_data, '$.room_id') = r_new.room_id
+
+LEFT JOIN movie_screenings ms_new
+    ON JSON_EXTRACT(sa.new_data, '$.movie_screen_id') = ms_new.movie_screen_id
+
+ORDER BY sa.show_audit_id DESC
       LIMIT ? OFFSET ?`,
       [limit, offset]
     );

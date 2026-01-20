@@ -1,3 +1,5 @@
+import { title } from "process";
+
 export const POLICY = `TỔNG QUAN
 CineGo hiểu rằng khách hàng quan tâm đến việc thông tin cá nhân của mình được thu thập, sử dụng và bảo vệ như thế nào. Chúng tôi trân trọng sự tin tưởng đó và cam kết quản lý, lưu trữ và xử lý thông tin một cách minh bạch, an toàn và tuân thủ pháp luật.
 Website: https://cinego.vn
@@ -168,6 +170,10 @@ export const MENUSUPERADMIN = [
   {
     index: 2,
     title: "Khuyến mãi",
+  },
+  {
+    index: 3,
+    title: "Quản trị người dùng",
   },
 ];
 

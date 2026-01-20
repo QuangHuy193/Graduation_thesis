@@ -571,13 +571,13 @@ export default function AdminDashboard() {
           >
             Tổng quan
           </button>
-          <button
+          {/* <button
             onClick={() => setActiveTab("users")}
             className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "users" ? "bg-slate-100" : "hover:bg-slate-50"
               }`}
           >
             Quản lý thành viên
-          </button>
+          </button> */}
           <button
             onClick={() => setActiveTab("movies")}
             className={`w-full text-left px-3 py-2 cursor-pointer rounded-md ${activeTab === "movies" ? "bg-slate-100" : "hover:bg-slate-50"
